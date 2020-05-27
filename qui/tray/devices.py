@@ -34,6 +34,7 @@ class DomainMenuItem(Gtk.ImageMenuItem):
         self.device = device
 
         icon = self.vm.icon
+
         self.set_image(qui.decorators.create_icon(icon))
         self._hbox = qui.decorators.device_domain_hbox(self.vm, self.attached)
         self.add(self._hbox)

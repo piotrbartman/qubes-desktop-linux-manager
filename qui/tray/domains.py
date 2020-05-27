@@ -32,6 +32,7 @@ STATE_DICTIONARY = {
     'domain-shutdown-failed': 'Running'
 }
 
+
 class IconCache:
     def __init__(self):
         self.icon_files = {
@@ -528,7 +529,11 @@ class DomainTray(Gtk.Application):
 
     def do_unpause_all(self, _vm, *_args, **_kwargs):
         for vm_name in self.menu_items:
-            self.qapp.domains[vm_name].unpause()
+            try:
+                self.qapp.domains[vm_name].unpause()
+            except exc.QubesException:
+                # we may not have permission to do that
+                pass
 
     def check_pause_notify(self, _vm, _event, **_kwargs):
         if self.have_running_and_all_are_paused():
@@ -555,13 +560,25 @@ class DomainTray(Gtk.Application):
          are created in alphabetical order. Otherwise, this method will
          attempt to sort menu items correctly."""
         # check if it already exists
-        vm = self.qapp.domains[str(vm)]
+        try:
+            vm = self.qapp.domains[str(vm)]
+        except KeyError:
+            # the VM was not created successfully or was deleted before the
+            # event was fully handled
+            return
         if vm in self.menu_items:
             return
 
         state = STATE_DICTIONARY.get(event)
         if not state:
-            state = vm.get_power_state()
+            try:
+                state = vm.get_power_state()
+            except exc.QubesException:
+                # VM might have been already destroyed
+                if vm not in self.qapp.domains:
+                    return
+                # or we might not have permission to access its power state
+                state = 'Halted'
 
         domain_item = DomainMenuItem(vm, self, self.icon_cache, state=state)
         if not event:  # menu item creation at widget start; we can assume

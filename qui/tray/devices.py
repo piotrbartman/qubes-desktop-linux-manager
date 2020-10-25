@@ -45,7 +45,7 @@ class DomainMenuItem(Gtk.ImageMenuItem):
 
 class DomainMenu(Gtk.Menu):
     def __init__(self, device, domains, qapp, gtk_app, **kwargs):
-        super(DomainMenu, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.device = device
         self.domains = domains
         self.qapp = qapp
@@ -184,7 +184,7 @@ class VM:
 
 class DevicesTray(Gtk.Application):
     def __init__(self, app_name, qapp, dispatcher):
-        super(DevicesTray, self).__init__()
+        super().__init__()
         self.name = app_name
 
         self.devices = {}

@@ -19,7 +19,7 @@ class PropertiesDecorator():
         self.obj = obj
         self.margin_left = margins[0]
         self.margin_right = margins[1]
-        super(PropertiesDecorator, self).__init__()
+        super().__init__()
 
     def set_margins(self, widget):
         ''' Helper for setting the default margins on a widget '''
@@ -31,7 +31,7 @@ class DomainDecorator(PropertiesDecorator):
     ''' Useful methods for domain data representation '''
 
     def __init__(self, vm, margins=(5, 5)) -> None:
-        super(DomainDecorator, self).__init__(vm, margins)
+        super().__init__(vm, margins)
         self.vm = vm
 
     class VMName(Gtk.Box):

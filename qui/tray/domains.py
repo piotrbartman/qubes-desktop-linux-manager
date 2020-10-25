@@ -273,7 +273,7 @@ def run_manager(_item):
 
 class QubesManagerItem(Gtk.ImageMenuItem):
     def __init__(self):
-        super(QubesManagerItem, self).__init__()
+        super().__init__()
 
         self.set_image(Gtk.Image.new_from_icon_name('qubes-logo-icon',
                                                     Gtk.IconSize.MENU))

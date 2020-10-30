@@ -12,6 +12,7 @@ import qubesadmin
 import qubesadmin.events
 
 from qubesadmin import exc
+from html import escape
 
 import qui.decorators
 import gi  # isort:skip
@@ -833,12 +834,12 @@ def main():
             dialog.set_title(_("Houston, we have a problem..."))
             dialog.set_markup(_(
                 "<b>Whoops. A critical error in Domains Widget has occured.</b>"
-                " This is most likely a bug in the widget. To restart the "
-                "widget, run 'qui-domains' in dom0."))
-            dialog.format_secondary_markup(
-                "\n<b>{}</b>: {}\n{}".format(
+                " This is most likely a bug in the widget. The Domains Widget"
+                " will restart itself."))
+            exc_description = "\n<b>{}</b>: {}\n{}".format(
                    exc_type.__name__, exc_value, traceback.format_exc(limit=10)
-                ))
+                )
+            dialog.format_secondary_markup(escape(exc_description))
             dialog.run()
             exit_code = 1
     return exit_code

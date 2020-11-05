@@ -681,6 +681,9 @@ class DomainTray(Gtk.Application):
             return
         except KeyError:
             self.add_domain_item(None, event, vm)
+            if not vm in self.menu_items:
+                # VM not added - already removed?
+                return
             item = self.menu_items[vm]
 
         if event in STATE_DICTIONARY:

@@ -187,7 +187,7 @@ class NotificationApp(Gtk.Application):
             self.icon.set_from_icon_name("edit-copy")
 
         if message:
-            self.notify(message)
+            self.send_notify(message)
 
     def prepare_menu(self):
         self.menu = Gtk.Menu()
@@ -227,18 +227,18 @@ class NotificationApp(Gtk.Application):
         text = clipboard.wait_for_text()
 
         if not text:
-            self.notify(_("dom0 clipboard is empty!"))
+            self.send_notify(_("dom0 clipboard is empty!"))
             return
 
         try:
             fd = os.open(APPVIEWER_LOCK, os.O_RDWR | os.O_CREAT, 0o0666)
         except Exception:  # pylint: disable=broad-except
-            self.notify(_("Error while accessing Qubes clipboard!"))
+            self.send_notify(_("Error while accessing Qubes clipboard!"))
         else:
             try:
                 fcntl.flock(fd, fcntl.LOCK_EX)
             except Exception:  # pylint: disable=broad-except
-                self.notify(_("Error while locking Qubes clipboard!"))
+                self.send_notify(_("Error while locking Qubes clipboard!"))
                 os.close(fd)
             else:
                 try:
@@ -249,12 +249,12 @@ class NotificationApp(Gtk.Application):
                     with open(XEVENT, "w") as timestamp:
                         timestamp.write(str(Gtk.get_current_event_time()))
                 except Exception as ex:  # pylint: disable=broad-except
-                    self.notify(_("Error while writing to "
+                    self.send_notify(_("Error while writing to "
                                   "Qubes clipboard!\n{0}").format(str(ex)))
                 fcntl.flock(fd, fcntl.LOCK_UN)
                 os.close(fd)
 
-    def notify(self, body):
+    def send_notify(self, body):
         # pylint: disable=attribute-defined-outside-init
         notification = Gio.Notification.new(_("Qubes Clipboard"))
         notification.set_body(body)

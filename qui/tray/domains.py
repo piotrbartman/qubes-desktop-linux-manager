@@ -48,7 +48,8 @@ class IconCache:
             'kill': 'media-record',
             'shutdown': 'media-playback-stop',
             'unpause': 'media-playback-start',
-            'files': 'system-file-manager'
+            'files': 'system-file-manager',
+            'restart': 'edit-redo'
         }
         self.icons = {}
 
@@ -141,6 +142,39 @@ class ShutdownItem(Gtk.ImageMenuItem):
             show_error(_("Error shutting down qube"),
                        _("The following error occurred on an attempt to "
                        "shutdown qube {0}:\n{1}").format(
+                           self.vm.name, str(ex)))
+
+
+class RestartItem(Gtk.ImageMenuItem):
+    ''' Restart menu Item. When activated shutdowns the domain and
+    then starts it again. '''
+
+    def __init__(self, vm, app, icon_cache):
+        super().__init__()
+        self.vm = vm
+        self.app = app
+
+        img = Gtk.Image.new_from_pixbuf(icon_cache.get_icon('restart'))
+
+        self.set_image(img)
+        self.set_label(_('Restart'))
+        self.restart_thread = None
+
+        self.connect('activate', self.restart)
+
+    def restart(self, *_args, **_kwargs):
+        asyncio.ensure_future(self.perform_restart())
+
+    async def perform_restart(self):
+        try:
+            self.vm.shutdown()
+            while self.vm.is_running():
+                await asyncio.sleep(1)
+            subprocess.Popen(['qvm-start', self.vm.name])
+        except exc.QubesException as ex:
+            show_error(_("Error restarting qube"),
+                       _("The following error occurred on an attempt to "
+                       "restart qube {0}:\n{1}").format(
                            self.vm.name, str(ex)))
 
 
@@ -261,6 +295,7 @@ class StartedMenu(Gtk.Menu):
         self.add(PreferencesItem(self.vm, icon_cache))
         self.add(PauseItem(self.vm, icon_cache))
         self.add(ShutdownItem(self.vm, self.app, icon_cache))
+        self.add(RestartItem(self.vm, self.app, icon_cache))
         self.add(RunTerminalItem(self.vm, icon_cache))
         self.add(OpenFileManagerItem(self.vm, icon_cache))
 

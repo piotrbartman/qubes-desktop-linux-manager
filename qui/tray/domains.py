@@ -707,7 +707,9 @@ class DomainTray(Gtk.Application):
                             continue
                     except exc.QubesPropertyAccessError:
                         continue
-                    if getattr(menu_item.vm, 'template', None) == vm:
+                    if getattr(menu_item.vm, 'template', None) == vm and \
+                            any(vol.is_outdated()
+                                for vol in menu_item.vm.volumes.values()):
                         menu_item.name.update_outdated(True)
             # if the VM was shut down, it is no longer outdated
             item.name.update_outdated(False)

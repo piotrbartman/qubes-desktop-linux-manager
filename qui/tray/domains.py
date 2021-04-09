@@ -698,19 +698,24 @@ class DomainTray(Gtk.Application):
         item.update_state(state)
 
         if event == 'domain-shutdown':
-            if getattr(vm, 'klass', None) == 'TemplateVM':
-                for menu_item in self.menu_items.values():
-                    try:
-                        if not menu_item.vm.is_running():
-                            # A VM based on this template can only be
-                            # outdated if the VM is currently running.
+            try:
+                if getattr(vm, 'klass', None) == 'TemplateVM':
+                    for menu_item in self.menu_items.values():
+                        try:
+                            if not menu_item.vm.is_running():
+                                # A VM based on this template can only be
+                                # outdated if the VM is currently running.
+                                continue
+                        except exc.QubesPropertyAccessError:
                             continue
-                    except exc.QubesPropertyAccessError:
-                        continue
-                    if getattr(menu_item.vm, 'template', None) == vm and \
-                            any(vol.is_outdated()
-                                for vol in menu_item.vm.volumes.values()):
-                        menu_item.name.update_outdated(True)
+                        if getattr(menu_item.vm, 'template', None) == vm and \
+                                any(vol.is_outdated()
+                                    for vol in menu_item.vm.volumes.values()):
+                            menu_item.name.update_outdated(True)
+            except exc.QubesVMNotFoundError:
+                #attribute not available anymore as VM was removed in the meantime
+                pass
+
             # if the VM was shut down, it is no longer outdated
             item.name.update_outdated(False)
 

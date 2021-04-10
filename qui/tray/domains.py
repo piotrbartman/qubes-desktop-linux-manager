@@ -669,6 +669,26 @@ class DomainTray(Gtk.Application):
         self.tray_menu.remove(vm_widget)
         del self.menu_items[vm]
 
+    def handle_domain_shutdown(self, vm):
+        try:
+            if getattr(vm, 'klass', None) == 'TemplateVM':
+                for menu_item in self.menu_items.values():
+                    try:
+                        if not menu_item.vm.is_running():
+                            # A VM based on this template can only be
+                            # outdated if the VM is currently running.
+                            continue
+                    except exc.QubesPropertyAccessError:
+                        continue
+                    if getattr(menu_item.vm, 'template', None) == vm and \
+                            any(vol.is_outdated()
+                                for vol in menu_item.vm.volumes.values()):
+                        menu_item.name.update_outdated(True)
+        except exc.QubesVMNotFoundError:
+            # attribute not available anymore as VM was removed
+            # in the meantime
+            pass
+
     def update_domain_item(self, vm, event, **kwargs):
         ''' Update the menu item with the started menu for
         the specified vm in the tray'''
@@ -698,24 +718,7 @@ class DomainTray(Gtk.Application):
         item.update_state(state)
 
         if event == 'domain-shutdown':
-            try:
-                if getattr(vm, 'klass', None) == 'TemplateVM':
-                    for menu_item in self.menu_items.values():
-                        try:
-                            if not menu_item.vm.is_running():
-                                # A VM based on this template can only be
-                                # outdated if the VM is currently running.
-                                continue
-                        except exc.QubesPropertyAccessError:
-                            continue
-                        if getattr(menu_item.vm, 'template', None) == vm and \
-                                any(vol.is_outdated()
-                                    for vol in menu_item.vm.volumes.values()):
-                            menu_item.name.update_outdated(True)
-            except exc.QubesVMNotFoundError:
-                #attribute not available anymore as VM was removed in the meantime
-                pass
-
+            self.handle_domain_shutdown(vm)
             # if the VM was shut down, it is no longer outdated
             item.name.update_outdated(False)
 

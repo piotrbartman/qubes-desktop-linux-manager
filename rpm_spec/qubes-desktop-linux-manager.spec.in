@@ -42,6 +42,7 @@ AutoReq:	no
 
 BuildArch: noarch
 
+BuildRequires:  make
 BuildRequires:  python3-devel
 BuildRequires:  gettext
 

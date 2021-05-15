@@ -6,4 +6,4 @@ Terminal=false
 Name=Qubes Update
 GenericName=Qubes Update
 StartupNotify=false
-Categories=System;
+Categories=Settings;X-XFCE-SettingsDialog

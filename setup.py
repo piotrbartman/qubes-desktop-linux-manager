@@ -3,27 +3,38 @@
 import os
 import subprocess
 import setuptools
+import setuptools.command.install
 
 
-def create_mo_files():
-    data_files = []
-    localedir = 'locales'
-    po_dirs = [localedir + '/' + l + '/LC_MESSAGES/'
-               for l in next(os.walk(localedir))[1]]
-    for d in po_dirs:
-        mo_files = []
-        po_files = [f
-                    for f in next(os.walk(d))[2]
-                    if os.path.splitext(f)[1] == '.po']
-        for po_file in po_files:
-            filename, extension = os.path.splitext(po_file)
-            mo_file = filename + '.mo'
-            msgfmt_cmd = 'msgfmt {} -o {}'.format(d + po_file, d + mo_file)
-            subprocess.check_call(msgfmt_cmd, shell=True)
-            mo_files.append(d + mo_file)
-        data_files.append((d, mo_files))
-    return data_files
 
+# create and install translation files
+class InstallWithLocale(setuptools.command.install.install):
+    def create_mo_files(self):
+        data_files = []
+        localedir = 'locale'
+        po_dirs = [localedir + '/' + l + '/LC_MESSAGES/'
+                   for l in next(os.walk(localedir))[1]]
+        for d in po_dirs:
+            mo_dir = os.path.join(self.root, 'usr/share', d)
+            os.makedirs(mo_dir)
+            mo_files = []
+            po_files = [f
+                        for f in next(os.walk(d))[2]
+                        if os.path.splitext(f)[1] == '.po']
+            for po_file in po_files:
+                filename, extension = os.path.splitext(po_file)
+                mo_file = filename + '.mo'
+                msgfmt_cmd = 'msgfmt {} -o {}'.format(
+                        d + po_file,
+                        os.path.join(mo_dir, mo_file))
+                subprocess.check_call(msgfmt_cmd, shell=True)
+                mo_files.append(d + mo_file)
+            data_files.append((d, mo_files))
+        return data_files
+
+    def run(self):
+        self.create_mo_files()
+        super().run()
 
 setuptools.setup(name='qui',
       version='0.1',
@@ -44,4 +55,7 @@ setuptools.setup(name='qui',
           ]
       },
       package_data={'qui': ["updater.glade"]},
-      data_files=create_mo_files())
+      cmdclass={
+          'install': InstallWithLocale
+      },
+)

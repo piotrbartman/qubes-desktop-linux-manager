@@ -155,8 +155,8 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 /usr/share/applications/qubes-update-gui.desktop
 /usr/bin/widget-wrapper
 /lib/systemd/user/qubes-widget@.service
-/usr/locales/en/LC_MESSAGES/desktop-linux-manager.mo
-/usr/locales/pl/LC_MESSAGES/desktop-linux-manager.mo
+/usr/share/locale/en/LC_MESSAGES/desktop-linux-manager.mo
+/usr/share/locale/pl/LC_MESSAGES/desktop-linux-manager.mo
 
 /usr/share/icons/hicolor/16x16/apps/qui-domains.png
 /usr/share/icons/hicolor/24x24/apps/qui-domains.png

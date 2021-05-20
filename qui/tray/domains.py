@@ -23,8 +23,7 @@ import gbulb
 gbulb.install()
 
 import gettext
-t = gettext.translation("desktop-linux-manager", localedir="/usr/locales",
-                        fallback=True)
+t = gettext.translation("desktop-linux-manager", fallback=True)
 _ = t.gettext
 
 STATE_DICTIONARY = {

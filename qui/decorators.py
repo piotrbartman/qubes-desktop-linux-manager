@@ -11,8 +11,7 @@ from qubesadmin import exc
 from qubesadmin.utils import size_to_human
 
 import gettext
-t = gettext.translation("desktop-linux-manager", localedir="/usr/locales",
-                        fallback=True)
+t = gettext.translation("desktop-linux-manager", fallback=True)
 _ = t.gettext
 
 

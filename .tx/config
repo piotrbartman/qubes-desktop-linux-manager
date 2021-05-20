@@ -2,9 +2,9 @@
 host = https://www.transifex.com
 
 [qubes.desktop-linux-manager-pot]
-file_filter = locales/<lang>/LC_MESSAGES/desktop-linux-manager.po
+file_filter = locale/<lang>/LC_MESSAGES/desktop-linux-manager.po
 minimum_perc = 0
-source_file = locales/desktop-linux-manager.pot
+source_file = locale/desktop-linux-manager.pot
 source_lang = en
 type = PO
 

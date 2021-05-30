@@ -170,7 +170,11 @@ class RestartItem(Gtk.ImageMenuItem):
             self.vm.shutdown()
             while self.vm.is_running():
                 await asyncio.sleep(1)
-            subprocess.Popen(['qvm-start', self.vm.name])
+            proc = await asyncio.create_subprocess_exec(
+                'qvm-start', self.vm.name, stderr=subprocess.PIPE)
+            _, stderr = await proc.communicate()
+            if proc.returncode != 0:
+                raise exc.QubesException(stderr)
         except exc.QubesException as ex:
             show_error(_("Error restarting qube"),
                        _("The following error occurred on an attempt to "

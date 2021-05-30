@@ -6,6 +6,11 @@ if [[ $# -lt 1 ]] ; then
     exit 1
 fi
 
+if ! [ -e /etc/qubes-release ] && ! [ -e /var/run/qubes-service/guivm ]; then
+    echo "not dom0 or guivm, exiting"
+    exit 0
+fi
+
 "$@"
 
 exit_code=$?

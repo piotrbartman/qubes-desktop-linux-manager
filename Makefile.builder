@@ -1,4 +1,5 @@
-ifeq ($(PACKAGE_SET),dom0)
-    RPM_SPEC_FILES := \
-        rpm_spec/qubes-desktop-linux-manager.spec
-endif
+RPM_SPEC_FILES := \
+    rpm_spec/qubes-desktop-linux-manager.spec
+DEBIAN_BUILD_DIRS := debian
+RPM_BUILD_DEFINES.vm = --define "vm_package 1"
+RPM_BUILD_DEFINES += $(RPM_BUILD_DEFINES.$(PACKAGE_SET))

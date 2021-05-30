@@ -43,16 +43,19 @@ AutoReq:	no
 BuildArch: noarch
 
 BuildRequires:  make
-BuildRequires:  python3-devel
+BuildRequires:  python%{python3_pkgversion}-devel
 BuildRequires:  gettext
 
-Requires:  python3-setuptools
-Requires:  python3-gbulb
+Requires:  python%{python3_pkgversion}-setuptools
+Requires:  python%{python3_pkgversion}-gbulb
 Requires:  libappindicator-gtk3
-Requires:  python3-systemd
+Requires:  python%{python3_pkgversion}-systemd
 Requires:  gtk3
-Requires:  python3-qubesadmin >= 4.1.8
+Requires:  python%{python3_pkgversion}-qubesadmin >= 4.1.8
+%if !0%{?vm_package}
+# FIXME: we need some way for applying updates from GUI VM
 Requires:  qubes-mgmt-salt-dom0-update >= 4.0.5
+%endif
 Requires:  qubes-artwork >= 4.1.5
 
 Provides:   qui = %{version}-%{release}
@@ -70,37 +73,7 @@ A collection of GUI application for enhancing the Qubes UX.
 
 %install
 %py3_install
-mkdir -p $RPM_BUILD_ROOT/etc/xdg/autostart
-cp autostart/qui-domains.desktop $RPM_BUILD_ROOT/etc/xdg/autostart
-cp autostart/qui-devices.desktop $RPM_BUILD_ROOT/etc/xdg/autostart
-cp autostart/qui-clipboard.desktop $RPM_BUILD_ROOT/etc/xdg/autostart
-cp autostart/qui-disk-space.desktop $RPM_BUILD_ROOT/etc/xdg/autostart
-cp autostart/qui-updates.desktop $RPM_BUILD_ROOT/etc/xdg/autostart
-mkdir -p $RPM_BUILD_ROOT/usr/share/icons/Adwaita/22x22/devices/
-mkdir -p $RPM_BUILD_ROOT/usr/share/icons/Adwaita/22x22/status/
-cp icons/22x22/generic-usb.png $RPM_BUILD_ROOT/usr/share/icons/Adwaita/22x22/devices/generic-usb.png
-cp icons/outdated.png $RPM_BUILD_ROOT/usr/share/icons/Adwaita/22x22/status/
-mkdir -p $RPM_BUILD_ROOT/usr/share/applications
-cp qubes-update-gui.desktop $RPM_BUILD_ROOT/usr/share/applications/
-cp qui/widget-wrapper $RPM_BUILD_ROOT/usr/bin/widget-wrapper
-mkdir -p $RPM_BUILD_ROOT/lib/systemd/user/
-cp linux-systemd/qubes-widget@.service $RPM_BUILD_ROOT/lib/systemd/user/
-mkdir -p $RPM_BUILD_ROOT/usr/share/icons/hicolor/16x16/apps/
-mkdir -p $RPM_BUILD_ROOT/usr/share/icons/hicolor/24x24/apps/
-mkdir -p $RPM_BUILD_ROOT/usr/share/icons/hicolor/32x32/apps/
-mkdir -p $RPM_BUILD_ROOT/usr/share/icons/hicolor/40x40/apps/
-mkdir -p $RPM_BUILD_ROOT/usr/share/icons/hicolor/48x48/apps/
-mkdir -p $RPM_BUILD_ROOT/usr/share/icons/hicolor/72x72/apps/
-mkdir -p $RPM_BUILD_ROOT/usr/share/icons/hicolor/96x96/apps/
-mkdir -p $RPM_BUILD_ROOT/usr/share/icons/hicolor/128x128/apps/
-cp icons/16x16/qui-domains.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/16x16/apps/qui-domains.png
-cp icons/24x24/qui-domains.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/24x24/apps/qui-domains.png
-cp icons/32x32/qui-domains.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/32x32/apps/qui-domains.png
-cp icons/40x40/qui-domains.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/40x40/apps/qui-domains.png
-cp icons/48x48/qui-domains.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/48x48/apps/qui-domains.png
-cp icons/72x72/qui-domains.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/72x72/apps/qui-domains.png
-cp icons/96x96/qui-domains.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/96x96/apps/qui-domains.png
-cp icons/128x128/qui-domains.png $RPM_BUILD_ROOT/usr/share/icons/hicolor/128x128/apps/qui-domains.png
+make install DESTDIR=$RPM_BUILD_ROOT
 
 %post
 touch --no-create %{_datadir}/icons/Adwaita &>/dev/null || :
@@ -155,8 +128,8 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 /usr/share/applications/qubes-update-gui.desktop
 /usr/bin/widget-wrapper
 /lib/systemd/user/qubes-widget@.service
-/usr/locales/en/LC_MESSAGES/desktop-linux-manager.mo
-/usr/locales/pl/LC_MESSAGES/desktop-linux-manager.mo
+/usr/share/locale/en/LC_MESSAGES/desktop-linux-manager.mo
+/usr/share/locale/pl/LC_MESSAGES/desktop-linux-manager.mo
 
 /usr/share/icons/hicolor/16x16/apps/qui-domains.png
 /usr/share/icons/hicolor/24x24/apps/qui-domains.png

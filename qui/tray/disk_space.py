@@ -9,8 +9,7 @@ from qubesadmin.utils import size_to_human
 from qubesadmin import exc
 
 import gettext
-t = gettext.translation("desktop-linux-manager", localedir="/usr/locales",
-                        fallback=True)
+t = gettext.translation("desktop-linux-manager", fallback=True)
 _ = t.gettext
 
 # TODO: add configurable warning levels

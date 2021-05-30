@@ -1,3 +1,43 @@
+qubes-desktop-linux-manager (4.1.8-1) unstable; urgency=medium
+
+  [ Frédéric Pierret (fepitre) ]
+  * Add .gitlab-ci.yml
+
+  [ Marek Marczykowski-Górecki ]
+  * gitlab-ci: add pylint job
+  * Rename 'notify' to 'send_notify' to not clobber GTK method
+
+  [ Marta Marczykowska-Górecka ]
+  * Added scrollbars to qubes-update-gui
+  * Improve outdatedness detection in qui-domains
+
+  [ Frédéric Pierret (fepitre) ]
+  * spec: add BR make
+
+  [ 3hhh ]
+  * domains: Handle removal of VM during on_shutdown.
+  * Make pylint happy
+
+  [ herypt ]
+  * Add updater to XFCE settings manager
+
+  [ Marek Marczykowski-Górecki ]
+  * rpm: build for vm too
+  * Fix installing locales
+  * Move custom install steps into Makefile
+  * Add Debian packaging
+  * rpm: make dependencies CentOS friendly
+  * rpm: skip qubes-mgmt-salt-dom0-update dependency in VM
+  * Start widgets only in dom0 and guivm
+
+  [ Marta Marczykowska-Górecka ]
+  * Added VM restart to qui-domains
+
+  [ Marek Marczykowski-Górecki ]
+  * restart: Use coroutine to call qvm-start, report errors
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 30 May 2021 04:07:32 +0200
+
 qubes-desktop-linux-manager (4.1.7-1) unstable; urgency=low
 
   * Initial release 

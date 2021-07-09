@@ -558,23 +558,23 @@ class DomainTray(Gtk.Application):
         notification.set_priority(Gio.NotificationPriority.NORMAL)
 
         if event == 'domain-start-failed':
-            notification.set_body(_('Domain {} has failed to start: {}').format(
+            notification.set_body(_('Qube {} has failed to start: {}').format(
                 vm.name, kwargs['reason']))
             notification.set_priority(Gio.NotificationPriority.HIGH)
             notification.set_icon(
                 Gio.ThemedIcon.new('dialog-warning'))
         elif event == 'domain-pre-start':
-            notification.set_body(_('Domain {} is starting.').format(vm.name))
+            notification.set_body(_('Qube {} is starting.').format(vm.name))
         elif event == 'domain-start':
-            notification.set_body(_('Domain {} has started.').format(vm.name))
+            notification.set_body(_('Qube {} has started.').format(vm.name))
         elif event == 'domain-pre-shutdown':
             notification.set_body(
-                _('Domain {} is attempting to shutdown.').format(vm.name))
+                _('Qube {} is attempting to shutdown.').format(vm.name))
         elif event == 'domain-shutdown':
-            notification.set_body(_('Domain {} has halted.').format(vm.name))
+            notification.set_body(_('Qube {} has halted.').format(vm.name))
         elif event == 'domain-shutdown-failed':
             notification.set_body(
-                _('Domain {} has failed to shutdown: {}').format(
+                _('Qube {} has failed to shutdown: {}').format(
                     vm.name, kwargs['reason']))
             notification.set_priority(Gio.NotificationPriority.HIGH)
             notification.set_icon(

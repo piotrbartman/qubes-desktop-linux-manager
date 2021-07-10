@@ -1,3 +1,9 @@
+qubes-desktop-linux-manager (4.1.9-1) unstable; urgency=medium
+
+  * Use 'Qube' term in notifications, instead of 'Domain'
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 10 Jul 2021 04:53:35 +0200
+
 qubes-desktop-linux-manager (4.1.8-1) unstable; urgency=medium
 
   [ Frédéric Pierret (fepitre) ]

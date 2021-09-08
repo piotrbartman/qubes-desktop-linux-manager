@@ -90,8 +90,8 @@ class PauseItem(Gtk.ImageMenuItem):
             self.vm.pause()
         except exc.QubesException as ex:
             show_error(_("Error pausing qube"),
-                       _("The following error occurred on an "
-                       "attempt to pause qube {0}:\n{1}").format(
+                       _("The following error occurred while "
+                       "attempting to pause qube {0}:\n{1}").format(
                            self.vm.name, str(ex)))
 
 
@@ -114,7 +114,7 @@ class UnpauseItem(Gtk.ImageMenuItem):
             self.vm.unpause()
         except exc.QubesException as ex:
             show_error(_("Error unpausing qube"),
-                       _("The following error occurred on an attempt "
+                       _("The following error occurred while attempting "
                        "to unpause qube {0}:\n{1}").format(
                            self.vm.name, str(ex)))
 
@@ -139,8 +139,8 @@ class ShutdownItem(Gtk.ImageMenuItem):
             self.vm.shutdown()
         except exc.QubesException as ex:
             show_error(_("Error shutting down qube"),
-                       _("The following error occurred on an attempt to "
-                       "shutdown qube {0}:\n{1}").format(
+                       _("The following error occurred while attempting to "
+                       "shut down qube {0}:\n{1}").format(
                            self.vm.name, str(ex)))
 
 
@@ -176,7 +176,7 @@ class RestartItem(Gtk.ImageMenuItem):
                 raise exc.QubesException(stderr)
         except exc.QubesException as ex:
             show_error(_("Error restarting qube"),
-                       _("The following error occurred on an attempt to "
+                       _("The following error occurred while attempting to "
                        "restart qube {0}:\n{1}").format(
                            self.vm.name, str(ex)))
 
@@ -200,8 +200,8 @@ class KillItem(Gtk.ImageMenuItem):
             self.vm.kill()
         except exc.QubesException as ex:
             show_error(_("Error shutting down qube"),
-                       _("The following error occurred on an attempt to "
-                       "shutdown qube {0}:\n{1}").format(self.vm.name, str(ex)))
+                       _("The following error occurred while attempting to shut"
+                       "down qube {0}:\n{1}").format(self.vm.name, str(ex)))
 
 
 class PreferencesItem(Gtk.ImageMenuItem):
@@ -257,13 +257,13 @@ class RunTerminalItem(Gtk.ImageMenuItem):
             self.vm.run_service('qubes.StartApp+qubes-run-terminal')
         except exc.QubesException as ex:
             show_error(_("Error starting terminal"),
-                       _("The following error occurred on an attempt to "
+                       _("The following error occurred while attempting to "
                        "run terminal {0}:\n{1}").format(self.vm.name, str(ex)))
 
 
 class OpenFileManagerItem(Gtk.ImageMenuItem):
-    """Attempts to open a file manager in the VM. If failed, displayes an
-    error message"""
+    """Attempts to open a file manager in the VM. If fails, displays an
+    error message."""
 
     def __init__(self, vm, icon_cache):
         super().__init__()
@@ -282,7 +282,7 @@ class OpenFileManagerItem(Gtk.ImageMenuItem):
             self.vm.run_service('qubes.StartApp+qubes-open-file-manager')
         except exc.QubesException as ex:
             show_error(_("Error opening file manager"),
-                       _("The following error occurred on an attempt to "
+                       _("The following error occurred while attempting to "
                        "open file manager {0}:\n{1}").format(
                            self.vm.name, str(ex)))
 
@@ -569,12 +569,12 @@ class DomainTray(Gtk.Application):
             notification.set_body(_('Qube {} has started.').format(vm.name))
         elif event == 'domain-pre-shutdown':
             notification.set_body(
-                _('Qube {} is attempting to shutdown.').format(vm.name))
+                _('Qube {} is attempting to shut down.').format(vm.name))
         elif event == 'domain-shutdown':
-            notification.set_body(_('Qube {} has halted.').format(vm.name))
+            notification.set_body(_('Qube {} has shut down.').format(vm.name))
         elif event == 'domain-shutdown-failed':
             notification.set_body(
-                _('Qube {} has failed to shutdown: {}').format(
+                _('Qube {} failed to shut down: {}').format(
                     vm.name, kwargs['reason']))
             notification.set_priority(Gio.NotificationPriority.HIGH)
             notification.set_icon(
@@ -585,12 +585,13 @@ class DomainTray(Gtk.Application):
 
     def emit_paused_notification(self):
         if not self.pause_notification_out:
-            notification = Gio.Notification.new(_("Your VMs have been paused!"))
+            notification = Gio.Notification.new(_("Your qubes have been "
+                "paused!"))
             notification.set_body(_(
-                "All your VMs are currently paused. If this was an accident, "
-                "simply click \"Unpause All\" to un-pause them. Otherwise, "
-                "you can un-pause individual VMs via the Qubes Domains "
-                "tray menu."))
+                "All your qubes are currently paused. If this was an accident, "
+                "simply click \"Unpause All\" to unpause them. Otherwise, "
+                "you can unpause individual qubes via the Qubes Domains "
+                "tray widget."))
             notification.set_icon(
                 Gio.ThemedIcon.new('dialog-warning'))
             notification.add_button(_('Unpause All'), 'app.do-unpause-all')
@@ -884,8 +885,8 @@ def main():
                 None, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK)
             dialog.set_title(_("Houston, we have a problem..."))
             dialog.set_markup(_(
-                "<b>Whoops. A critical error in Domains Widget has occured.</b>"
-                " This is most likely a bug in the widget. The Domains Widget"
+                "<b>Whoops. A critical error in Qubes Domains has occurred.</b>"
+                " This is most likely a bug in the widget. Qubes Domains"
                 " will restart itself."))
             exc_description = "\n<b>{}</b>: {}\n{}".format(
                    exc_type.__name__, exc_value, traceback.format_exc(limit=10)

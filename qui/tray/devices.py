@@ -276,7 +276,7 @@ class DevicesTray(Gtk.Application):
                 self.devices[str(dev)] = dev
                 self.emit_notification(
                     _("Device available"),
-                    _("Device {} is available").format(dev.description),
+                    _("Device {} is available.").format(dev.description),
                     Gio.NotificationPriority.NORMAL,
                     notification_id=(dev.backend_domain +
                                      dev.ident))
@@ -287,7 +287,7 @@ class DevicesTray(Gtk.Application):
         for dev_name in dev_to_remove:
             self.emit_notification(
                 _("Device removed"),
-                _("Device {} is removed").format(
+                _("Device {} has been removed.").format(
                     self.devices[dev_name].description),
                 Gio.NotificationPriority.NORMAL,
                 notification_id=(self.devices[dev_name].backend_domain +
@@ -454,7 +454,7 @@ def main():
                 None, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK)
             dialog.set_title(_("Houston, we have a problem..."))
             dialog.set_markup(_(
-                "<b>Whoops. A critical error in Domains Widget has occured.</b>"
+                "<b>Whoops. A critical error in Qubes Domains has occurred.</b>"
                 " This is most likely a bug in the widget. To restart the "
                 "widget, run 'qui-domains' in dom0."))
             dialog.format_secondary_markup(

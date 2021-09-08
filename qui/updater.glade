@@ -6,7 +6,7 @@
     <property name="can_focus">False</property>
     <property name="hexpand">True</property>
     <property name="vexpand">False</property>
-    <property name="title" translatable="yes">Qubes Updater</property>
+    <property name="title" translatable="yes">Qubes Update</property>
     <child type="titlebar">
       <placeholder/>
     </child>
@@ -56,7 +56,7 @@
                     <property name="valign">start</property>
                     <property name="margin_bottom">10</property>
                     <property name="hexpand">True</property>
-                    <property name="label" translatable="yes">Select templates and qubes to update:</property>
+                    <property name="label" translatable="yes">Select qubes to update:</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -101,7 +101,7 @@
                     <property name="can_focus">False</property>
                     <property name="no_show_all">True</property>
                     <property name="halign">start</property>
-                    <property name="label" translatable="yes">No updates have been found.</property>
+                    <property name="label" translatable="yes">No updates found.</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -111,7 +111,7 @@
                 </child>
                 <child>
                   <object class="GtkCheckButton" id="allow_update_unavailable">
-                    <property name="label" translatable="yes">Enable updates for qubes without known available updates</property>
+                    <property name="label" translatable="yes">Enable updates for qubes without known available updates.</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">False</property>

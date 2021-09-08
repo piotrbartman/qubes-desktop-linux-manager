@@ -203,7 +203,7 @@ class QubesUpdater(Gtk.Application):
                 GObject.idle_add(row.set_status, 'failure')
                 GObject.idle_add(
                     self.append_text_view,
-                    _("Cancelled update for {}\n").format(row.vm.name))
+                    _("Canceled update for {}\n").format(row.vm.name))
                 continue
 
             GObject.idle_add(
@@ -244,7 +244,7 @@ class QubesUpdater(Gtk.Application):
             self.exit_triggered = True
             dialog = Gtk.MessageDialog(
                 self.main_window, Gtk.DialogFlags.MODAL, Gtk.MessageType.OTHER,
-                Gtk.ButtonsType.NONE, _("Cancelling remaining updates..."))
+                Gtk.ButtonsType.NONE, _("Canceling remaining updates..."))
             dialog.show()
             while self.update_thread.is_alive():
                 while Gtk.events_pending():
@@ -313,7 +313,7 @@ class VMListBoxRow(Gtk.ListBoxRow):
                         'dialog-warning', 12, 0))
                 warn_icon.set_tooltip_text(
                     'This qube may have been restored from an older version of '
-                    'Qubes and may not be able to update itself correctly. '
+                    'Qubes OS and may not be able to update itself correctly. '
                     'Please check the documentation if problems occur.')
                 hbox.pack_start(warn_icon, False, False, 0)
         except exc.QubesDaemonCommunicationError:
@@ -367,7 +367,7 @@ class ProgressListBoxRow(Gtk.ListBoxRow):
             widget = Gtk.Image.new_from_icon_name("gtk-cancel",
                                                   Gtk.IconSize.BUTTON)
         else:
-            raise ValueError(_("unknown status {}").format(status))
+            raise ValueError(_("Unknown status {}").format(status))
 
         for child in self.progress_box.get_children():
             self.progress_box.remove(child)

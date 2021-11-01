@@ -1,3 +1,17 @@
+qubes-desktop-linux-manager (4.1.10-1) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * rpm: add BR python3-setuptools
+
+  [ Andrew David Wong ]
+  * Improve language
+
+  [ Marek Marczykowski-Górecki ]
+  * Update update_translations.sh script
+  * Update locale po files.
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 01 Nov 2021 10:59:49 +0100
+
 qubes-desktop-linux-manager (4.1.9-1) unstable; urgency=medium
 
   * Use 'Qube' term in notifications, instead of 'Domain'

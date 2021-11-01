@@ -54,7 +54,7 @@ class UpdatesTray(Gtk.Application):
 
     def setup_menu(self):
         title_label = Gtk.Label(xalign=0)
-        title_label.set_markup(_("<b>Qube Updates Available</b>"))
+        title_label.set_markup(_("<b>Qube updates available</b>"))
         title_menu_item = Gtk.MenuItem()
         title_menu_item.add(title_label)
         title_menu_item.set_sensitive(False)
@@ -145,7 +145,7 @@ class UpdatesTray(Gtk.Application):
             self.vms_needing_update.add(vm)
 
             notification = Gio.Notification.new(
-                _("New updates are available for {}").format(vm.name))
+                _("New updates are available for {}.").format(vm.name))
             notification.set_priority(Gio.NotificationPriority.NORMAL)
             self.send_notification(None, notification)
         elif not value and vm in self.vms_needing_update:
@@ -183,7 +183,7 @@ def main():
                 None, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK)
             dialog.set_title(_("Houston, we have a problem..."))
             dialog.set_markup(_(
-                "<b>Whoops. A critical error in Updates Widget has occured.</b>"
+                "<b>Whoops. A critical error in Qubes Update has occurred.</b>"
                 " This is most likely a bug in the widget. To restart the "
                 "widget, run 'qui-updates' in dom0."))
             dialog.format_secondary_markup(

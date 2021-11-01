@@ -67,19 +67,18 @@ class EventHandler(pyinotify.ProcessEvent):
 
         size = clipboard_formatted_size()
 
-        body = _("Qubes Clipboard fetched from qube: <b>'{0}'</b>\n"
-                 "Copied <b>{1}</b> to the clipboard.\n"
-                 "<small>Press Ctrl-Shift-v to copy this clipboard into "
-                 "destination qube's clipboard.</small>").format(vmname, size)
+        body = _("Clipboard contents fetched from qube: <b>'{0}'</b>\n"
+                 "Copied <b>{1}</b> to the global clipboard.\n"
+                 "<small>Press Ctrl+Shift+V in qube to paste to local"
+                 "clipboard.</small>").format(vmname, size)
 
         self.gtk_app.update_clipboard_contents(vmname, size, message=body)
 
     def _paste(self):
         ''' Sends Paste notification via Gio.Notification.
         '''
-        body = _("Qubes Clipboard has been copied to the qube and wiped.<i/>\n"
-                 "<small>Trigger a paste operation (e.g. Ctrl-v) to insert "
-                 "it into an application.</small>")
+        body = _("Global clipboard contents copied to qube and wiped.<i/>\n"
+                 "<small>Paste normally in qube (e.g. Ctrl+V).</small>")
         self.gtk_app.update_clipboard_contents(message=body)
 
     def process_IN_CLOSE_WRITE(self, _unused):
@@ -137,8 +136,8 @@ class NotificationApp(Gtk.Application):
         self.icon = Gtk.StatusIcon()
         self.icon.set_from_icon_name('edit-copy')
         self.icon.set_tooltip_markup(
-            _('<b>Qubes Clipboard</b>\nInformation about current'
-              ' state of Qubes Clipboard.'))
+            _('<b>Global Clipboard</b>\nInformation about the current'
+              ' state of the global clipboard.'))
         self.icon.connect('button-press-event', self.show_menu)
 
         self.menu = Gtk.Menu()
@@ -175,13 +174,13 @@ class NotificationApp(Gtk.Application):
     def update_clipboard_contents(self, vm=None, size=0, message=None):
         if not vm or not size:
             self.clipboard_label.set_markup(_(
-                "<i>Qubes clipboard is empty</i>"))
+                "<i>Global clipboard is empty</i>"))
             self.icon.set_from_icon_name("edit-copy")
             # todo the icon should be empty and full depending on state
 
         else:
             self.clipboard_label.set_markup(
-                _("<i>Qubes clipboard contents: {0} from "
+                _("<i>Global clipboard contents: {0} from "
                   "<b>{1}</b></i>").format(size, vm))
             self.icon.set_from_icon_name("edit-copy")
 
@@ -207,7 +206,7 @@ class NotificationApp(Gtk.Application):
         self.menu.append(Gtk.SeparatorMenuItem())
 
         help_label = Gtk.Label(xalign=0)
-        help_label.set_markup(_("<i>Use <b>Ctrl+Shift+C</b> to copy, "
+        help_label.set_markup(_("<i>Use <b>Ctrl+Shift+C</b> to copy and "
                                 "<b>Ctrl+Shift+V</b> to paste.</i>"))
         help_item = Gtk.MenuItem()
         help_item.set_margin_left(10)
@@ -226,18 +225,18 @@ class NotificationApp(Gtk.Application):
         text = clipboard.wait_for_text()
 
         if not text:
-            self.send_notify(_("dom0 clipboard is empty!"))
+            self.send_notify(_("Dom0 clipboard is empty!"))
             return
 
         try:
             fd = os.open(APPVIEWER_LOCK, os.O_RDWR | os.O_CREAT, 0o0666)
         except Exception:  # pylint: disable=broad-except
-            self.send_notify(_("Error while accessing Qubes clipboard!"))
+            self.send_notify(_("Error while accessing global clipboard!"))
         else:
             try:
                 fcntl.flock(fd, fcntl.LOCK_EX)
             except Exception:  # pylint: disable=broad-except
-                self.send_notify(_("Error while locking Qubes clipboard!"))
+                self.send_notify(_("Error while locking global clipboard!"))
                 os.close(fd)
             else:
                 try:
@@ -249,13 +248,13 @@ class NotificationApp(Gtk.Application):
                         timestamp.write(str(Gtk.get_current_event_time()))
                 except Exception as ex:  # pylint: disable=broad-except
                     self.send_notify(_("Error while writing to "
-                                  "Qubes clipboard!\n{0}").format(str(ex)))
+                                  "global clipboard!\n{0}").format(str(ex)))
                 fcntl.flock(fd, fcntl.LOCK_UN)
                 os.close(fd)
 
     def send_notify(self, body):
         # pylint: disable=attribute-defined-outside-init
-        notification = Gio.Notification.new(_("Qubes Clipboard"))
+        notification = Gio.Notification.new(_("Global Clipboard"))
         notification.set_body(body)
         notification.set_priority(Gio.NotificationPriority.NORMAL)
         self.send_notification(self.get_application_id(), notification)

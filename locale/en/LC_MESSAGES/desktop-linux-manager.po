@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 4.0.22\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-08 15:38+0100\n"
+"POT-Creation-Date: 2021-11-01 01:55+0100\n"
 "PO-Revision-Date: 2019-10-29 15:34+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -16,100 +16,99 @@ msgstr ""
 #: qui/clipboard.py:70
 #, python-brace-format
 msgid ""
-"Qubes Clipboard fetched from qube: <b>'{0}'</b>\n"
-"Copied <b>{1}</b> to the clipboard.\n"
-"<small>Press Ctrl-Shift-v to copy this clipboard into destination qube's "
-"clipboard.</small>"
+"Clipboard contents fetched from qube: <b>'{0}'</b>\n"
+"Copied <b>{1}</b> to the global clipboard.\n"
+"<small>Press Ctrl+Shift+V in qube to paste to localclipboard.</small>"
 msgstr ""
 
 #: qui/clipboard.py:80
 msgid ""
-"Qubes Clipboard has been copied to the qube and wiped.<i/>\n"
-"<small>Trigger a paste operation (e.g. Ctrl-v) to insert it into an "
-"application.</small>"
+"Global clipboard contents copied to qube and wiped.<i/>\n"
+"<small>Paste normally in qube (e.g. Ctrl+V).</small>"
 msgstr ""
 
-#: qui/clipboard.py:114
+#: qui/clipboard.py:113
 msgid "? bytes"
 msgstr ""
 
-#: qui/clipboard.py:117
+#: qui/clipboard.py:116
 msgid "1 byte"
 msgstr ""
 
-#: qui/clipboard.py:119
+#: qui/clipboard.py:118
 msgid " bytes"
 msgstr ""
 
-#: qui/clipboard.py:140
+#: qui/clipboard.py:139
 msgid ""
-"<b>Qubes Clipboard</b>\n"
-"Information about current state of Qubes Clipboard."
+"<b>Global Clipboard</b>\n"
+"Information about the current state of the global clipboard."
 msgstr ""
 
-#: qui/clipboard.py:178
-msgid "<i>Qubes clipboard is empty</i>"
+#: qui/clipboard.py:177
+msgid "<i>Global clipboard is empty</i>"
 msgstr ""
 
-#: qui/clipboard.py:184
+#: qui/clipboard.py:183
 #, python-brace-format
-msgid "<i>Qubes clipboard contents: {0} from <b>{1}</b></i>"
+msgid "<i>Global clipboard contents: {0} from <b>{1}</b></i>"
 msgstr ""
 
-#: qui/clipboard.py:195
+#: qui/clipboard.py:194
 msgid "<b>Current clipboard</b>"
 msgstr ""
 
-#: qui/clipboard.py:210
-msgid "<i>Use <b>Ctrl+Shift+C</b> to copy, <b>Ctrl+Shift+V</b> to paste.</i>"
+#: qui/clipboard.py:209
+msgid ""
+"<i>Use <b>Ctrl+Shift+C</b> to copy and <b>Ctrl+Shift+V</b> to paste.</i>"
 msgstr ""
 
-#: qui/clipboard.py:220
+#: qui/clipboard.py:219
 msgid "Copy dom0 clipboard"
 msgstr ""
 
-#: qui/clipboard.py:229
-msgid "dom0 clipboard is empty!"
+#: qui/clipboard.py:228
+msgid "Dom0 clipboard is empty!"
 msgstr ""
 
-#: qui/clipboard.py:235
-msgid "Error while accessing Qubes clipboard!"
+#: qui/clipboard.py:234
+msgid "Error while accessing global clipboard!"
 msgstr ""
 
-#: qui/clipboard.py:240
-msgid "Error while locking Qubes clipboard!"
+#: qui/clipboard.py:239
+msgid "Error while locking global clipboard!"
 msgstr ""
 
-#: qui/clipboard.py:251
+#: qui/clipboard.py:250
 #, python-brace-format
 msgid ""
-"Error while writing to Qubes clipboard!\n"
+"Error while writing to global clipboard!\n"
 "{0}"
 msgstr ""
 
-#: qui/clipboard.py:258
-msgid "Qubes Clipboard"
+#: qui/clipboard.py:257
+msgid "Global Clipboard"
 msgstr ""
 
-#: qui/decorators.py:58
+#: qui/decorators.py:59
 msgid "<b>Qube</b>"
 msgstr ""
 
-#: qui/decorators.py:67
+#: qui/decorators.py:68
 msgid "Updates available"
 msgstr ""
 
-#: qui/decorators.py:69
+#: qui/decorators.py:70
 msgid "Qube must be restarted to reflect changes in template"
 msgstr ""
 
-#: qui/decorators.py:101
+#: qui/decorators.py:106
 msgid ""
 "\n"
 "Administrative domain"
 msgstr ""
 
-#: qui/decorators.py:134
+#: qui/decorators.py:140
 #, python-brace-format
 msgid ""
 "\n"
@@ -119,275 +118,346 @@ msgid ""
 "({perc_storage:.1%})</b>"
 msgstr ""
 
-#: qui/decorators.py:145
+#: qui/decorators.py:151
 msgid ""
 "\n"
 "\n"
 "Restart qube to apply changes in template."
 msgstr ""
 
-#: qui/decorators.py:149
+#: qui/decorators.py:155
 msgid ""
 "\n"
 "\n"
 "Updates available."
 msgstr ""
 
-#: qui/decorators.py:167
+#: qui/decorators.py:173
 msgid "<b>CPU</b>"
 msgstr ""
 
-#: qui/decorators.py:185
+#: qui/decorators.py:191
 msgid "<b>RAM</b>"
 msgstr ""
 
-#: qui/updater.py:160
+#: qui/updater.py:167
 msgid "Finish"
 msgstr ""
 
-#: qui/updater.py:199
-msgid "Cancelled update for {}\n"
+#: qui/updater.py:206
+msgid "Canceled update for {}\n"
 msgstr ""
 
-#: qui/updater.py:203
+#: qui/updater.py:210
 msgid "Updating {}\n"
 msgstr ""
 
-#: qui/updater.py:227
+#: qui/updater.py:234
 msgid ""
 "Error on updating {}: {}\n"
 "{}"
 msgstr ""
 
-#: qui/updater.py:240
-msgid "Cancelling remaining updates..."
+#: qui/updater.py:247
+msgid "Canceling remaining updates..."
 msgstr ""
 
-#: qui/updater.py:280
+#: qui/updater.py:287
 #, python-brace-format
 msgid "{vm} (updates available)"
 msgstr ""
 
-#: qui/updater.py:344
-msgid "unknown status {}"
+#: qui/updater.py:370
+msgid "Unknown status {}"
 msgstr ""
 
-#: qui/tray/devices.py:83
+#: qui/tray/devices.py:91
 msgid "Attaching device"
 msgstr ""
 
-#: qui/tray/devices.py:84
+#: qui/tray/devices.py:92
 msgid "Attaching {} to {}"
 msgstr ""
 
-#: qui/tray/devices.py:89 qui/tray/devices.py:112
+#: qui/tray/devices.py:98 qui/tray/devices.py:124
 msgid "Error"
 msgstr ""
 
-#: qui/tray/devices.py:90
+#: qui/tray/devices.py:99
 #, python-brace-format
 msgid "Attaching device {0} to {1} failed. Error: {2} - {3}"
 msgstr ""
 
-#: qui/tray/devices.py:101
+#: qui/tray/devices.py:112
 msgid "Detaching device"
 msgstr ""
 
-#: qui/tray/devices.py:102
+#: qui/tray/devices.py:113
 msgid "Detaching {} from {}"
 msgstr ""
 
-#: qui/tray/devices.py:113
+#: qui/tray/devices.py:125
 #, python-brace-format
 msgid "Detaching device {0} from {1} failed. Error: {2}"
 msgstr ""
 
-#: qui/tray/devices.py:208
+#: qui/tray/devices.py:260
 msgid ""
 "<b>Qubes Devices</b>\n"
 "View and manage devices."
 msgstr ""
 
-#: qui/tray/devices.py:226
+#: qui/tray/devices.py:278
 msgid "Device available"
 msgstr ""
 
-#: qui/tray/devices.py:227
-msgid "Device {} is available"
+#: qui/tray/devices.py:279
+msgid "Device {} is available."
 msgstr ""
 
-#: qui/tray/devices.py:235
+#: qui/tray/devices.py:289
 msgid "Device removed"
 msgstr ""
 
-#: qui/tray/devices.py:236
-msgid "Device {} is removed"
+#: qui/tray/devices.py:290
+msgid "Device {} has been removed."
 msgstr ""
 
-#: qui/tray/devices.py:363 qui/tray/domains.py:773 qui/tray/updates.py:174
+#: qui/tray/devices.py:455 qui/tray/domains.py:886 qui/tray/updates.py:184
 msgid "Houston, we have a problem..."
 msgstr ""
 
-#: qui/tray/devices.py:365 qui/tray/domains.py:775
+#: qui/tray/devices.py:457
 msgid ""
-"<b>Whoops. A critical error in Domains Widget has occured.</b> This is most "
+"<b>Whoops. A critical error in Qubes Domains has occurred.</b> This is most "
 "likely a bug in the widget. To restart the widget, run 'qui-domains' in dom0."
 msgstr ""
 
-#: qui/tray/disk_space.py:38
+#: qui/tray/disk_space.py:96
+msgid "Open Qube Settings"
+msgstr ""
+
+#: qui/tray/disk_space.py:111
+msgid "Do not show notifications about this qube"
+msgstr ""
+
+#: qui/tray/disk_space.py:169
 msgid ""
 "\n"
 "{:.1%} space left in pool {}"
 msgstr ""
 
-#: qui/tray/disk_space.py:115
-msgid ""
-"<b>Qubes Disk Space Monitor</b>\n"
-"WARNING! You are running out of disk space."
-msgstr ""
-
-#: qui/tray/disk_space.py:120
+#: qui/tray/disk_space.py:337
 msgid "Disk usage warning!"
 msgstr ""
 
-#: qui/tray/disk_space.py:123
+#: qui/tray/disk_space.py:338
 msgid "You are running out of disk space."
 msgstr ""
 
-#: qui/tray/disk_space.py:133
+#: qui/tray/disk_space.py:354
+msgid "Qube usage warning"
+msgstr ""
+
+#: qui/tray/disk_space.py:355
+msgid "Qube {} is running out of storage space."
+msgstr ""
+
+#: qui/tray/disk_space.py:367
+msgid ""
+"<b>Qubes Disk Space Monitor</b>\n"
+"\n"
+"WARNING!"
+msgstr ""
+
+#: qui/tray/disk_space.py:378
 msgid ""
 "<b>Qubes Disk Space Monitor</b>\n"
 "View free disk space."
 msgstr ""
 
-#: qui/tray/disk_space.py:146
-msgid "<b>Volumes</b>"
+#: qui/tray/disk_space.py:427
+msgid "<b>{}</b>"
 msgstr ""
 
-#: qui/tray/disk_space.py:176
+#: qui/tray/disk_space.py:438
 msgid "<b>Total disk usage</b>"
 msgstr ""
 
-#: qui/tray/domains.py:80
-msgid "Pause"
+#: qui/tray/domains.py:84
+msgid "Emergency pause"
 msgstr ""
 
-#: qui/tray/domains.py:88
+#: qui/tray/domains.py:92
 msgid "Error pausing qube"
 msgstr ""
 
-#: qui/tray/domains.py:89
+#: qui/tray/domains.py:93
 #, python-brace-format
 msgid ""
-"The following error occurred when on an attempt to pause qube {0}:\n"
+"The following error occurred while attempting to pause qube {0}:\n"
 "{1}"
 msgstr ""
 
-#: qui/tray/domains.py:104
+#: qui/tray/domains.py:108
 msgid "Unpause"
 msgstr ""
 
-#: qui/tray/domains.py:112
+#: qui/tray/domains.py:116
 msgid "Error unpausing qube"
 msgstr ""
 
-#: qui/tray/domains.py:113
+#: qui/tray/domains.py:117
 #, python-brace-format
 msgid ""
-"The following error occurred when on an attempt to unpause qube {0}:\n"
+"The following error occurred while attempting to unpause qube {0}:\n"
 "{1}"
 msgstr ""
 
-#: qui/tray/domains.py:129
+#: qui/tray/domains.py:133
 msgid "Shutdown"
 msgstr ""
 
-#: qui/tray/domains.py:137 qui/tray/domains.py:161
+#: qui/tray/domains.py:141 qui/tray/domains.py:202
 msgid "Error shutting down qube"
 msgstr ""
 
-#: qui/tray/domains.py:138 qui/tray/domains.py:162
+#: qui/tray/domains.py:142
 #, python-brace-format
 msgid ""
-"The following error occurred when on an attempt to shutdown qube {0}:\n"
+"The following error occurred while attempting to shut down qube {0}:\n"
 "{1}"
 msgstr ""
 
-#: qui/tray/domains.py:153
+#: qui/tray/domains.py:159
+msgid "Restart"
+msgstr ""
+
+#: qui/tray/domains.py:178
+msgid "Error restarting qube"
+msgstr ""
+
+#: qui/tray/domains.py:179
+#, python-brace-format
+msgid ""
+"The following error occurred while attempting to restart qube {0}:\n"
+"{1}"
+msgstr ""
+
+#: qui/tray/domains.py:194
 msgid "Kill"
 msgstr ""
 
-#: qui/tray/domains.py:176
+#: qui/tray/domains.py:203
+#, python-brace-format
+msgid ""
+"The following error occurred while attempting to shutdown qube {0}:\n"
+"{1}"
+msgstr ""
+
+#: qui/tray/domains.py:217
 msgid "Settings"
 msgstr ""
 
-#: qui/tray/domains.py:210
+#: qui/tray/domains.py:251
 msgid "Run Terminal"
 msgstr ""
 
 #: qui/tray/domains.py:259
-msgid "Console Log"
+msgid "Error starting terminal"
 msgstr ""
 
-#: qui/tray/domains.py:261
-msgid "QEMU Console Log"
+#: qui/tray/domains.py:260
+#, python-brace-format
+msgid ""
+"The following error occurred while attempting to run terminal {0}:\n"
+"{1}"
+msgstr ""
+
+#: qui/tray/domains.py:276
+msgid "Open File Manager"
+msgstr ""
+
+#: qui/tray/domains.py:284
+msgid "Error opening file manager"
 msgstr ""
 
 #: qui/tray/domains.py:285
+#, python-brace-format
+msgid ""
+"The following error occurred while attempting to open file manager {0}:\n"
+"{1}"
+msgstr ""
+
+#: qui/tray/domains.py:333
+msgid "Console Log"
+msgstr ""
+
+#: qui/tray/domains.py:335
+msgid "QEMU Console Log"
+msgstr ""
+
+#: qui/tray/domains.py:359
 msgid "Open Qube Manager"
 msgstr ""
 
-#: qui/tray/domains.py:421
+#: qui/tray/domains.py:492
 msgid ""
 "<b>Qubes Domains</b>\n"
 "View and manage running domains."
 msgstr ""
 
-#: qui/tray/domains.py:486
+#: qui/tray/domains.py:557
 msgid "Qube Status: {}"
 msgstr ""
 
-#: qui/tray/domains.py:490
-msgid "Domain {} has failed to start: {}"
+#: qui/tray/domains.py:561
+msgid "Qube {} has failed to start: {}"
 msgstr ""
 
-#: qui/tray/domains.py:496
-msgid "Domain {} is starting."
+#: qui/tray/domains.py:567
+msgid "Qube {} is starting."
 msgstr ""
 
-#: qui/tray/domains.py:498
-msgid "Domain {} has started."
+#: qui/tray/domains.py:569
+msgid "Qube {} has started."
 msgstr ""
 
-#: qui/tray/domains.py:501
-msgid "Domain {} is attempting to shutdown."
+#: qui/tray/domains.py:572
+msgid "Qube {} is attempting to shut down."
 msgstr ""
 
-#: qui/tray/domains.py:503
-msgid "Domain {} has halted."
+#: qui/tray/domains.py:574
+msgid "Qube {} has shut down."
 msgstr ""
 
-#: qui/tray/domains.py:506
-msgid "Domain {} has failed to shutdown: {}"
+#: qui/tray/domains.py:577
+msgid "Qube {} failed to shut down: {}"
 msgstr ""
 
-#: qui/tray/domains.py:517
-msgid "Your VMs have been paused!"
+#: qui/tray/domains.py:588
+msgid "Your qubes have been paused!"
 msgstr ""
 
-#: qui/tray/domains.py:519
+#: qui/tray/domains.py:591
 msgid ""
-"All your VMs are currently paused. If this was an accident, simply click "
-"\"Unpause All\" to un-pause them. Otherwise, you can un-pause individual VMs "
-"via the Qubes Domains tray menu."
+"All your qubes are currently paused. If this was an accident, simply click "
+"\"Unpause All\" to unpause them. Otherwise, you can unpause individual qubes "
+"via the Qubes Domains tray widget."
 msgstr ""
 
-#: qui/tray/domains.py:525
+#: qui/tray/domains.py:597
 msgid "Unpause All"
 msgstr ""
 
-#: qui/tray/domains.py:629
+#: qui/tray/domains.py:737
 msgid "Unexpected property access error"
+msgstr ""
+
+#: qui/tray/domains.py:888
+msgid ""
+"<b>Whoops. A critical error in Qubes Domains has occurred.</b> This is most "
+"likely a bug in the widget. Qubes Domains will restart itself."
 msgstr ""
 
 #: qui/tray/updates.py:43
@@ -397,7 +467,7 @@ msgid ""
 msgstr ""
 
 #: qui/tray/updates.py:57
-msgid "<b>Qube Updates Available</b>"
+msgid "<b>Qube updates available</b>"
 msgstr ""
 
 #: qui/tray/updates.py:64
@@ -408,18 +478,18 @@ msgstr ""
 msgid "Launch updater"
 msgstr ""
 
-#: qui/tray/updates.py:138
-msgid "New updates are available for {}"
+#: qui/tray/updates.py:148
+msgid "New updates are available for {}."
 msgstr ""
 
-#: qui/tray/updates.py:176
+#: qui/tray/updates.py:186
 msgid ""
-"<b>Whoops. A critical error in Updates Widget has occured.</b> This is most "
+"<b>Whoops. A critical error in Qubes Update has occurred.</b> This is most "
 "likely a bug in the widget. To restart the widget, run 'qui-updates' in dom0."
 msgstr ""
 
 #: qui/updater.glade:9
-msgid "Qubes Updater"
+msgid "Qubes Update"
 msgstr ""
 
 #: qui/updater.glade:27
@@ -427,33 +497,33 @@ msgid "Next"
 msgstr ""
 
 #: qui/updater.glade:59
-msgid "Select templates and qubes to update:"
+msgid "Select qubes to update:"
 msgstr ""
 
-#: qui/updater.glade:91
-msgid "No updates have been found."
+#: qui/updater.glade:104
+msgid "No updates found."
 msgstr ""
 
-#: qui/updater.glade:101
-msgid "Enable updates for qubes without known available updates"
-msgstr ""
-
-#: qui/updater.glade:116
-msgid "Qube list"
+#: qui/updater.glade:114
+msgid "Enable updates for qubes without known available updates."
 msgstr ""
 
 #: qui/updater.glade:129
+msgid "Qube list"
+msgstr ""
+
+#: qui/updater.glade:142
 msgid "Update progress:"
 msgstr ""
 
-#: qui/updater.glade:183
+#: qui/updater.glade:196
 msgid "Details"
 msgstr ""
 
-#: qui/updater.glade:238
+#: qui/updater.glade:251
 msgid "page0"
 msgstr ""
 
-#: qui/updater.glade:251
+#: qui/updater.glade:264
 msgid "Cancel"
 msgstr ""

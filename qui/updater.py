@@ -244,7 +244,9 @@ class QubesUpdater(Gtk.Application):
             self.exit_triggered = True
             dialog = Gtk.MessageDialog(
                 self.main_window, Gtk.DialogFlags.MODAL, Gtk.MessageType.OTHER,
-                Gtk.ButtonsType.NONE, _("Canceling remaining updates..."))
+                Gtk.ButtonsType.NONE, _(
+                    "Waiting for current qube to finish updating."
+                    " Updates for remaining qubes have been cancelled."))
             dialog.show()
             while self.update_thread.is_alive():
                 while Gtk.events_pending():

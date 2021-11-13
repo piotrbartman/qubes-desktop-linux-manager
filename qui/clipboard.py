@@ -73,8 +73,9 @@ class EventHandler(pyinotify.ProcessEvent):
         ''' Sends Copy notification via Gio.Notification
         '''
         if vmname is None:
-            with open(FROM, 'r') as vm_from_file:
-                vmname = vm_from_file.readline().strip('\n')
+            with appviewer_lock():
+                with open(FROM, 'r') as vm_from_file:
+                    vmname = vm_from_file.readline().strip('\n')
 
         size = clipboard_formatted_size()
 
@@ -94,8 +95,9 @@ class EventHandler(pyinotify.ProcessEvent):
 
     def process_IN_CLOSE_WRITE(self, _unused):
         ''' Reacts to modifications of the FROM file '''
-        with open(FROM, 'r') as vm_from_file:
-            vmname = vm_from_file.readline().strip('\n')
+        with appviewer_lock():
+            with open(FROM, 'r') as vm_from_file:
+                vmname = vm_from_file.readline().strip('\n')
         if vmname == "":
             self._paste()
         else:

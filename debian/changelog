@@ -1,3 +1,14 @@
+qubes-desktop-linux-manager (4.1.11-1) unstable; urgency=medium
+
+  [ Marta Marczykowska-Górecka ]
+  * Make message about cancelling updates more understandable
+
+  [ Marek Marczykowski-Górecki ]
+  * Factor out appviewer lock to context manager
+  * Guard reading clipboard source name with a lock
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 10 Dec 2021 02:42:13 +0100
+
 qubes-desktop-linux-manager (4.1.10-1) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]

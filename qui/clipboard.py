@@ -27,6 +27,7 @@ via Qubes RPC '''
 # pylint: disable=invalid-name,wrong-import-position
 
 import asyncio
+import contextlib
 import math
 import os
 import fcntl
@@ -51,6 +52,16 @@ XEVENT = "/var/run/qubes/qubes-clipboard.bin.xevent"
 APPVIEWER_LOCK = "/var/run/qubes/appviewer.lock"
 
 
+@contextlib.contextmanager
+def appviewer_lock():
+    fd = os.open(APPVIEWER_LOCK, os.O_RDWR | os.O_CREAT, 0o0666)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        yield
+    finally:
+        fcntl.flock(fd, fcntl.LOCK_UN)
+
+
 class EventHandler(pyinotify.ProcessEvent):
     # pylint: disable=arguments-differ
     def my_init(self, loop=None, gtk_app=None):
@@ -62,8 +73,9 @@ class EventHandler(pyinotify.ProcessEvent):
         ''' Sends Copy notification via Gio.Notification
         '''
         if vmname is None:
-            with open(FROM, 'r') as vm_from_file:
-                vmname = vm_from_file.readline().strip('\n')
+            with appviewer_lock():
+                with open(FROM, 'r') as vm_from_file:
+                    vmname = vm_from_file.readline().strip('\n')
 
         size = clipboard_formatted_size()
 
@@ -83,8 +95,9 @@ class EventHandler(pyinotify.ProcessEvent):
 
     def process_IN_CLOSE_WRITE(self, _unused):
         ''' Reacts to modifications of the FROM file '''
-        with open(FROM, 'r') as vm_from_file:
-            vmname = vm_from_file.readline().strip('\n')
+        with appviewer_lock():
+            with open(FROM, 'r') as vm_from_file:
+                vmname = vm_from_file.readline().strip('\n')
         if vmname == "":
             self._paste()
         else:
@@ -229,28 +242,15 @@ class NotificationApp(Gtk.Application):
             return
 
         try:
-            fd = os.open(APPVIEWER_LOCK, os.O_RDWR | os.O_CREAT, 0o0666)
+            with appviewer_lock():
+                with open(DATA, "w") as contents:
+                    contents.write(text)
+                with open(FROM, "w") as source:
+                    source.write("dom0")
+                with open(XEVENT, "w") as timestamp:
+                    timestamp.write(str(Gtk.get_current_event_time()))
         except Exception:  # pylint: disable=broad-except
             self.send_notify(_("Error while accessing global clipboard!"))
-        else:
-            try:
-                fcntl.flock(fd, fcntl.LOCK_EX)
-            except Exception:  # pylint: disable=broad-except
-                self.send_notify(_("Error while locking global clipboard!"))
-                os.close(fd)
-            else:
-                try:
-                    with open(DATA, "w") as contents:
-                        contents.write(text)
-                    with open(FROM, "w") as source:
-                        source.write("dom0")
-                    with open(XEVENT, "w") as timestamp:
-                        timestamp.write(str(Gtk.get_current_event_time()))
-                except Exception as ex:  # pylint: disable=broad-except
-                    self.send_notify(_("Error while writing to "
-                                  "global clipboard!\n{0}").format(str(ex)))
-                fcntl.flock(fd, fcntl.LOCK_UN)
-                os.close(fd)
 
     def send_notify(self, body):
         # pylint: disable=attribute-defined-outside-init

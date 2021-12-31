@@ -49,6 +49,7 @@ BuildRequires:  gettext
 
 Requires:  python%{python3_pkgversion}-setuptools
 Requires:  python%{python3_pkgversion}-gbulb
+Requires:  python%{python3_pkgversion}-inotify
 Requires:  libappindicator-gtk3
 Requires:  python%{python3_pkgversion}-systemd
 Requires:  gtk3

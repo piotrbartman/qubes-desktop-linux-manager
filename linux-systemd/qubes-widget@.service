@@ -1,5 +1,5 @@
 [Unit]
-Description=Qubes Widet service
+Description=Qubes Widget service
 StartLimitIntervalSec=5
 
 [Service]

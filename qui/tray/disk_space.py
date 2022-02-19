@@ -54,7 +54,8 @@ class VMUsageData:
                     usage_data = VMUsage(vm)
                     if usage_data.problem_volumes:
                         self.problematic_vms.append(usage_data)
-            except exc.QubesPropertyAccessError:
+            except (exc.QubesPropertyAccessError,
+                    exc.QubesVMNotFoundError) :
                 continue
 
     def get_vms_widgets(self):

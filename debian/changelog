@@ -1,3 +1,19 @@
+qubes-desktop-linux-manager (4.1.12-1) unstable; urgency=medium
+
+  [ Demi Marie Obenour ]
+  * Fix typo: widet -> widget
+  * Add missing dependency of the clipboard widget
+
+  [ AmCrNi ]
+  * Update disk_space.py
+  * Update disk_space.py
+
+  [ Marek Marczykowski-Górecki ]
+  * Fix trailing space
+  * Missing "fixes" tag
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 19 Feb 2022 04:12:15 +0100
+
 qubes-desktop-linux-manager (4.1.11-1) unstable; urgency=medium
 
   [ Marta Marczykowska-Górecka ]

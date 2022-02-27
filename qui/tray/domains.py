@@ -298,7 +298,8 @@ class StartedMenu(Gtk.Menu):
         self.add(PreferencesItem(self.vm, icon_cache))
         self.add(PauseItem(self.vm, icon_cache))
         self.add(ShutdownItem(self.vm, self.app, icon_cache))
-        self.add(RestartItem(self.vm, self.app, icon_cache))
+        if self.vm.klass != 'DispVM' or not self.vm.auto_cleanup:
+            self.add(RestartItem(self.vm, self.app, icon_cache))
         self.add(RunTerminalItem(self.vm, icon_cache))
         self.add(OpenFileManagerItem(self.vm, icon_cache))
 

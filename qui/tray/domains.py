@@ -316,7 +316,6 @@ class PausedMenu(Gtk.Menu):
         self.add(PreferencesItem(self.vm, icon_cache))
         self.add(UnpauseItem(self.vm, icon_cache))
         self.add(KillItem(self.vm, icon_cache))
-        self.add(RunTerminalItem(self.vm, icon_cache))
 
         self.show_all()
 

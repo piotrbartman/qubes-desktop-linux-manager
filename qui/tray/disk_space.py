@@ -101,6 +101,7 @@ class SettingsItem(Gtk.MenuItem):
 
 def launch_preferences_dialog(_, vm):
     vm = str(vm).strip('\'')
+    # pylint: disable=consider-using-with
     subprocess.Popen(['qubes-vm-settings', vm])
 
 

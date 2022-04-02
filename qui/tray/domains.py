@@ -219,6 +219,7 @@ class PreferencesItem(Gtk.ImageMenuItem):
         self.connect('activate', self.launch_preferences_dialog)
 
     def launch_preferences_dialog(self, _item):
+        # pylint: disable=consider-using-with
         subprocess.Popen(['qubes-vm-settings', self.vm.name])
 
 
@@ -236,6 +237,7 @@ class LogItem(Gtk.ImageMenuItem):
         self.connect('activate', self.launch_log_viewer)
 
     def launch_log_viewer(self, *_args, **_kwargs):
+        # pylint: disable=consider-using-with
         subprocess.Popen(['qubes-log-viewer', self.path])
 
 
@@ -346,6 +348,7 @@ class DebugMenu(Gtk.Menu):
 
 
 def run_manager(_item):
+    # pylint: disable=consider-using-with
     subprocess.Popen(['qubes-qube-manager'])
 
 

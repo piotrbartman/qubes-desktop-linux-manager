@@ -90,6 +90,7 @@ class UpdatesTray(Gtk.Application):
 
     @staticmethod
     def launch_updater(*_args, **_kwargs):
+        # pylint: disable=consider-using-with
         subprocess.Popen(['qubes-update-gui'])
 
     def check_vms_needing_update(self):

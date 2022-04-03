@@ -1,3 +1,19 @@
+qubes-desktop-linux-manager (4.1.13-1) unstable; urgency=medium
+
+  [ Rusty Bird ]
+  * domains: hide Restart action for auto_cleanup DispVM
+  * domains: hide Run Terminal action in paused submenu
+  * domains: don't put routine actions next to dangerous actions
+
+  [ unman ]
+  * Dont error on os.makedirs if the directory already exists
+
+  [ Marek Marczykowski-Górecki ]
+  * Ignore pylint's consider-using-with
+  * Refresh domains states when events connection is established
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 03 Apr 2022 05:59:28 +0200
+
 qubes-desktop-linux-manager (4.1.12-1) unstable; urgency=medium
 
   [ Demi Marie Obenour ]

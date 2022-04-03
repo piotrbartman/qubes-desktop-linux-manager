@@ -513,6 +513,7 @@ class DomainTray(Gtk.Application):
         self.register()  # register Gtk Application
 
     def register_events(self):
+        self.dispatcher.add_handler('connection-established', self.refresh_all)
         self.dispatcher.add_handler('domain-pre-start', self.update_domain_item)
         self.dispatcher.add_handler('domain-start', self.update_domain_item)
         self.dispatcher.add_handler('domain-start-failed',
@@ -805,10 +806,19 @@ class DomainTray(Gtk.Application):
 
         self.connect('shutdown', self._disconnect_signals)
 
+    def refresh_all(self, _subject, _event, **_kwargs):
+        for vm in self.menu_items:
+            if vm not in self.qapp.domains:
+                self.remove_domain_item(None, None, vm)
+        for vm in self.qapp.domains:
+            self.update_domain_item(vm, '')
+
     def run(self):  # pylint: disable=arguments-differ
         self.initialize_menu()
 
     def _disconnect_signals(self, _event):
+        self.dispatcher.remove_handler('connection-established',
+                                       self.refresh_all)
         self.dispatcher.remove_handler('domain-pre-start',
                                        self.update_domain_item)
         self.dispatcher.remove_handler('domain-start', self.update_domain_item)

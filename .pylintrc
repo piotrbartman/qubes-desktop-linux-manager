@@ -20,6 +20,7 @@ disable=
   logging-format-interpolation,
   missing-docstring,
   too-few-public-methods,
+  consider-using-f-string,
   star-args,
   useless-super-delegation,
   wrong-import-order

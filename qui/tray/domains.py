@@ -53,7 +53,7 @@ class IconCache:
         self.icons = {}
 
     def get_icon(self, icon_name):
-        if icon_name in self.icons.keys():
+        if icon_name in self.icons:
             icon = self.icons[icon_name]
         else:
             icon = Gtk.IconTheme.get_default().load_icon(
@@ -171,7 +171,7 @@ class RestartItem(Gtk.ImageMenuItem):
                 await asyncio.sleep(1)
             proc = await asyncio.create_subprocess_exec(
                 'qvm-start', self.vm.name, stderr=subprocess.PIPE)
-            _, stderr = await proc.communicate()
+            _stdout, stderr = await proc.communicate()
             if proc.returncode != 0:
                 raise exc.QubesException(stderr)
         except exc.QubesException as ex:

@@ -74,7 +74,7 @@ class EventHandler(pyinotify.ProcessEvent):
         '''
         if vmname is None:
             with appviewer_lock():
-                with open(FROM, 'r') as vm_from_file:
+                with open(FROM, 'r', encoding='ascii') as vm_from_file:
                     vmname = vm_from_file.readline().strip('\n')
 
         size = clipboard_formatted_size()
@@ -96,7 +96,7 @@ class EventHandler(pyinotify.ProcessEvent):
     def process_IN_CLOSE_WRITE(self, _unused):
         ''' Reacts to modifications of the FROM file '''
         with appviewer_lock():
-            with open(FROM, 'r') as vm_from_file:
+            with open(FROM, 'r', encoding='ascii') as vm_from_file:
                 vmname = vm_from_file.readline().strip('\n')
         if vmname == "":
             self._paste()
@@ -243,11 +243,11 @@ class NotificationApp(Gtk.Application):
 
         try:
             with appviewer_lock():
-                with open(DATA, "w") as contents:
+                with open(DATA, "w", encoding='utf-8') as contents:
                     contents.write(text)
-                with open(FROM, "w") as source:
+                with open(FROM, "w", encoding='ascii') as source:
                     source.write("dom0")
-                with open(XEVENT, "w") as timestamp:
+                with open(XEVENT, "w", encoding='ascii') as timestamp:
                     timestamp.write(str(Gtk.get_current_event_time()))
         except Exception:  # pylint: disable=broad-except
             self.send_notify(_("Error while accessing global clipboard!"))

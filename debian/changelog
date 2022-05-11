@@ -1,3 +1,20 @@
+qubes-desktop-linux-manager (4.1.14-1) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * Adjust for updated pylint
+
+  [ Frédéric Pierret (fepitre) ]
+  * Drop Travis CI
+
+  [ noskb ]
+  * clipboard: Close fd properly
+
+  [ Frédéric Pierret (fepitre) ]
+  * Add Qubes Builder v2 integration
+  * .qubesbuilder: replace 'spec' by 'build'
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Thu, 12 May 2022 00:49:38 +0200
+
 qubes-desktop-linux-manager (4.1.13-1) unstable; urgency=medium
 
   [ Rusty Bird ]

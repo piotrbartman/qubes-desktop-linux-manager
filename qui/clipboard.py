@@ -60,7 +60,7 @@ def appviewer_lock():
         yield
     finally:
         fcntl.flock(fd, fcntl.LOCK_UN)
-
+        os.close(fd)
 
 class EventHandler(pyinotify.ProcessEvent):
     # pylint: disable=arguments-differ

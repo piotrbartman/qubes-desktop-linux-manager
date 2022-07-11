@@ -415,7 +415,7 @@ class DevicesTray(Gtk.Application):
             if i > 0 and item.device.devclass != \
                     menu_items[i-1].device.devclass:
                 tray_menu.add(
-                    DevclassHeaderMenuItem(menu_items[i].device.devclass))
+                    DevclassHeaderMenuItem(item.device.devclass))
             tray_menu.add(item)
 
         tray_menu.show_all()

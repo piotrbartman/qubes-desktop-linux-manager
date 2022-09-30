@@ -6,7 +6,7 @@ containing helpful representation methods.
 
 import gi  # isort:skip
 gi.require_version('Gtk', '3.0')  # isort:skip
-from gi.repository import Gtk, Pango  # isort:skip
+from gi.repository import Gtk, Pango, GLib, GdkPixbuf  # isort:skip
 from qubesadmin import exc
 from qubesadmin.utils import size_to_human
 
@@ -290,6 +290,20 @@ def device_domain_hbox(vm, attached: bool) -> Gtk.Box:
 
 
 def create_icon(name) -> Gtk.Image:
-    ''' Create an icon from string '''
-    icon_dev = Gtk.IconTheme.get_default().load_icon(name, 16, 0)
-    return Gtk.Image.new_from_pixbuf(icon_dev)
+    """" Create an icon from string; tries for both the normal and -symbolic
+     variants, because some themes only have the symbolic variant. If not
+     found, outputs a blank icon."""
+
+    names = [name, f'{name}-symbolic']
+    pixbuf = None
+    for icon_name in names:
+        try:
+            pixbuf = Gtk.IconTheme.get_default().load_icon(icon_name, 16, 0)
+            break
+        except (TypeError, GLib.Error):
+            continue
+    if not pixbuf:
+        pixbuf = GdkPixbuf.Pixbuf.new(GdkPixbuf.Colorspace.RGB, True, 8, 16, 16)
+        pixbuf.fill(0x000)
+
+    return Gtk.Image.new_from_pixbuf(pixbuf)

@@ -10,11 +10,11 @@ import traceback
 
 import qubesadmin
 import qubesadmin.events
+import qui.utils
+import qui.decorators
 
 from qubesadmin import exc
-from html import escape
 
-import qui.decorators
 import gi  # isort:skip
 gi.require_version('Gtk', '3.0')  # isort:skip
 from gi.repository import Gio, Gtk, GObject  # isort:skip
@@ -884,30 +884,8 @@ def main():
         asyncio.ensure_future(stats_dispatcher.listen_for_events()),
     ]
 
-    done, _unused = loop.run_until_complete(asyncio.wait(
-            tasks, return_when=asyncio.FIRST_EXCEPTION))
-
-    exit_code = 0
-
-    for d in done:  # pylint: disable=invalid-name
-        try:
-            d.result()
-        except Exception as _ex:  # pylint: disable=broad-except
-            exc_type, exc_value = sys.exc_info()[:2]
-            dialog = Gtk.MessageDialog(
-                None, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK)
-            dialog.set_title(_("Houston, we have a problem..."))
-            dialog.set_markup(_(
-                "<b>Whoops. A critical error in Qubes Domains has occurred.</b>"
-                " This is most likely a bug in the widget. Qubes Domains"
-                " will restart itself."))
-            exc_description = "\n<b>{}</b>: {}\n{}".format(
-                   exc_type.__name__, exc_value, traceback.format_exc(limit=10)
-                )
-            dialog.format_secondary_markup(escape(exc_description))
-            dialog.run()
-            exit_code = 1
-    return exit_code
+    return qui.utils.run_asyncio_and_show_errors(loop, tasks,
+                                                 "Qubes Domains Widget")
 
 
 if __name__ == '__main__':

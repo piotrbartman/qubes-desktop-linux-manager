@@ -30,8 +30,6 @@ import asyncio
 import contextlib
 import math
 import os
-import sys
-import traceback
 import fcntl
 import qubesadmin
 import qubesadmin.events
@@ -46,6 +44,8 @@ import pyinotify
 import gettext
 t = gettext.translation("desktop-linux-manager", fallback=True)
 _ = t.gettext
+
+from .utils import run_asyncio_and_show_errors
 
 gbulb.install()
 
@@ -311,31 +311,8 @@ def main():
     handler = EventHandler(loop=loop, gtk_app=gtk_app)
     pyinotify.AsyncioNotifier(wm, loop, default_proc_fun=handler)
 
-    done, _unused = loop.run_until_complete(asyncio.ensure_future(
-        dispatcher.listen_for_events()))
-
-    exit_code = 0
-
-    for d in done:  # pylint: disable=invalid-name
-        try:
-            d.result()
-        except Exception:  # pylint: disable=broad-except
-            exc_type, exc_value = sys.exc_info()[:2]
-            dialog = Gtk.MessageDialog(
-                None, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK)
-            dialog.set_title(_("Houston, we have a problem..."))
-            dialog.set_markup(_(
-                "<b>Whoops. A critical error in Qubes Update has occurred.</b>"
-                " This is most likely a bug in the widget. To restart the "
-                "widget, run 'qui-updates' in dom0."))
-            # pylint: disable=consider-using-f-string
-            dialog.format_secondary_markup(
-                "\n<b>{}</b>: {}\n{}".format(
-                   exc_type.__name__, exc_value, traceback.format_exc(limit=10)
-                ))
-            dialog.run()
-            exit_code = 1
-    return exit_code
+    return run_asyncio_and_show_errors(loop, [asyncio.ensure_future(
+        dispatcher.listen_for_events())], "Qubes Clipboard Widget")
 
 
 if __name__ == '__main__':

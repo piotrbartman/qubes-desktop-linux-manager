@@ -14,6 +14,7 @@ import qubesadmin.events
 import qubesadmin.devices
 import qubesadmin.exc
 import qui.decorators
+import qui.utils
 
 import gbulb
 gbulb.install()
@@ -440,31 +441,11 @@ def main():
         'org.qubes.qui.tray.Devices', qapp, dispatcher)
 
     loop = asyncio.get_event_loop()
-
-    done, _unused = loop.run_until_complete(asyncio.ensure_future(
-        dispatcher.listen_for_events()))
-
-    exit_code = 0
-    for d in done:  # pylint: disable=invalid-name
-        try:
-            d.result()
-        except Exception:  # pylint: disable=broad-except
-            exc_type, exc_value = sys.exc_info()[:2]
-            dialog = Gtk.MessageDialog(
-                None, 0, Gtk.MessageType.ERROR, Gtk.ButtonsType.OK)
-            dialog.set_title(_("Houston, we have a problem..."))
-            dialog.set_markup(_(
-                "<b>Whoops. A critical error in Qubes Domains has occurred.</b>"
-                " This is most likely a bug in the widget. To restart the "
-                "widget, run 'qui-domains' in dom0."))
-            dialog.format_secondary_markup(
-                "\n<b>{}</b>: {}\n{}".format(
-                   exc_type.__name__, exc_value, traceback.format_exc(limit=10)
-                ))
-            dialog.run()
-            exit_code = 1
+    return_code = qui.utils.run_asyncio_and_show_errors(
+        loop, [asyncio.ensure_future(dispatcher.listen_for_events())],
+    "Qubes Devices Widget")
     del app
-    return exit_code
+    return return_code
 
 
 if __name__ == '__main__':

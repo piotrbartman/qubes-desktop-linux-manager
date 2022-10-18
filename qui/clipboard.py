@@ -31,6 +31,8 @@ import contextlib
 import math
 import os
 import fcntl
+import qubesadmin
+import qubesadmin.events
 
 import gi
 gi.require_version('Gtk', '3.0')  # isort:skip
@@ -43,6 +45,8 @@ import gettext
 t = gettext.translation("desktop-linux-manager", fallback=True)
 _ = t.gettext
 
+from .utils import run_asyncio_and_show_errors
+
 gbulb.install()
 
 DATA = "/var/run/qubes/qubes-clipboard.bin"
@@ -50,6 +54,8 @@ FROM = "/var/run/qubes/qubes-clipboard.bin.source"
 FROM_DIR = "/var/run/qubes/"
 XEVENT = "/var/run/qubes/qubes-clipboard.bin.xevent"
 APPVIEWER_LOCK = "/var/run/qubes/appviewer.lock"
+COPY_FEATURE = 'gui-default-secure-copy-sequence'
+PASTE_FEATURE = 'gui-default-secure-paste-sequence'
 
 
 @contextlib.contextmanager
@@ -79,10 +85,10 @@ class EventHandler(pyinotify.ProcessEvent):
 
         size = clipboard_formatted_size()
 
-        body = _("Clipboard contents fetched from qube: <b>'{0}'</b>\n"
-                 "Copied <b>{1}</b> to the global clipboard.\n"
-                 "<small>Press Ctrl+Shift+V in qube to paste to local"
-                 "clipboard.</small>").format(vmname, size)
+        body = _(f"Clipboard contents fetched from qube: <b>'{vmname}'</b>\n"
+                 f"Copied <b>{size}</b> to the global clipboard.\n"
+                 f"<small>Press {self.gtk_app.paste_shortcut} in qube "
+                 "to paste to local clipboard.</small>")
 
         self.gtk_app.update_clipboard_contents(vmname, size, message=body)
 
@@ -141,10 +147,14 @@ def clipboard_formatted_size() -> str:
 
 
 class NotificationApp(Gtk.Application):
-    def __init__(self, wm, **properties):
+    def __init__(self, wm, qapp, dispatcher, **properties):
         super().__init__(**properties)
         self.set_application_id("org.qubes.qui.clipboard")
         self.register()  # register Gtk Application
+
+        self.qapp = qapp
+        self.vm = self.qapp.domains[self.qapp.local_name]
+        self.dispatcher = dispatcher
 
         self.icon = Gtk.StatusIcon()
         self.icon.set_from_icon_name('edit-copy')
@@ -156,7 +166,9 @@ class NotificationApp(Gtk.Application):
         self.menu = Gtk.Menu()
         self.clipboard_label = Gtk.Label(xalign=0)
 
-        self.prepare_menu()
+        self.copy_shortcut = None
+        self.paste_shortcut = None
+        self.setup_ui()
 
         self.wm = wm
         self.temporary_watch = None
@@ -167,6 +179,12 @@ class NotificationApp(Gtk.Application):
                 self.wm.add_watch(FROM_DIR, pyinotify.IN_CREATE, rec=False)
         else:
             self.setup_watcher()
+
+        for feature in [COPY_FEATURE, PASTE_FEATURE]:
+            self.dispatcher.add_handler(f'domain-feature-set:{feature}',
+                                        self.setup_ui)
+            self.dispatcher.add_handler(f'domain-feature-delete:{feature}',
+                                        self.setup_ui)
 
     def setup_watcher(self):
         if self.temporary_watch:
@@ -200,7 +218,12 @@ class NotificationApp(Gtk.Application):
         if message:
             self.send_notify(message)
 
-    def prepare_menu(self):
+    def setup_ui(self, *_args, **_kwargs):
+        self.copy_shortcut = self._prettify_shortcut(self.vm.features.get(
+            COPY_FEATURE, 'Ctrl-Shift-C'))
+        self.paste_shortcut = self._prettify_shortcut(self.vm.features.get(
+            PASTE_FEATURE, 'Ctrl-Shift-V'))
+
         self.menu = Gtk.Menu()
 
         title_label = Gtk.Label(xalign=0)
@@ -219,8 +242,9 @@ class NotificationApp(Gtk.Application):
         self.menu.append(Gtk.SeparatorMenuItem())
 
         help_label = Gtk.Label(xalign=0)
-        help_label.set_markup(_("<i>Use <b>Ctrl+Shift+C</b> to copy and "
-                                "<b>Ctrl+Shift+V</b> to paste.</i>"))
+        help_label.set_markup(
+            _(f"<i>Use <b>{self.copy_shortcut}</b> to copy and "
+              f"<b>{self.paste_shortcut}</b> to paste.</i>"))
         help_item = Gtk.MenuItem()
         help_item.set_margin_left(10)
         help_item.set_sensitive(False)
@@ -259,15 +283,36 @@ class NotificationApp(Gtk.Application):
         notification.set_priority(Gio.NotificationPriority.NORMAL)
         self.send_notification(self.get_application_id(), notification)
 
+    def _prettify_shortcut(self, shortcut: str):
+        """Turn a keyboard shortcut into a nicer, more readable version,
+        e.g. convert 'Ctrl-Mod4-c' into 'Ctrl-Win-C'"""
+        parts = shortcut.split('-')
+        return "+".join([self._convert_to_readable(part) for part in parts])
+
+    @staticmethod
+    def _convert_to_readable(key: str):
+        if key == 'Mod4':
+            return 'Win'
+        if key == 'Ins':
+            return "Insert"
+        if len(key) == 1:
+            return key.upper()
+        return key
 
 def main():
     loop = asyncio.get_event_loop()
     wm = pyinotify.WatchManager()
-    gtk_app = NotificationApp(wm)
+
+    qubes_app = qubesadmin.Qubes()
+    dispatcher = qubesadmin.events.EventsDispatcher(qubes_app)
+
+    gtk_app = NotificationApp(wm, qubes_app, dispatcher)
 
     handler = EventHandler(loop=loop, gtk_app=gtk_app)
     pyinotify.AsyncioNotifier(wm, loop, default_proc_fun=handler)
-    loop.run_forever()
+
+    return run_asyncio_and_show_errors(loop, [asyncio.ensure_future(
+        dispatcher.listen_for_events())], "Qubes Clipboard Widget")
 
 
 if __name__ == '__main__':

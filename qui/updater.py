@@ -130,20 +130,25 @@ class QubesUpdater(Gtk.Application):
                 except exc.QubesDaemonCommunicationError:
                     state = False
                 result = result or state
-                self.vm_list.add(VMListBoxRow(vm, state))
+                vmrow = VMListBoxRow(vm, state)
+                self.vm_list.add(vmrow)
+                vmrow.checkbox.connect('toggled', self.checkbox_checked)
 
         self.vm_list.connect("row-activated", self.toggle_row_selection)
         return result
 
-    def toggle_row_selection(self, _emitter, row):
-        if row:
-            row.checkbox.set_active(not row.checkbox.get_active())
-            row.set_label_text()
+    def checkbox_checked(self, _emitter, *_args):
         for vm_row in self.vm_list:
             if vm_row.checkbox.get_active():
                 self.next_button.set_sensitive(True)
                 return
             self.next_button.set_sensitive(False)
+
+    @staticmethod
+    def toggle_row_selection(_emitter, row):
+        if row:
+            row.checkbox.set_active(not row.checkbox.get_active())
+            row.set_label_text()
 
     def set_update_available(self, _emitter):
         for vm_row in self.vm_list:

@@ -7,8 +7,6 @@ ignore=qui/tests
 # deprecated-method:
 #   enable again after disabling py-3.4.3 asyncio.ensure_future compat hack
 disable=
-  abstract-class-little-used,
-  bad-continuation,
   cyclic-import,
   deprecated-method,
   duplicate-code,
@@ -16,12 +14,10 @@ disable=
   fixme,
   inconsistent-return-statements,
   locally-disabled,
-  locally-enabled,
   logging-format-interpolation,
   missing-docstring,
   too-few-public-methods,
   consider-using-f-string,
-  star-args,
   useless-super-delegation,
   wrong-import-order
 
@@ -43,9 +39,6 @@ generated-members=
   Element,ElementTree,QName,SubElement,fromstring,parse,tostring,
 
 [BASIC]
-
-# List of builtins function names that should not be used, separated by a comma
-bad-functions=
 
 # Regular expression which should only match correct module names
 module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$

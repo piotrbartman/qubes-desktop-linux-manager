@@ -345,9 +345,9 @@ class DiskSpace(Gtk.Application):
 
         if vm_warning:
             currently_problematic_vms = [x.vm for x in vm_warning]
-            for vm in self.vms_warned:
-                if vm not in currently_problematic_vms:
-                    self.vms_warned.remove(vm)
+
+            self.vms_warned = {vm for vm in self.vms_warned if vm in
+                               currently_problematic_vms}
             for vm in currently_problematic_vms:
                 if not vm.features.get('disk-space-not-notify', False) and vm\
                         not in self.vms_warned:

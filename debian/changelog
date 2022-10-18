@@ -1,3 +1,29 @@
+qubes-desktop-linux-manager (4.1.15-1) unstable; urgency=medium
+
+  [ Marta Marczykowska-Górecka ]
+  * Fix set being changed during iteration
+  * Fix pylint's complaints
+
+  [ dominoomni ]
+  * update updater.py with details_label checkbox v4.1
+  * update updater.glide with details_label chkbx v4.1
+  * update updater.glade details_label mnemonics v4.1
+
+  [ Marta Marczykowska-Górecka ]
+  * Make Qubes Update tool panes resizable
+
+  [ Ilka Schulz ]
+  * GUI: bump Glade version to "3.38.1"
+  * GUI: use mnemonics
+
+  [ Marta Marczykowska-Górecka ]
+  * Fix inconsistent behavior on checkbox/row click
+  * Deal with missing icons in a more flexible way
+  * Handle variable copy/paste shortcut in Clipboard Widget
+  * Remove boilerplate run code
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Tue, 18 Oct 2022 23:51:45 +0200
+
 qubes-desktop-linux-manager (4.1.14-1) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]

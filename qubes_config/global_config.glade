@@ -6846,7 +6846,7 @@ Documentation will open in a disposable qube.</property>
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <child>
-                      <!-- n-columns=3 n-rows=7 -->
+                      <!-- n-columns=3 n-rows=8 -->
                       <object class="GtkGrid" id="thisdevice_contents">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
@@ -6859,8 +6859,8 @@ Documentation will open in a disposable qube.</property>
                           </object>
                           <packing>
                             <property name="left-attach">0</property>
-                            <property name="top-attach">0</property>
-                            <property name="height">2</property>
+                            <property name="top-attach">1</property>
+                            <property name="height">3</property>
                           </packing>
                         </child>
                         <child>
@@ -6873,84 +6873,9 @@ Documentation will open in a disposable qube.</property>
                           </object>
                           <packing>
                             <property name="left-attach">1</property>
-                            <property name="top-attach">0</property>
+                            <property name="top-attach">1</property>
                             <property name="width">2</property>
                             <property name="height">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkSeparator">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">0</property>
-                            <property name="top-attach">3</property>
-                            <property name="width">3</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="halign">start</property>
-                            <property name="margin-end">20</property>
-                            <property name="margin-top">10</property>
-                            <property name="margin-bottom">10</property>
-                            <property name="label" translatable="yes">For more detailed information about RAM,
-run the following command in a dom0 terminal:</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">4</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="halign">start</property>
-                            <property name="margin-end">20</property>
-                            <property name="margin-top">10</property>
-                            <property name="margin-bottom">10</property>
-                            <property name="label" translatable="yes">For more detailed general information,
-run the following command in a dom0 terminal:</property>
-                          </object>
-                          <packing>
-                            <property name="left-attach">1</property>
-                            <property name="top-attach">5</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="halign">start</property>
-                            <property name="label" translatable="yes">sudo dmidecode -t memory</property>
-                            <property name="selectable">True</property>
-                            <style>
-                              <class name="red_code"/>
-                            </style>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">4</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="halign">start</property>
-                            <property name="label" translatable="yes">qubes-hcl-report</property>
-                            <property name="selectable">True</property>
-                            <style>
-                              <class name="red_code"/>
-                            </style>
-                          </object>
-                          <packing>
-                            <property name="left-attach">2</property>
-                            <property name="top-attach">5</property>
                           </packing>
                         </child>
                         <child>
@@ -6962,33 +6887,405 @@ run the following command in a dom0 terminal:</property>
                           </object>
                           <packing>
                             <property name="left-attach">0</property>
-                            <property name="top-attach">6</property>
+                            <property name="top-attach">7</property>
                             <property name="width">3</property>
                           </packing>
                         </child>
                         <child>
                           <object class="GtkButton" id="thisdevice_copy_button">
                             <property name="label" translatable="yes">Copy system information to Global Clipboard</property>
+                            <property name="name">copy_button</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
+                            <property name="halign">center</property>
+                            <property name="valign">end</property>
                           </object>
                           <packing>
                             <property name="left-attach">1</property>
-                            <property name="top-attach">2</property>
+                            <property name="top-attach">3</property>
                           </packing>
                         </child>
                         <child>
-                          <placeholder/>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="label" translatable="yes">Device Information</property>
+                            <style>
+                              <class name="group_title"/>
+                              <class name="section_title"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="left-attach">0</property>
+                            <property name="top-attach">0</property>
+                            <property name="width">3</property>
+                          </packing>
                         </child>
                         <child>
-                          <placeholder/>
+                          <object class="GtkButton" id="thisdevice_copy_hcl_button">
+                            <property name="label" translatable="yes">Copy HCL report to Global Clipboard</property>
+                            <property name="name">copy_hcl_button</property>
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="receives-default">True</property>
+                            <property name="halign">center</property>
+                            <property name="valign">end</property>
+                            <property name="margin-start">30</property>
+                          </object>
+                          <packing>
+                            <property name="left-attach">2</property>
+                            <property name="top-attach">3</property>
+                          </packing>
                         </child>
                         <child>
-                          <placeholder/>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="label" translatable="yes">Qubes OS Security Report</property>
+                            <style>
+                              <class name="group_title"/>
+                              <class name="section_title"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="left-attach">0</property>
+                            <property name="top-attach">4</property>
+                            <property name="width">3</property>
+                          </packing>
                         </child>
                         <child>
-                          <placeholder/>
+                          <!-- n-columns=3 n-rows=7 -->
+                          <object class="GtkGrid">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="row-spacing">10</property>
+                            <property name="column-spacing">10</property>
+                            <child>
+                              <object class="GtkLabel" id="thisdevice_hvm_label">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">HVM:</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkImage" id="thisdevice_hvm_image">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="stock">gtk-missing-image</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="thisdevice_iommu_label">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">I/O MMU:</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkImage" id="thisdevice_iommu_image">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="stock">gtk-missing-image</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="thisdevice_hap_label">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">HAP/SLAT:</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">2</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="thisdevice_tpm_label">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">TPM:</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">3</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="thisdevice_remapping_label">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">Remapping:</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">4</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkImage" id="thisdevice_hap_image">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="stock">gtk-missing-image</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">2</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkImage" id="thisdevice_tpm_image">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="stock">gtk-missing-image</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">3</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkImage" id="thisdevice_remapping_image">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="stock">gtk-missing-image</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">4</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkImage" id="thisdevice_usbk_image">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="stock">gtk-missing-image</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">5</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkImage" id="thisdevice_pv_image">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="stock">gtk-missing-image</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">6</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkBox" id="thisdevice_certified_box_yes">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="halign">center</property>
+                                <child>
+                                  <object class="GtkImage" id="thisdevice_certified_img2">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="valign">center</property>
+                                    <property name="margin-right">20</property>
+                                    <property name="margin-end">20</property>
+                                    <property name="pixel-size">64</property>
+                                    <property name="icon-name">check_yes</property>
+                                    <property name="icon_size">6</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="thisdevice_certified_yes_info">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="label" translatable="yes">&lt;b&gt;This device is certified for Qubes OS.&lt;/b&gt;
+For more information, &lt;a href="https://www.qubes-os.org/doc/certified-hardware/"&gt;click here&lt;/a&gt;.</property>
+                                    <property name="use-markup">True</property>
+                                    <property name="justify">center</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                                <style>
+                                  <class name="certified_yes"/>
+                                </style>
+                              </object>
+                              <packing>
+                                <property name="left-attach">2</property>
+                                <property name="top-attach">0</property>
+                                <property name="height">7</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <child>
+                                  <object class="GtkLabel" id="thisdevice_usbk_label">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="halign">start</property>
+                                    <property name="label" translatable="yes">USB keyboards:</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkImage" id="thisdevice_usbk_tooltip">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="tooltip-text" translatable="yes">Enabling USB keyboards unconditionally can be dangerous. You can check your policy settings on the USB Devices page.</property>
+                                    <property name="margin-start">10</property>
+                                    <property name="xalign">0.5</property>
+                                    <property name="yalign">0.6000000238418579</property>
+                                    <property name="pixel-size">20</property>
+                                    <property name="icon-name">qubes-question</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="padding">3</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">5</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <child>
+                                  <object class="GtkLabel" id="thisdevice_pv_label">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="halign">start</property>
+                                    <property name="label" translatable="yes">PV qubes:</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkImage" id="thisdevice_pv_tooltip">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="tooltip-text" translatable="yes">Enabling USB keyboards unconditionally can be dangerous. You can check your policy settings on the USB Devices page.</property>
+                                    <property name="margin-start">10</property>
+                                    <property name="xalign">0.5</property>
+                                    <property name="yalign">0.6000000238418579</property>
+                                    <property name="pixel-size">20</property>
+                                    <property name="icon-name">qubes-question</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="padding">3</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">6</property>
+                              </packing>
+                            </child>
+                            <style>
+                              <class name="info_grid"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="left-attach">0</property>
+                            <property name="top-attach">5</property>
+                            <property name="width">3</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">center</property>
+                            <property name="margin-bottom">20</property>
+                            <property name="spacing">20</property>
+                            <child>
+                              <object class="GtkImage">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="valign">center</property>
+                                <property name="pixel-size">48</property>
+                                <property name="icon-name">qubes-info</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel" id="thisdevice_security_info">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">To learn more about Qubes OS Security Report, you can check the &lt;a href="https://github.com/Qubes-Community/Contents/blob/master/docs/common-tasks/opening-urls-in-vms.md"&gt;online documentation&lt;/a&gt;. 
+Documentation will open in a disposable qube.</property>
+                                <property name="use-markup">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <style>
+                              <class name="info_box"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="left-attach">0</property>
+                            <property name="top-attach">6</property>
+                            <property name="width">3</property>
+                          </packing>
                         </child>
                         <style>
                           <class name="content_box"/>

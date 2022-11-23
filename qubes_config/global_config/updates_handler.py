@@ -22,6 +22,7 @@ Updates page handler
 """
 import os
 import subprocess
+from html import escape
 from typing import Optional, List, Dict
 
 from qrexec.policy.parser import Rule
@@ -201,7 +202,8 @@ class RepoHandler:
                         self._set_repository(repo, False)
                 except RuntimeError as ex:
                     raise qubesadmin.exc.QubesException(
-                        f'Failed to set repository data: {ex}') from ex
+                        'Failed to set repository data: '
+                        f'{escape(str(ex))}') from ex
         self._load_data()
         self._load_state()
 

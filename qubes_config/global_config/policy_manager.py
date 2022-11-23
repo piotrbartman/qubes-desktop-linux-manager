@@ -39,6 +39,10 @@ class PolicyManager:
 
 """
 
+    def get_all_policy_files(self, service: str) -> List[str]:
+        """Just get a straightforward list of all relevant policy files."""
+        return self.policy_client.policy_get_files(service)
+
     def get_conflicting_policy_files(self, service: str,
                                      own_file: str) -> List[str]:
         """
@@ -48,7 +52,7 @@ class PolicyManager:
         :param own_file: name of the config's own file
         :return: list of file names as str
         """
-        files = sorted(self.policy_client.policy_get_files(service))
+        files = sorted(self.get_all_policy_files(service))
         conflicting_files = []
         for f in files:
             if not f:

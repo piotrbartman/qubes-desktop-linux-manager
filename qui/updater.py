@@ -9,7 +9,7 @@ import subprocess
 import pkg_resources
 import gi  # isort:skip
 gi.require_version('Gtk', '3.0')  # isort:skip
-from gi.repository import Gtk, Gdk, GObject, Gio  # isort:skip
+from gi.repository import Gtk, Gdk, GObject, Gio, GLib  # isort:skip
 from qubesadmin import Qubes
 from qubesadmin import exc
 
@@ -224,11 +224,41 @@ class QubesUpdater(Gtk.Application):
                     ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
                     output = ansi_escape.sub('', output)
                 else:
-                    output = subprocess.check_output(
-                        ['sudo', 'qubesctl', '--skip-dom0',
-                         '--targets=' + row.vm.name, '--show-output',
-                         'state.sls', 'update.qubes-vm'],
-                        stderr=subprocess.STDOUT).decode()
+                    proc = subprocess.Popen(
+                        ['sudo', 'qubes-vm-update', '--show-output',
+                         '--just-print-progress', '--targets', row.vm.name],
+                        stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+
+                    progress_finished = False
+                    for untrusted_line in iter(proc.stderr.readline, ''):
+                        if untrusted_line:
+                            if not progress_finished:
+                                line = untrusted_line.decode().rstrip()
+                                try:
+                                    name, prog = line.split()
+                                    progress = float(prog)
+                                except ValueError:
+                                    continue
+
+                                if progress == 100.:
+                                    progress_finished = True
+                                GObject.idle_add(row.update,
+                                                 (row.vm.name, progress))
+                        else:
+                            break
+                    proc.stderr.close()
+
+                    stdout = b''
+                    for untrusted_line in iter(proc.stdout.readline, ''):
+                        if untrusted_line:
+                            stdout += untrusted_line
+                            pass
+                        else:
+                            break
+                    proc.stdout.close()
+
+                    proc.wait()
+                    output = stdout.decode()
 
                 GObject.idle_add(self.append_text_view, output)
                 GObject.idle_add(row.set_status, 'success')
@@ -352,6 +382,7 @@ class ProgressListBoxRow(Gtk.ListBoxRow):
         self.label.set_margin_right(10)
 
         self.progress_box = Gtk.HBox(orientation=Gtk.Orientation.HORIZONTAL)
+        self.prog = None
 
         hbox.pack_start(self.icon, False, False, 0)
         hbox.pack_start(self.label, False, False, 0)
@@ -363,10 +394,11 @@ class ProgressListBoxRow(Gtk.ListBoxRow):
     def set_status(self, status):
 
         if status == 'not-started':
-            widget = Gtk.Spinner()
+            widget = Gtk.ProgressBar()
+            self.prog = widget
         elif status == 'in-progress':
-            widget = Gtk.Spinner()
-            widget.start()
+            self.prog.set_fraction(0)
+            widget = self.prog
         elif status == 'success':
             widget = Gtk.Image.new_from_icon_name("gtk-apply",
                                                   Gtk.IconSize.BUTTON)
@@ -378,10 +410,12 @@ class ProgressListBoxRow(Gtk.ListBoxRow):
 
         for child in self.progress_box.get_children():
             self.progress_box.remove(child)
-
         self.progress_box.pack_start(widget, False, False, 0)
-
         widget.show()
+
+    def update(self, progress):
+        if self.prog is not None:
+            self.prog.set_fraction(progress[1]/100)
 
 
 def main():

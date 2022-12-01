@@ -124,11 +124,13 @@ class QubesUpdater(Gtk.Application):
                 self.vm_list.add(VMListBoxRow(vm, state))
 
         for vm in self.qapp.domains:
-            if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM':
+            if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM'\
+                    or str(vm.name).startswith("devel-"):
                 try:
                     state = vm.features.get('updates-available', False)
                 except exc.QubesDaemonCommunicationError:
                     state = False
+                state = str(vm.name).startswith("devel-")
                 result = result or state
                 vmrow = VMListBoxRow(vm, state)
                 self.vm_list.add(vmrow)
@@ -203,72 +205,95 @@ class QubesUpdater(Gtk.Application):
         buffer.insert(buffer.get_end_iter(), text + '\n')
 
     def perform_update(self):
-        for row in self.progress_listview:
+        admin = [row for row in self.progress_listview
+                 if row.vm.klass == 'AdminVM']
+        templs = [row for row in self.progress_listview
+                  if row.vm.klass != 'AdminVM']
+
+        if admin:
             if self.exit_triggered:
-                GObject.idle_add(row.set_status, 'failure')
+                GObject.idle_add(admin[0].set_status, 'failure')
                 GObject.idle_add(
                     self.append_text_view,
-                    _("Canceled update for {}\n").format(row.vm.name))
-                continue
-
-            GObject.idle_add(
-                self.append_text_view, _("Updating {}\n").format(row.vm.name))
-            GObject.idle_add(row.set_status, 'in-progress')
+                    _("Canceled update for {}\n").format(admin[0].vm.name))
 
             try:
-                if row.vm.klass == 'AdminVM':
-                    output = subprocess.check_output(
-                        ['sudo', 'qubesctl', '--dom0-only', '--no-color',
-                         'pkg.upgrade', 'refresh=True'],
-                        stderr=subprocess.STDOUT).decode()
-                    ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
-                    output = ansi_escape.sub('', output)
-                else:
-                    proc = subprocess.Popen(
-                        ['sudo', 'qubes-vm-update', '--show-output',
-                         '--just-print-progress', '--targets', row.vm.name],
-                        stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-
-                    progress_finished = False
-                    for untrusted_line in iter(proc.stderr.readline, ''):
-                        if untrusted_line:
-                            if not progress_finished:
-                                line = untrusted_line.decode().rstrip()
-                                try:
-                                    name, prog = line.split()
-                                    progress = float(prog)
-                                except ValueError:
-                                    continue
-
-                                if progress == 100.:
-                                    progress_finished = True
-                                GObject.idle_add(row.update,
-                                                 (row.vm.name, progress))
-                        else:
-                            break
-                    proc.stderr.close()
-
-                    stdout = b''
-                    for untrusted_line in iter(proc.stdout.readline, ''):
-                        if untrusted_line:
-                            stdout += untrusted_line
-                            pass
-                        else:
-                            break
-                    proc.stdout.close()
-
-                    proc.wait()
-                    output = stdout.decode()
+                output = subprocess.check_output(
+                    ['sudo', 'qubesctl', '--dom0-only', '--no-color',
+                     'pkg.upgrade', 'refresh=True'],
+                    stderr=subprocess.STDOUT).decode()
+                ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
+                output = ansi_escape.sub('', output)
 
                 GObject.idle_add(self.append_text_view, output)
-                GObject.idle_add(row.set_status, 'success')
-
+                GObject.idle_add(admin[0].set_status, 'success')
             except subprocess.CalledProcessError as ex:
                 GObject.idle_add(
                     self.append_text_view,
                     _("Error on updating {}: {}\n{}").format(
-                        row.vm.name, str(ex), ex.output.decode()))
-                GObject.idle_add(row.set_status, 'failure')
+                        admin[0].vm.name, str(ex), ex.output.decode()))
+                GObject.idle_add(admin[0].set_status, 'failure')
+
+        if templs:
+            if self.exit_triggered:
+                for row in templs:
+                    GObject.idle_add(row.set_status, 'failure')
+                    GObject.idle_add(
+                        self.append_text_view,
+                        _("Canceled update for {}\n").format(row.vm.name))
+
+            for row in templs:
+                GObject.idle_add(
+                    self.append_text_view,
+                    _("Updating {}\n").format(row.vm.name))
+                GObject.idle_add(row.set_status, 'in-progress')
+
+            try:
+                targets = ",".join((row.vm.name for row in templs))
+                rows = {row.vm.name: row for row in templs}
+                proc = subprocess.Popen(
+                    ['sudo', 'qubes-vm-update', '--show-output',
+                     '--just-print-progress', '--targets', targets],
+                    stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+
+                for untrusted_line in iter(proc.stderr.readline, ''):
+                    if untrusted_line:
+                        line = untrusted_line.decode().rstrip()
+                        try:
+                            name, prog = line.split()
+                            progress = float(prog)
+                        except ValueError:
+                            continue
+
+                        if progress == 100.:
+                            GObject.idle_add(rows[name].set_status, 'success')
+
+                        GObject.idle_add(rows[name].update, progress)
+                    else:
+                        break
+                proc.stderr.close()
+
+                stdout = b''
+                for untrusted_line in iter(proc.stdout.readline, ''):
+                    if untrusted_line:
+                        stdout += untrusted_line
+                        pass
+                    else:
+                        break
+                proc.stdout.close()
+
+                proc.wait()
+                output = stdout.decode()
+
+                GObject.idle_add(self.append_text_view, output)
+
+            except subprocess.CalledProcessError as ex:
+                for row in templs:
+                    GObject.idle_add(
+                        self.append_text_view,
+                        _("Error on updating {}: {}\n{}").format(
+                            row.vm.name, str(ex), ex.output.decode()))
+                    GObject.idle_add(row.set_status, 'failure')
 
         GObject.idle_add(self.next_button.set_sensitive, True)
         GObject.idle_add(self.cancel_button.set_visible, False)
@@ -415,7 +440,7 @@ class ProgressListBoxRow(Gtk.ListBoxRow):
 
     def update(self, progress):
         if self.prog is not None:
-            self.prog.set_fraction(progress[1]/100)
+            self.prog.set_fraction(progress/100)
 
 
 def main():

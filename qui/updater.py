@@ -6,6 +6,8 @@ import re
 import time
 import threading
 import subprocess
+from datetime import datetime
+
 import pkg_resources
 import gi  # isort:skip
 gi.require_version('Gtk', '3.0')  # isort:skip
@@ -124,14 +126,36 @@ class QubesUpdater(Gtk.Application):
                 self.vm_list.add(VMListBoxRow(vm, state))
 
         for vm in self.qapp.domains:
-            if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM'\
-                    or str(vm.name).startswith("devel-"):
+            if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM':
                 try:
                     state = vm.features.get('updates-available', False)
                 except exc.QubesDaemonCommunicationError:
                     state = False
-                state = str(vm.name).startswith("devel-")
                 result = result or state
+
+                today = datetime.today()
+                try:
+                    last_update_str = vm.features.get(
+                        'last-update',
+                        datetime.fromtimestamp(0).strftime(
+                            '%Y-%m-%d %H:%M:%S'))
+                    last_update = datetime.fromisoformat(last_update_str)
+                    if (today - last_update).days > 14:
+                        state = True
+                except exc.QubesDaemonCommunicationError:
+                    state = False
+                try:
+                    last_update_str = vm.features.get(
+                        'last-updates-check',
+                        datetime.fromtimestamp(0).strftime(
+                            '%Y-%m-%d %H:%M:%S'))
+                    last_update = datetime.fromisoformat(last_update_str)
+                    if (today - last_update).days > 7:
+                        state = True
+                except exc.QubesDaemonCommunicationError:
+                    state = False
+
+                state = str(vm.name).startswith("devel-")
                 vmrow = VMListBoxRow(vm, state)
                 self.vm_list.add(vmrow)
                 vmrow.checkbox.connect('toggled', self.checkbox_checked)

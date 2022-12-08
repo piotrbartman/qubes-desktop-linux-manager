@@ -34,12 +34,16 @@ from ...new_qube.template_handler import TemplateHandler
 def test_app_handler(mock_subprocess, test_qapp, new_qube_builder):
     def mock_output(command):
         vm_name = command[-1]
-        if vm_name == 'fedora-35':
-            return b'test.desktop|Test App|'
-        if vm_name == 'fedora-36':
-            return b'test2.desktop|Test2 App|test2 desc\n' \
-                   b'egg.desktop|Egg|egg\n' \
-                   b'firefox.desktop|Firefox|firefox'
+        if command[1] == '--get-available':
+            if vm_name == 'fedora-35':
+                return b'test.desktop|Test App|'
+            if vm_name == 'fedora-36':
+                return b'test2.desktop|Test2 App|test2 desc\n' \
+                       b'egg.desktop|Egg|egg\n' \
+                       b'firefox.desktop|Firefox|firefox'
+        elif command[1] == '--get-default-whitelist':
+            if vm_name == 'fedora-36':
+                return b'firefox.desktop'
         return b''
     mock_subprocess.side_effect = mock_output
 
@@ -74,12 +78,16 @@ def test_app_handler(mock_subprocess, test_qapp, new_qube_builder):
 def test_app_handler_show_hide(mock_subprocess, test_qapp, new_qube_builder):
     def mock_output(command):
         vm_name = command[-1]
-        if vm_name == 'fedora-35':
-            return b'test.desktop|Test App|'
-        if vm_name == 'fedora-36':
-            return b'test2.desktop|Test2 App|test2 desc\n' \
-                   b'egg.desktop|Egg|egg\n' \
-                   b'firefox.desktop|Firefox|firefox'
+        if command[1] == '--get-available':
+            if vm_name == 'fedora-35':
+                return b'test.desktop|Test App|'
+            if vm_name == 'fedora-36':
+                return b'test2.desktop|Test2 App|test2 desc\n' \
+                       b'egg.desktop|Egg|egg\n' \
+                       b'firefox.desktop|Firefox|firefox'
+        elif command[1] == '--get-default-whitelist':
+            if vm_name == 'fedora-36':
+                return b'firefox.desktop'
         return b''
     mock_subprocess.side_effect = mock_output
 
@@ -135,15 +143,19 @@ def test_app_handler_change_template(mock_subprocess,
                                      test_qapp, new_qube_builder):
     def mock_output(command):
         vm_name = command[-1]
-        if vm_name == 'fedora-35':
-            return b'test.desktop|Test App|\n' \
-                   b'tomato.desktop|Tomato|basil\n' \
-                   b'udon.desktop|Udon|noodles\n' \
-                   b'spaghetti.desktop|Spaghetti|pasta'
-        if vm_name == 'fedora-36':
-            return b'test2.desktop|Test2 App|test2 desc\n' \
-                   b'egg.desktop|Egg|egg\n' \
-                   b'firefox.desktop|Firefox|firefox'
+        if command[1] == '--get-available':
+            if vm_name == 'fedora-35':
+                return b'test.desktop|Test App|\n' \
+                       b'tomato.desktop|Tomato|basil\n' \
+                       b'udon.desktop|Udon|noodles\n' \
+                       b'spaghetti.desktop|Spaghetti|pasta'
+            if vm_name == 'fedora-36':
+                return b'test2.desktop|Test2 App|test2 desc\n' \
+                       b'egg.desktop|Egg|egg\n' \
+                       b'firefox.desktop|Firefox|firefox'
+        elif command[1] == '--get-default-whitelist':
+            if vm_name == 'fedora-36':
+                return b'firefox.desktop'
         return b''
     mock_subprocess.side_effect = mock_output
 
@@ -210,15 +222,19 @@ def test_app_handler_do_template(mock_subprocess,
                                      test_qapp, new_qube_builder):
     def mock_output(command):
         vm_name = command[-1]
-        if vm_name == 'fedora-35':
-            return b'test.desktop|Test App|\n' \
-                   b'tomato.desktop|Tomato|basil\n' \
-                   b'udon.desktop|Udon|noodles\n' \
-                   b'spaghetti.desktop|Spaghetti|pasta'
-        if vm_name == 'fedora-36':
-            return b'test2.desktop|Test2 App|test2 desc\n' \
-                   b'egg.desktop|Egg|egg\n' \
-                   b'firefox.desktop|Firefox|firefox'
+        if command[1] == '--get-available':
+            if vm_name == 'fedora-35':
+                return b'test.desktop|Test App|\n' \
+                       b'tomato.desktop|Tomato|basil\n' \
+                       b'udon.desktop|Udon|noodles\n' \
+                       b'spaghetti.desktop|Spaghetti|pasta'
+            if vm_name == 'fedora-36':
+                return b'test2.desktop|Test2 App|test2 desc\n' \
+                       b'egg.desktop|Egg|egg\n' \
+                       b'firefox.desktop|Firefox|firefox'
+        elif command[1] == '--get-default-whitelist':
+            if vm_name == 'fedora-36':
+                return b'firefox.desktop'
         return b''
     mock_subprocess.side_effect = mock_output
 
@@ -263,15 +279,19 @@ def test_app_handler_delete(mock_subprocess,
                             test_qapp, new_qube_builder):
     def mock_output(command):
         vm_name = command[-1]
-        if vm_name == 'fedora-35':
-            return b'test.desktop|Test App|\n' \
-                   b'tomato.desktop|Tomato|basil\n' \
-                   b'udon.desktop|Udon|noodles\n' \
-                   b'spaghetti.desktop|Spaghetti|pasta'
-        if vm_name == 'fedora-36':
-            return b'test2.desktop|Test2 App|test2 desc\n' \
-                   b'egg.desktop|Egg|egg\n' \
-                   b'firefox.desktop|Firefox|firefox'
+        if command[1] == '--get-available':
+            if vm_name == 'fedora-35':
+                return b'test.desktop|Test App|\n' \
+                       b'tomato.desktop|Tomato|basil\n' \
+                       b'udon.desktop|Udon|noodles\n' \
+                       b'spaghetti.desktop|Spaghetti|pasta'
+            if vm_name == 'fedora-36':
+                return b'test2.desktop|Test2 App|test2 desc\n' \
+                       b'egg.desktop|Egg|egg\n' \
+                       b'firefox.desktop|Firefox|firefox'
+        elif command[1] == '--get-default-whitelist':
+            if vm_name == 'fedora-36':
+                return b'firefox.desktop'
         return b''
     mock_subprocess.side_effect = mock_output
 

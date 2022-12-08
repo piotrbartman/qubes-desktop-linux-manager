@@ -259,6 +259,7 @@ class TemplateHandler:
 
         self._application_data: \
             Dict[qubesadmin.vm.QubesVM, List[ApplicationData]] = {}
+        self._default_applications: Dict[qubesadmin.vm.QubesVM, List[str]] = {}
         self._collect_application_data()
 
     def change_vm_type(self, vm_type: str):
@@ -295,6 +296,10 @@ class TemplateHandler:
                 for line in subprocess.check_output(
                     command).decode().splitlines()]
             self._application_data[vm] = available_applications
+            command = ['qvm-appmenus', '--get-default-whitelist', vm.name]
+            default_applications = subprocess.check_output(
+                    command).decode().splitlines()
+            self._default_applications[vm] = default_applications
 
     def get_available_apps(self, vm: Optional[qubesadmin.vm.QubesVM] = None):
         """Get apps available for a given template."""
@@ -302,6 +307,10 @@ class TemplateHandler:
             return self._application_data.get(vm, [])
         return [appdata for appdata_list
                 in self._application_data.values() for appdata in appdata_list]
+
+    def get_default_apps(self, vm: qubesadmin.vm.QubesVM) -> List[str]:
+        """Get list of default apps for a given template"""
+        return self._default_applications.get(vm, [])
 
     def select_template(self, vm: Optional[str]):
         """Selected a vm in the current selector as provided by

@@ -334,8 +334,7 @@ class ApplicationBoxHandler:
             template_vm)
         selected = []
         if default:
-            selected = ['firefox.desktop', 'exo-terminal-emulator.desktop',
-                        'xterm.desktop', 'firefox-esr.desktop']
+            selected = self.template_selector.get_default_apps(template_vm)
         else:
             for button in self.flowbox.get_children():
                 if isinstance(button, ApplicationButton):

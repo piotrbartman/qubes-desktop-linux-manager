@@ -28,14 +28,18 @@ from ...new_qube.application_selector import AddButton
 
 def mock_output(command, *_args, **_kwargs):
     vm_name = command[-1]
-    if vm_name == 'fedora-35':
-        return b'green.desktop|Green App|\n' \
-               b'eggs.desktop|Eggs App|\n' \
-               b'ham.desktop|Ham App|'
-    if vm_name == 'fedora-36':
-        return b'test2.desktop|Test2 App|test2 desc\n' \
-               b'egg.desktop|Egg|egg\n' \
-               b'firefox.desktop|Firefox|firefox'
+    if command[1] == '--get-available':
+        if vm_name == 'fedora-35':
+            return b'green.desktop|Green App|\n' \
+                   b'eggs.desktop|Eggs App|\n' \
+                   b'ham.desktop|Ham App|'
+        if vm_name == 'fedora-36':
+            return b'test2.desktop|Test2 App|test2 desc\n' \
+                   b'egg.desktop|Egg|egg\n' \
+                   b'firefox.desktop|Firefox|firefox'
+    elif command[1] == '--get-default-whitelist':
+        if vm_name == 'fedora-36':
+            return b'firefox.desktop'
     return b''
 
 

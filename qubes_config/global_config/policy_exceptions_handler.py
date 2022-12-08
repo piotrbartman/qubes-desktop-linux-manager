@@ -28,10 +28,9 @@ import qubesadmin.vm
 from qrexec.policy.parser import Rule
 from .page_handler import PageHandler
 
-from .policy_handler import PolicyHandler
+from .policy_handler import PolicyHandler, ErrorHandler
 from .policy_rules import SimpleVerbDescription, RuleDispVM
-from .rule_list_widgets import RuleListBoxRow, ErrorRuleRow, \
-    DispvmRuleRow
+from .rule_list_widgets import RuleListBoxRow, DispvmRuleRow
 
 import gi
 
@@ -68,18 +67,16 @@ class PolicyExceptionsHandler:
         self.add_button: Gtk.Button = gtk_builder.get_object(
             f'{prefix}_add_rule_button')
 
-        self.error_box: Gtk.Box = gtk_builder.get_object(f'{prefix}_error_box')
-        self.error_list: Gtk.ListBox = gtk_builder.get_object(
-            f'{prefix}_error_list')
+        self.error_handler = ErrorHandler(gtk_builder, prefix)
 
         # connect events
         self.rule_list.connect('row-activated', self._rule_clicked)
         self.add_button.connect("clicked", self.add_new_rule)
 
-        self._errors: List[Rule] = []
-
     def load_rules(self, rules: List[Rule]):
         """Load provided rules."""
+        self.error_handler.clear_all_errors()
+
         self.initial_rules.clear()
         for rule in rules:
             if self.exclude_rule and self.exclude_rule(rule):
@@ -89,13 +86,11 @@ class PolicyExceptionsHandler:
         for child in self.rule_list.get_children():
             self.rule_list.remove(child)
 
-        self.clear_errors()
-
         for rule in self.initial_rules:
             try:
                 self.rule_list.add(self.row_func(rule, False))
             except Exception:  # pylint: disable=broad-except
-                self.add_error(rule)
+                self.error_handler.add_error(rule)
 
     def add_new_rule(self, *_args):
         """Add a new rule."""
@@ -136,19 +131,6 @@ class PolicyExceptionsHandler:
     def close_all_edits(self):
         """Close all edited rows."""
         PolicyHandler.close_rows_in_list(self.rule_list.get_children())
-
-    def add_error(self, rule: Rule):
-        self._errors.append(rule)
-        self.error_box.set_visible(True)
-        self.error_box.show_all()
-        self.error_list.add(ErrorRuleRow(rule))
-        self.error_list.show_all()
-
-    def clear_errors(self):
-        self._errors.clear()
-        self.error_box.set_visible(False)
-        for child in self.error_list.get_children():
-            self.error_list.remove(child)
 
     @staticmethod
     def verify_rule_against_rows(other_rows: List[RuleListBoxRow],

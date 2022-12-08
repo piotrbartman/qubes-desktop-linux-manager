@@ -84,8 +84,6 @@ class PolicyHandler(PageHandler):
         self.rule_class = rule_class
         self.include_adminvm = include_admin_vm
 
-        self._errors: List[Rule] = []
-
         # main widgets
         self.main_list_box: Gtk.ListBox = \
             gtk_builder.get_object(f'{prefix}_main_list')
@@ -116,10 +114,6 @@ class PolicyHandler(PageHandler):
         self.raw_cancel: Gtk.Button = gtk_builder.get_object(
             f'{prefix}_raw_cancel')
         self.text_buffer: Gtk.TextBuffer = self.raw_text.get_buffer()
-        # error list widgets
-        self.error_box: Gtk.Box = gtk_builder.get_object(f'{prefix}_error_box')
-        self.error_list: Gtk.ListBox = \
-            gtk_builder.get_object(f'{prefix}_error_list')
 
         # connect events
         self.add_button.connect("clicked", self.add_new_rule)
@@ -151,6 +145,8 @@ class PolicyHandler(PageHandler):
             event_callback=self._raw_hide_show
         )
 
+        self.error_handler = ErrorHandler(gtk_builder, prefix)
+
         self.initial_rules, self.current_token = \
             self.policy_manager.get_rules_from_filename(
                 self.policy_file_name, self.default_policy)
@@ -162,19 +158,6 @@ class PolicyHandler(PageHandler):
         self.check_custom_rules(rules)
 
         self.main_list_box.connect('map', self.on_switch)
-
-    def add_error(self, rule: Rule):
-        self._errors.append(rule)
-        self.error_box.set_visible(True)
-        self.error_box.show_all()
-        self.error_list.add(ErrorRuleRow(rule))
-        self.error_list.show_all()
-
-    def clear_errors(self):
-        self._errors.clear()
-        self.error_box.set_visible(False)
-        for child in self.error_list.get_children():
-            self.error_list.remove(child)
 
     def add_new_rule(self, *_args):
         """Add a new rule."""
@@ -213,6 +196,7 @@ class PolicyHandler(PageHandler):
             self.main_list_box.remove(child)
         for child in self.exception_list_box.get_children():
             self.exception_list_box.remove(child)
+        self.error_handler.clear_all_errors()
 
         for rule in rules:
             try:
@@ -235,7 +219,7 @@ class PolicyHandler(PageHandler):
                     enable_vm_edit=not fundamental,
                     enable_adminvm=self.include_adminvm))
             except Exception:  # pylint: disable=broad-except
-                self.add_error(rule)
+                self.error_handler.add_error(rule)
 
         if not self.main_list_box.get_children():
             deny_all_rule = self.policy_manager.new_rule(
@@ -261,8 +245,9 @@ class PolicyHandler(PageHandler):
                     self.text_buffer.get_start_iter(),
                     self.text_buffer.get_end_iter(), False))
             self.populate_rule_lists(rules)
-            if self._errors:
-                rule_text = "\n".join(str(rule) for rule in self._errors)
+            if self.error_handler.get_errors():
+                rule_text = "\n".join(str(rule) for rule in
+                                      self.error_handler.get_errors())
                 show_error(
                     parent=self.main_list_box.get_toplevel(),
                     title="Unknown rule found",
@@ -438,8 +423,9 @@ class PolicyHandler(PageHandler):
         return ""
 
     def on_switch(self, *_args):
-        if self._errors:
-            rule_text = "\n".join(str(rule) for rule in self._errors)
+        if self.error_handler.get_errors():
+            rule_text = "\n".join(str(rule) for rule in
+                                  self.error_handler.get_errors())
             show_error(
                 parent=self.main_list_box.get_toplevel(),
                 title="Unknown rule found in police file",
@@ -582,7 +568,7 @@ class VMSubsetPolicyHandler(PolicyHandler):
             child.get_parent().remove(child)
         # rules with source = '@anyvm' go to main list and their
         # qubes are key qubes
-        self.clear_errors()
+        self.error_handler.clear_all_errors()
 
         # we have to first populate select qubes, then the rest of them
 
@@ -591,11 +577,11 @@ class VMSubsetPolicyHandler(PolicyHandler):
                 if rule.source == '@anyvm':
                     if rule.target.type == 'keyword':
                         # we do not support this
-                        self.add_error(rule)
+                        self.error_handler.add_error(rule)
                         continue
                     self._add_main_rule(rule)
             except Exception: # pylint: disable=broad-except
-                self.add_error(rule)
+                self.error_handler.add_error(rule)
                 continue
 
         self.select_qubes = {row.rule.target for row in
@@ -610,11 +596,11 @@ class VMSubsetPolicyHandler(PolicyHandler):
                     wrapped_exception_rule = self.exception_rule_class(rule)
                     if wrapped_exception_rule.target not in self.select_qubes:
                         if not drop_obsolete:
-                            self.add_error(rule)
+                            self.error_handler.add_error(rule)
                         continue
                     self._add_exception_rule(rule)
             except Exception: # pylint: disable=broad-except
-                self.add_error(rule)
+                self.error_handler.add_error(rule)
                 continue
         self.add_button.set_sensitive(bool(self.main_list_box.get_children()))
 
@@ -705,3 +691,35 @@ class VMSubsetPolicyHandler(PolicyHandler):
         rules.extend([row.rule.raw_rule for row in
                       self.main_list_box.get_children()])
         return rules
+
+
+class ErrorHandler:
+    """A helper class to manage boxes with error lists."""
+    def __init__(self, gtk_builder, prefix: str):
+        """
+        :param gtk_builder: Gtk.Builder
+        :param prefix: prefix for the following objects:
+        - prefix_error_box that contains all error widgets
+        - prefix_error_list, a ListBox that contains erroneous rules
+        """
+        self.error_box: Gtk.Box = gtk_builder.get_object(f'{prefix}_error_box')
+        self.error_list: Gtk.ListBox = gtk_builder.get_object(
+            f'{prefix}_error_list')
+
+        self._errors: List[Rule] = []
+
+    def clear_all_errors(self):
+        for child in self.error_list.get_children():
+            self.error_list.remove(child)
+        self._errors.clear()
+        self.error_box.set_visible(False)
+
+    def add_error(self, rule: Rule):
+        self._errors.append(rule)
+        self.error_box.set_visible(True)
+        self.error_box.show_all()
+        self.error_list.add(ErrorRuleRow(rule))
+        self.error_list.show_all()
+
+    def get_errors(self):
+        return self._errors

@@ -1102,6 +1102,6 @@ TestService * @anyvm vault allow target=test-blue
         exception_verb_description=SimpleVerbDescription({}),
         exception_rule_class=RuleTargeted)
 
-    assert handler.error_box.get_visible()
+    assert handler.error_handler.error_box.get_visible()
     # no rules should have been loaded
     assert not handler.current_rules

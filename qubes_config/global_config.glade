@@ -1081,7 +1081,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="usb_input_error_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. The following rules were affected:</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. They will be discarded on save. The following rules were affected:</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -2985,7 +2985,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="updates_error_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. The following rules were affected:</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. These rules will be discarded on save. The following rules were affected:</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -3684,7 +3684,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="splitgpg_error_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. The following rules were affected:</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. These rules will be discarded on save. The following rules were affected:</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -4594,7 +4594,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="clipboard_error_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. The following rules were affected:</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. These rules will be discarded on save. The following rules were affected:</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -5225,7 +5225,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="filecopy_error_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. The following rules were affected:</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. These rules will be discarded on save. The following rules were affected:</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -5874,7 +5874,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="openinvm_error_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. The following rules were affected:</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. These rules will be discarded on save. The following rules were affected:</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -6285,7 +6285,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="url_error_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. The following rules were affected:</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. These rules will be discarded on save. The following rules were affected:</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>

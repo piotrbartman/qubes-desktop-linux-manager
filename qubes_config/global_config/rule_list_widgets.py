@@ -357,8 +357,6 @@ class RuleListBoxRow(Gtk.ListBoxRow):
 
         self.editing: bool = False
 
-        self.changed_from_initial: bool = False
-
         self.set_edit_mode(False, setup=True)
 
     def get_source_widget(self) -> VMWidget:
@@ -424,7 +422,7 @@ class RuleListBoxRow(Gtk.ListBoxRow):
             self.additional_widget_box.set_visible(True)
         else:
             # if never changed do not save
-            if not setup and self.is_new_row and not self.changed_from_initial:
+            if not setup and self.is_new_row:
                 self._do_delete_self(force=True)
                 return
             self.get_style_context().remove_class('edited_row')
@@ -493,7 +491,7 @@ class RuleListBoxRow(Gtk.ListBoxRow):
         self.rule.source = new_source
         self.rule.target = new_target
 
-        self.changed_from_initial = True
+        self.is_new_row = False
         self.set_edit_mode(False)
         self.get_parent().invalidate_sort()
 

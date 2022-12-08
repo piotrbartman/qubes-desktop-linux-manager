@@ -43,6 +43,24 @@ import qubesadmin.vm
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+class ErrorRuleRow(Gtk.ListBoxRow):
+    """A ListBox row representing an error-ed out rule."""
+    def __init__(self, rule: Rule):
+        super().__init__()
+        self.box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.add(self.box)
+
+        self.get_style_context().add_class('problem_row')
+
+        self.label = Gtk.Label()
+        self.label.set_text(str(rule))
+        self.label.get_style_context().add_class('red_code')
+        self.box.pack_start(self.label, False, False, 0)
+
+    def __str__(self):
+        # pylint: disable=arguments-differ
+        return self.label.get_text()
+
 
 class PolicyHandler(PageHandler):
     """Handler for a single page with Policy settings."""
@@ -79,7 +97,7 @@ class PolicyHandler(PageHandler):
         self.verb_description = verb_description
         self.rule_class = rule_class
 
-        self.errors: List[Rule] = []
+        self._errors: List[Rule] = []
 
         # main widgets
         self.main_list_box: Gtk.ListBox = \
@@ -111,6 +129,10 @@ class PolicyHandler(PageHandler):
         self.raw_cancel: Gtk.Button = gtk_builder.get_object(
             f'{prefix}_raw_cancel')
         self.text_buffer: Gtk.TextBuffer = self.raw_text.get_buffer()
+        # error list widgets
+        self.error_box: Gtk.Box = gtk_builder.get_object(f'{prefix}_error_box')
+        self.error_list: Gtk.ListBox = \
+            gtk_builder.get_object(f'{prefix}_error_list')
 
         # connect events
         self.add_button.connect("clicked", self.add_new_rule)
@@ -152,6 +174,21 @@ class PolicyHandler(PageHandler):
         self.fill_raw_rules()
         self.check_custom_rules(rules)
 
+        self.main_list_box.connect('map', self.on_switch)
+
+    def add_error(self, rule: Rule):
+        self._errors.append(rule)
+        self.error_box.set_visible(True)
+        self.error_box.show_all()
+        self.error_list.add(ErrorRuleRow(rule))
+        self.error_list.show_all()
+
+    def clear_errors(self):
+        self._errors.clear()
+        self.error_box.set_visible(False)
+        for child in self.error_list.get_children():
+            self.error_list.remove(child)
+
     def add_new_rule(self, *_args):
         """Add a new rule."""
         self.close_all_edits()
@@ -190,20 +227,23 @@ class PolicyHandler(PageHandler):
             self.exception_list_box.remove(child)
 
         for rule in rules:
-            wrapped_rule = self.rule_class(rule)
-            if wrapped_rule.is_rule_fundamental():
-                self.main_list_box.add(RuleListBoxRow
-                                       (self, wrapped_rule,
-                                        self.qapp, self.verb_description,
-                                        enable_delete=False,
-                                        enable_vm_edit=False))
-                continue
-            fundamental = not (rule.source == '@adminvm' and
-                               rule.target == '@anyvm')
-            self.exception_list_box.add(RuleListBoxRow(self,
-                rule=wrapped_rule, qapp=self.qapp,
-                verb_description=self.verb_description,
-                enable_delete=fundamental, enable_vm_edit=fundamental))
+            try:
+                wrapped_rule = self.rule_class(rule)
+                if wrapped_rule.is_rule_fundamental():
+                    self.main_list_box.add(RuleListBoxRow
+                                           (self, wrapped_rule,
+                                            self.qapp, self.verb_description,
+                                            enable_delete=False,
+                                            enable_vm_edit=False))
+                    continue
+                fundamental = not (rule.source == '@adminvm' and
+                                   rule.target == '@anyvm')
+                self.exception_list_box.add(RuleListBoxRow(self,
+                    rule=wrapped_rule, qapp=self.qapp,
+                    verb_description=self.verb_description,
+                    enable_delete=fundamental, enable_vm_edit=fundamental))
+            except Exception:  # pylint: disable=broad-except
+                self.add_error(rule)
 
         if not self.main_list_box.get_children():
             deny_all_rule = self.policy_manager.new_rule(
@@ -228,6 +268,17 @@ class PolicyHandler(PageHandler):
                     self.text_buffer.get_start_iter(),
                     self.text_buffer.get_end_iter(), False))
             self.populate_rule_lists(rules)
+            if self._errors:
+                rule_text = "\n".join(str(rule) for rule in self._errors)
+                show_error(
+                    parent=self.main_list_box.get_toplevel(),
+                    title="Unknown rule found",
+                    text="The following rules could not be parsed:\n"
+                         f"{rule_text}\n"
+                         "Changes will be reverted."
+                )
+                self.reset()
+                return
             self.check_custom_rules(rules)
             self.expander_handler.set_state(False)
         except PolicySyntaxError as ex:
@@ -393,6 +444,18 @@ class PolicyHandler(PageHandler):
             return "Policy rules"
         return ""
 
+    def on_switch(self, *_args):
+        if self._errors:
+            rule_text = "\n".join(str(rule) for rule in self._errors)
+            show_error(
+                parent=self.main_list_box.get_toplevel(),
+                title="Unknown rule found in police file",
+                text="The following rules could not be parsed:\n"
+                     f"{rule_text}\n"
+                     "This has probably happened due to manual editing of the"
+                     "policy file. The rule will be discarded."
+            )
+
 
 class VMSubsetPolicyHandler(PolicyHandler):
     """
@@ -465,13 +528,12 @@ class VMSubsetPolicyHandler(PolicyHandler):
         self.add_select_cancel.connect('clicked', self._add_select_cancel)
 
         self.main_list_box.connect('rules-changed', self._select_qubes_changed)
-        self._select_qubes_changed()
 
     def _select_qubes_changed(self, *_args):
         self.close_all_edits()
         self.select_qubes = {row.rule.target for row in
                         self.main_list_box.get_children()}
-        self.populate_rule_lists(self.current_rules)
+        self.populate_rule_lists(self.current_rules, drop_obsolete=True)
 
     def _add_main_rule(self, rule):
         self.main_list_box.add(RuleListBoxRow(
@@ -511,28 +573,54 @@ class VMSubsetPolicyHandler(PolicyHandler):
                 return True
         return False
 
-    def populate_rule_lists(self, rules: List[Rule]):
+    def populate_rule_lists(self, rules: List[Rule],
+                            drop_obsolete: bool = False):
+        """
+        Populate the rule lists.
+        :param rules: List of Rule objects
+        :param drop_obsolete: should rules with target qubes that are not
+        in key qube list be silently discarded?
+        :return:
+        """
         for child in self.main_list_box.get_children() + \
                      self.exception_list_box.get_children():
             child.get_parent().remove(child)
         # rules with source = '@anyvm' go to main list and their
         # qubes are key qubes
-        self.errors.clear()
+        self.clear_errors()
+
+        # we have to first populate select qubes, then the rest of them
+
         for rule in reversed(rules):
-            if rule.target != '@default':
-                if self._has_partial_duplicate(rule, rules):
-                    continue
-            if rule.source == '@anyvm':
-                if rule.target.type == 'keyword':
-                    # we do not support this
-                    self.errors.append(rule)
-                    continue
-                self._add_main_rule(rule)
-            else:
-                wrapped_exception_rule = self.exception_rule_class(rule)
-                if wrapped_exception_rule.target not in self.select_qubes:
-                    continue
-                self._add_exception_rule(rule)
+            try:
+                if rule.source == '@anyvm':
+                    if rule.target.type == 'keyword':
+                        # we do not support this
+                        self.add_error(rule)
+                        continue
+                    self._add_main_rule(rule)
+            except Exception: # pylint: disable=broad-except
+                self.add_error(rule)
+                continue
+
+        self.select_qubes = {row.rule.target for row in
+                        self.main_list_box.get_children()}
+
+        for rule in reversed(rules):
+            try:
+                if rule.target != '@default':
+                    if self._has_partial_duplicate(rule, rules):
+                        continue
+                if rule.source != '@anyvm':
+                    wrapped_exception_rule = self.exception_rule_class(rule)
+                    if wrapped_exception_rule.target not in self.select_qubes:
+                        if not drop_obsolete:
+                            self.add_error(rule)
+                        continue
+                    self._add_exception_rule(rule)
+            except Exception: # pylint: disable=broad-except
+                self.add_error(rule)
+                continue
         self.add_button.set_sensitive(bool(self.main_list_box.get_children()))
 
     def set_custom_editable(self, state: bool):

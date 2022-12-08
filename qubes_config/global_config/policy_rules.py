@@ -34,6 +34,10 @@ class AbstractRuleWrapper(abc.ABC):
         """
         :param rule:
         """
+        errors = self.get_rule_errors(str(rule.source),
+                                      str(rule.target), str(rule.action))
+        if errors:
+            raise ValueError(errors)
         self._rule = rule
 
     @property
@@ -144,6 +148,13 @@ class RuleSimple(AbstractRuleWrapper):
     def raw_rule(self):
         return self._rule
 
+    @staticmethod
+    def get_rule_errors(source: str, target: str, action: str) -> \
+            Optional[str]:
+        # action must be a simple ask/allow/deny
+        if action not in ['ask', 'allow', 'deny']:
+            return f'Unrecognized action: {action}'
+        return None
 
 class RuleSimpleAskIsAllow(RuleSimple):
     """Simple rule where there is no Allow and Ask is pretending to be Allow.
@@ -153,12 +164,27 @@ class RuleSimpleAskIsAllow(RuleSimple):
         "deny": "never"
     }
 
+    @staticmethod
+    def get_rule_errors(source: str, target: str, action: str) -> \
+            Optional[str]:
+        # action must be a simple ask/allow/deny
+        if action not in ['ask', 'deny']:
+            return f'Unrecognized action: {action}'
+        return None
+
 class RuleSimpleNoAllow(RuleSimple):
     """Simple rule that has no Allow option"""
     ACTION_CHOICES = {
         "ask": "can",
         "deny": "can not"
     }
+    @staticmethod
+    def get_rule_errors(source: str, target: str, action: str) -> \
+            Optional[str]:
+        # action must be a simple ask/allow/deny
+        if action not in ['ask', 'deny']:
+            return f'Unrecognized action: {action}'
+        return None
 
 class RuleTargeted(AbstractRuleWrapper):
     """

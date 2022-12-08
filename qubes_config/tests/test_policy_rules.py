@@ -108,12 +108,17 @@ def test_targeted_rule_weird_cases():
            str(make_rule('vm1', '@default', 'ask default_target=vm3'))
 
 def test_targeted_tokens():
-    # tokens as target should be treated like normal targets
+    # can't make a rule with @anyvm target here
     allow_rule = make_rule('vm1', '@anyvm', 'allow')
+    with pytest.raises(ValueError):
+        RuleTargeted(allow_rule)
+
+    # but dispvm is ok and should be treated like normal target
+    allow_rule = make_rule('vm1', '@dispvm', 'allow')
     wrapped_rule = RuleTargeted(allow_rule)
     assert wrapped_rule.raw_rule == allow_rule
     assert wrapped_rule.source == 'vm1'
-    assert wrapped_rule.target == '@anyvm'
+    assert wrapped_rule.target == '@dispvm'
     assert wrapped_rule.action == 'allow'
 
     wrapped_rule.target = 'vm3'

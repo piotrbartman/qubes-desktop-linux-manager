@@ -1075,3 +1075,33 @@ TestService * @anyvm vault ask
 
     # should only have one exception visible, not two
     assert len(handler.exception_list_box.get_children()) == 1
+
+
+def test_subset_handler_unsupported(test_builder, test_qapp,
+                           test_policy_manager: PolicyManager):
+    default_policy = """
+"""
+    current_policy = """TestService * test-blue @default allow target=vault
+TestService * test-blue vault allow
+TestService * @anyvm vault allow target=test-blue
+"""
+
+    test_policy_manager.policy_client.policy_replace('c-test',
+                                                     current_policy, 'any')
+
+    handler = VMSubsetPolicyHandler(
+        qapp=test_qapp,
+        gtk_builder=test_builder,
+        prefix='policytest',
+        policy_manager=test_policy_manager,
+        default_policy=default_policy,
+        service_name="TestService",
+        policy_file_name="c-test",
+        main_verb_description=SimpleVerbDescription({}),
+        main_rule_class=RuleSimple,
+        exception_verb_description=SimpleVerbDescription({}),
+        exception_rule_class=RuleTargeted)
+
+    assert handler.error_box.get_visible()
+    # no rules should have been loaded
+    assert not handler.current_rules

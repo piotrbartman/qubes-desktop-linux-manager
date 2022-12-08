@@ -67,6 +67,8 @@ class RepoHandler:
 
         self.problems_repo_box: Gtk.Box = \
             gtk_builder.get_object('updates_problem_repo')
+        self.problems_label: Gtk.Label = \
+            gtk_builder.get_object('updates_problem_label')
 
         # the code below relies on dicts in Python 3.6+ keeping the
         # order of items
@@ -105,7 +107,7 @@ class RepoHandler:
                 self.repos[repo_name] = {}
                 self.repos[repo_name]['prettyname'] = lst[1]
                 self.repos[repo_name]['enabled'] = (lst[2] == 'enabled')
-        except RuntimeError:
+        except RuntimeError as ex:
             # disable all repo-related stuff
             self.dom0_stable_radio.set_sensitive(False)
             self.dom0_testing_sec_radio.set_sensitive(False)
@@ -115,6 +117,9 @@ class RepoHandler:
             self.template_community_testing.set_sensitive(False)
             self.repos = {}
             self.problems_repo_box.set_visible(True)
+            self.problems_label.set_text(
+                self.problems_label.get_text() +
+                ' Encountered error: ' + str(ex))
 
     def _load_state(self):
         for repo_dict in self.repo_to_widget_mapping:

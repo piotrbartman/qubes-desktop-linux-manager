@@ -21,7 +21,6 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
 # pylint: disable=protected-access
-import unittest.mock
 from unittest.mock import patch, call
 from functools import partial
 

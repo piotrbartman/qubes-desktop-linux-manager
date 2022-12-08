@@ -28,7 +28,7 @@ from qrexec.policy.parser import Allow
 from ..widgets.gtk_widgets import ImageTextButton
 from ..widgets.utils import get_feature, apply_feature_change_from_widget, \
     apply_feature_change
-from ..widgets.gtk_utils import ask_question
+from ..widgets.gtk_utils import ask_question, show_error
 from .page_handler import PageHandler
 from .policy_rules import RuleSimple
 from .policy_manager import PolicyManager
@@ -292,6 +292,8 @@ class U2FPolicyHandler:
         self.policy_filename = '50-config-u2f'
         self.sys_usb = sys_usb
 
+        self._errors: List[str] = []
+
         self.default_policy = ""
         self.deny_all_policy = """
 u2f.Authenticate * @anyvm @anyvm deny
@@ -367,6 +369,20 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
             own_file_name=self.policy_filename,
             policy_manager=self.policy_manager)
 
+        self.box.connect('map', self._on_switch)
+
+    def _on_switch(self, *_args):
+        if self._errors:
+            rule_text = "\n".join(str(rule) for rule in self._errors)
+            show_error(
+                parent=self.box.get_toplevel(),
+                title="Unknown rule found in police file",
+                text="The following rules could not be parsed:\n"
+                     f"{rule_text}\n"
+                     "This has probably happened due to manual editing of the"
+                     "policy file. The rule will be discarded."
+            )
+
 
     @staticmethod
     def _enable_clicked(related_box: Union[Gtk.Box, VMFlowboxHandler],
@@ -386,6 +402,7 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
         return False
 
     def _initialize_data(self):
+        self._errors.clear()
         self.initially_enabled_vms.clear()
         self.available_vms.clear()
         self.initial_register_vms.clear()
@@ -425,6 +442,7 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
                         vm = self.qapp.domains[rule.source]
                         self.initial_register_vms.append(vm)
                     except KeyError:
+                        self._errors.append(str(rule))
                         continue
             elif rule.service == self.AUTH_POLICY:
                 if rule.source != '@anyvm' and isinstance(rule.action, Allow):
@@ -432,7 +450,11 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
                         vm = self.qapp.domains[rule.source]
                         self.initial_blanket_vms.append(vm)
                     except KeyError:
+                        self._errors.append(str(rule))
                         continue
+            elif rule.service != self.POLICY_REGISTER_POLICY:
+                self._errors.append(str(rule))
+                continue
 
         if self.allow_all_register:
             self.register_check.set_active(True)
@@ -468,6 +490,13 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
             return
 
         enabled_vms = self.enable_some_handler.selected_vms
+        if not enabled_vms:
+            show_error(self.box.get_toplevel(),
+                       "Incorrect configuration found",
+                       "U2F is enabled, but not qubes are selected to be "
+                       "used with U2F. This is equivalent to disabling U2F "
+                       "and will be treated as such.")
+
         for vm in self.available_vms:
             value = None if vm not in enabled_vms else True
             apply_feature_change(vm, self.SERVICE_FEATURE, value)

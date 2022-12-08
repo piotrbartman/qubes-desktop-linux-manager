@@ -1075,6 +1075,47 @@ Documentation will open in a disposable qube.</property>
                           </packing>
                         </child>
                         <child>
+                          <object class="GtkBox" id="usb_input_error_box">
+                            <property name="can-focus">False</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkLabel" id="usb_input_error_label">
+                                <property name="can-focus">False</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. The following rules were affected:</property>
+                                <property name="wrap">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkListBox" id="usb_input_error_list">
+                                <property name="can-focus">False</property>
+                                <property name="selection-mode">none</property>
+                                <property name="activate-on-single-click">False</property>
+                                <style>
+                                  <class name="problem_list"/>
+                                </style>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <style>
+                              <class name="problem_box"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">11</property>
+                          </packing>
+                        </child>
+                        <child>
                           <object class="GtkBox" id="usb_u2f_no_usb_vm_problem">
                             <property name="can-focus">False</property>
                             <property name="halign">center</property>
@@ -1100,7 +1141,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">11</property>
+                            <property name="position">12</property>
                           </packing>
                         </child>
                         <child>
@@ -1129,7 +1170,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">12</property>
+                            <property name="position">13</property>
                           </packing>
                         </child>
                         <child>
@@ -1170,7 +1211,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">13</property>
+                            <property name="position">14</property>
                           </packing>
                         </child>
                         <child>
@@ -1194,7 +1235,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">14</property>
+                            <property name="position">15</property>
                           </packing>
                         </child>
                         <child>
@@ -2064,7 +2105,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">15</property>
+                            <property name="position">16</property>
                           </packing>
                         </child>
                         <style>
@@ -2938,6 +2979,47 @@ Documentation will open in a disposable qube.</property>
                           </packing>
                         </child>
                         <child>
+                          <object class="GtkBox" id="updates_error_box">
+                            <property name="can-focus">False</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkLabel" id="updates_error_label">
+                                <property name="can-focus">False</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. The following rules were affected:</property>
+                                <property name="wrap">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkListBox" id="updates_error_list">
+                                <property name="can-focus">False</property>
+                                <property name="selection-mode">none</property>
+                                <property name="activate-on-single-click">False</property>
+                                <style>
+                                  <class name="problem_list"/>
+                                </style>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <style>
+                              <class name="problem_box"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">21</property>
+                          </packing>
+                        </child>
+                        <child>
                           <!-- n-columns=2 n-rows=2 -->
                           <object class="GtkGrid">
                             <property name="visible">True</property>
@@ -3042,7 +3124,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">21</property>
+                            <property name="position">22</property>
                           </packing>
                         </child>
                         <child>
@@ -3083,7 +3165,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">22</property>
+                            <property name="position">23</property>
                           </packing>
                         </child>
                         <child>
@@ -3125,7 +3207,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">23</property>
+                            <property name="position">24</property>
                           </packing>
                         </child>
                         <child>
@@ -3151,7 +3233,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">24</property>
+                            <property name="position">25</property>
                           </packing>
                         </child>
                         <child>
@@ -3164,7 +3246,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">25</property>
+                            <property name="position">26</property>
                           </packing>
                         </child>
                         <child>
@@ -3219,7 +3301,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">27</property>
+                            <property name="position">28</property>
                           </packing>
                         </child>
                         <child>
@@ -3236,7 +3318,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">28</property>
+                            <property name="position">29</property>
                           </packing>
                         </child>
                         <child>
@@ -3253,7 +3335,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">29</property>
+                            <property name="position">30</property>
                           </packing>
                         </child>
                         <child>
@@ -3426,7 +3508,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">30</property>
+                            <property name="position">31</property>
                           </packing>
                         </child>
                         <style>
@@ -3596,6 +3678,47 @@ Documentation will open in a disposable qube.</property>
                           </packing>
                         </child>
                         <child>
+                          <object class="GtkBox" id="splitgpg_error_box">
+                            <property name="can-focus">False</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkLabel" id="splitgpg_error_label">
+                                <property name="can-focus">False</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. The following rules were affected:</property>
+                                <property name="wrap">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkListBox" id="splitgpg_error_list">
+                                <property name="can-focus">False</property>
+                                <property name="selection-mode">none</property>
+                                <property name="activate-on-single-click">False</property>
+                                <style>
+                                  <class name="problem_list"/>
+                                </style>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <style>
+                              <class name="problem_box"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">4</property>
+                          </packing>
+                        </child>
+                        <child>
                           <object class="GtkRadioButton" id="splitgpg_disable_radio">
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
@@ -3643,7 +3766,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">4</property>
+                            <property name="position">5</property>
                           </packing>
                         </child>
                         <child>
@@ -3694,7 +3817,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">5</property>
+                            <property name="position">6</property>
                           </packing>
                         </child>
                         <child>
@@ -4097,7 +4220,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">6</property>
+                            <property name="position">7</property>
                           </packing>
                         </child>
                         <child>
@@ -4163,7 +4286,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">7</property>
+                            <property name="position">8</property>
                           </packing>
                         </child>
                         <child>
@@ -4242,7 +4365,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">8</property>
+                            <property name="position">9</property>
                           </packing>
                         </child>
                         <style>
@@ -4403,7 +4526,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">4</property>
+                            <property name="position">3</property>
                           </packing>
                         </child>
                         <child>
@@ -4420,7 +4543,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">5</property>
+                            <property name="position">4</property>
                           </packing>
                         </child>
                         <child>
@@ -4441,6 +4564,47 @@ Documentation will open in a disposable qube.</property>
                             </child>
                             <child>
                               <object class="GtkListBox" id="clipboard_problem_files_list">
+                                <property name="can-focus">False</property>
+                                <property name="selection-mode">none</property>
+                                <property name="activate-on-single-click">False</property>
+                                <style>
+                                  <class name="problem_list"/>
+                                </style>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <style>
+                              <class name="problem_box"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">5</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkBox" id="clipboard_error_box">
+                            <property name="can-focus">False</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkLabel" id="clipboard_error_label">
+                                <property name="can-focus">False</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. The following rules were affected:</property>
+                                <property name="wrap">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkListBox" id="clipboard_error_list">
                                 <property name="can-focus">False</property>
                                 <property name="selection-mode">none</property>
                                 <property name="activate-on-single-click">False</property>
@@ -4854,7 +5018,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">9</property>
+                            <property name="position">10</property>
                           </packing>
                         </child>
                         <child>
@@ -4931,7 +5095,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">11</property>
+                            <property name="position">12</property>
                           </packing>
                         </child>
                         <style>
@@ -5055,6 +5219,47 @@ Documentation will open in a disposable qube.</property>
                           </packing>
                         </child>
                         <child>
+                          <object class="GtkBox" id="filecopy_error_box">
+                            <property name="can-focus">False</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkLabel" id="filecopy_error_label">
+                                <property name="can-focus">False</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. The following rules were affected:</property>
+                                <property name="wrap">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkListBox" id="filecopy_error_list">
+                                <property name="can-focus">False</property>
+                                <property name="selection-mode">none</property>
+                                <property name="activate-on-single-click">False</property>
+                                <style>
+                                  <class name="problem_list"/>
+                                </style>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <style>
+                              <class name="problem_box"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">3</property>
+                          </packing>
+                        </child>
+                        <child>
                           <object class="GtkRadioButton" id="filecopy_disable_radio">
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
@@ -5103,7 +5308,7 @@ Files cannot be copied to dom0.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">3</property>
+                            <property name="position">4</property>
                           </packing>
                         </child>
                         <child>
@@ -5154,7 +5359,7 @@ Files cannot be copied to dom0.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">4</property>
+                            <property name="position">5</property>
                           </packing>
                         </child>
                         <child>
@@ -5379,7 +5584,7 @@ Files cannot be copied to dom0.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">5</property>
+                            <property name="position">6</property>
                           </packing>
                         </child>
                         <child>
@@ -5445,7 +5650,7 @@ Files cannot be copied to dom0.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">6</property>
+                            <property name="position">7</property>
                           </packing>
                         </child>
                         <child>
@@ -5524,7 +5729,7 @@ Files cannot be copied to dom0.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">7</property>
+                            <property name="position">8</property>
                           </packing>
                         </child>
                         <child>
@@ -5536,7 +5741,7 @@ Files cannot be copied to dom0.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">8</property>
+                            <property name="position">9</property>
                           </packing>
                         </child>
                         <child>
@@ -5553,7 +5758,7 @@ Files cannot be copied to dom0.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">9</property>
+                            <property name="position">10</property>
                           </packing>
                         </child>
                         <child>
@@ -5571,7 +5776,7 @@ Files cannot be copied to dom0.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">10</property>
+                            <property name="position">11</property>
                           </packing>
                         </child>
                         <child>
@@ -5618,7 +5823,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">False</property>
-                            <property name="position">11</property>
+                            <property name="position">12</property>
                           </packing>
                         </child>
                         <child>
@@ -5659,7 +5864,48 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">12</property>
+                            <property name="position">13</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkBox" id="openinvm_error_box">
+                            <property name="can-focus">False</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkLabel" id="openinvm_error_label">
+                                <property name="can-focus">False</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. The following rules were affected:</property>
+                                <property name="wrap">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkListBox" id="openinvm_error_list">
+                                <property name="can-focus">False</property>
+                                <property name="selection-mode">none</property>
+                                <property name="activate-on-single-click">False</property>
+                                <style>
+                                  <class name="problem_list"/>
+                                </style>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <style>
+                              <class name="problem_box"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">14</property>
                           </packing>
                         </child>
                         <child>
@@ -5710,7 +5956,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">13</property>
+                            <property name="position">15</property>
                           </packing>
                         </child>
                         <child>
@@ -5761,7 +6007,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">14</property>
+                            <property name="position">16</property>
                           </packing>
                         </child>
                         <child>
@@ -5986,7 +6232,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">15</property>
+                            <property name="position">17</property>
                           </packing>
                         </child>
                         <child>
@@ -6052,7 +6298,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">16</property>
+                            <property name="position">18</property>
                           </packing>
                         </child>
                         <child>
@@ -6131,7 +6377,7 @@ Documentation will open in a disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">17</property>
+                            <property name="position">19</property>
                           </packing>
                         </child>
                         <style>
@@ -6302,6 +6548,47 @@ Documentation will open in a disposable qube.</property>
                           </packing>
                         </child>
                         <child>
+                          <object class="GtkBox" id="url_error_box">
+                            <property name="can-focus">False</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkLabel" id="url_error_label">
+                                <property name="can-focus">False</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. The following rules were affected:</property>
+                                <property name="wrap">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkListBox" id="url_error_list">
+                                <property name="can-focus">False</property>
+                                <property name="selection-mode">none</property>
+                                <property name="activate-on-single-click">False</property>
+                                <style>
+                                  <class name="problem_list"/>
+                                </style>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <style>
+                              <class name="problem_box"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">4</property>
+                          </packing>
+                        </child>
+                        <child>
                           <object class="GtkRadioButton" id="url_disable_radio">
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
@@ -6350,7 +6637,7 @@ from one qube in another non-disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">4</property>
+                            <property name="position">5</property>
                           </packing>
                         </child>
                         <child>
@@ -6401,7 +6688,7 @@ from one qube in another non-disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">5</property>
+                            <property name="position">6</property>
                           </packing>
                         </child>
                         <child>
@@ -6626,7 +6913,7 @@ from one qube in another non-disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">6</property>
+                            <property name="position">7</property>
                           </packing>
                         </child>
                         <child>
@@ -6692,7 +6979,7 @@ from one qube in another non-disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">7</property>
+                            <property name="position">8</property>
                           </packing>
                         </child>
                         <child>
@@ -6771,7 +7058,7 @@ from one qube in another non-disposable qube.</property>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">8</property>
+                            <property name="position">9</property>
                           </packing>
                         </child>
                         <style>

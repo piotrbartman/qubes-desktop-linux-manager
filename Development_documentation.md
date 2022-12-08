@@ -33,6 +33,8 @@ The following widgets are required:
 - Gtk.RadioButton `{prefix}_disable_radio` RadioButton to set default policy
 - Gtk.Box `{prefix}_problem_box` box with information about conflicting policy files
 - Gtk.ListBox `{prefix}_problem_files_list` list of conflicting policy files
+- Gtk.Box `{prefix}_error_box` has information about errors in loaded policy
+- Gtk.ListBox `{prefix}_error_list` list of erroneous policy rules
 
 ## Testing
 

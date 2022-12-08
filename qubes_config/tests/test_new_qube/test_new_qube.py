@@ -21,7 +21,6 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
 # pylint: disable=unnecessary-dunder-call
-import time
 from unittest.mock import patch, call, ANY
 
 from ...new_qube.new_qube_app import CreateNewQube

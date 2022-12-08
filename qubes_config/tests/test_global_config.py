@@ -198,16 +198,16 @@ def test_global_config_page_change(mock_error, mock_subprocess,
     assert isinstance(handler, FileAccessHandler)
 
     # make a small change
-    handler.openinvm_handler.enable_radio.set_active(True)
-    handler.openinvm_handler.add_button.clicked()
+    handler.filecopy_handler.enable_radio.set_active(True)
+    handler.filecopy_handler.add_button.clicked()
 
-    for child in handler.openinvm_handler.current_rows:
+    for child in handler.filecopy_handler.current_rows:
         if child.editing:
             child.activate()
             child.source_widget.model.select_value('sys-net')
             child.validate_and_save()
 
-    for row in handler.openinvm_handler.current_rows:
+    for row in handler.filecopy_handler.current_rows:
         if row.rule.source == 'sys-net':
             break
     else:
@@ -223,22 +223,22 @@ def test_global_config_page_change(mock_error, mock_subprocess,
     assert app.main_notebook.get_current_page() == file_page_num + 1
     app.main_notebook.prev_page()
 
-    # changes should not be makde
-    for row in handler.openinvm_handler.current_rows:
+    # changes should not be made
+    for row in handler.filecopy_handler.current_rows:
         assert row.rule.source != 'sys-net'
 
     # make changes and try to stick to them
-    handler.openinvm_handler.enable_radio.set_active(True)
-    handler.openinvm_handler.add_button.clicked()
+    handler.filecopy_handler.enable_radio.set_active(True)
+    handler.filecopy_handler.add_button.clicked()
 
-    for child in handler.openinvm_handler.current_rows:
+    for child in handler.filecopy_handler.current_rows:
         if child.editing:
             child.activate()
             child.source_widget.model.select_value('sys-net')
             child.validate_and_save()
 
     old_text = test_policy_manager.policy_client.files[
-        handler.openinvm_handler.policy_file_name]
+        handler.filecopy_handler.policy_file_name]
 
     # save changes
     with patch('qubes_config.global_config.global_config.show_dialog') \
@@ -249,7 +249,7 @@ def test_global_config_page_change(mock_error, mock_subprocess,
 
     # changes should have been done
     assert old_text != test_policy_manager.policy_client.files[
-        handler.openinvm_handler.policy_file_name]
+        handler.filecopy_handler.policy_file_name]
 
     mock_error.assert_not_called()
 

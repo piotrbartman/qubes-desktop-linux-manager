@@ -39,11 +39,12 @@ from .page_handler import PageHandler
 from .policy_handler import PolicyHandler, VMSubsetPolicyHandler
 from .policy_rules import RuleSimple, \
     RuleSimpleAskIsAllow, RuleTargeted, SimpleVerbDescription, \
-    TargetedVerbDescription, RuleSimpleNoAllow
+    RuleSimpleNoAllow
 from .policy_manager import PolicyManager
 from .updates_handler import UpdatesHandler
 from .usb_devices import DevicesHandler
 from .basics_handler import BasicSettingsHandler, FeatureHandler
+from .policy_exceptions_handler import DispvmExceptionHandler
 
 import gi
 
@@ -148,29 +149,15 @@ qubes.Filecopy * @anyvm @anyvm ask""",
                 "deny": "be allowed to copy files to"
             }),
             rule_class=RuleSimple)
-        self.openinvm_handler = PolicyHandler(
-            qapp=self.qapp,
+
+        self.openinvm_handler = DispvmExceptionHandler(
             gtk_builder=gtk_builder,
-            prefix="openinvm",
-            policy_manager=self.policy_manager,
-            default_policy="""qubes.OpenInVM * @anyvm @adminvm deny\n
-qubes.OpenInVM * @anyvm @dispvm allow\n
-qubes.OpenInVM * @anyvm @anyvm ask""",
+            qapp=self.qapp,
             service_name="qubes.OpenInVM",
             policy_file_name="50-config-openinvm",
-            verb_description=TargetedVerbDescription(
-                    single_target_descr={
-                        "allow": 'open files in',
-                        "ask": 'where to open files,\nand select by default',
-                        "deny": 'be allowed to open files in'
-                    },
-                    multi_target_descr={
-                        "allow": 'open files in',
-                        "ask": 'where to open files in',
-                        "deny": 'be allowed to open files in'
-                    }
-                ),
-            rule_class=RuleTargeted)
+            prefix="openinvm",
+            policy_manager=self.policy_manager,
+        )
 
     def reset(self):
         self.filecopy_handler.reset()
@@ -387,30 +374,14 @@ class GlobalConfig(Gtk.Application):
                 policy_manager=self.policy_manager
             )
         self.progress_bar_dialog.update_progress(page_progress)
-
-        self.handlers['url'] = PolicyHandler(
-                qapp=self.qapp,
-                gtk_builder=self.builder,
-                policy_manager=self.policy_manager,
-                prefix="url",
-                service_name='qubes.OpenURL',
-                policy_file_name='50-config-openurl',
-                default_policy="""qubes.OpenURL * @anyvm @adminvm deny\n
-qubes.OpenURL * @anyvm @dispvm allow\n
-qubes.OpenURL * @anyvm @anyvm ask\n""",
-                verb_description=TargetedVerbDescription(
-                    single_target_descr={
-                        "allow": 'open URLs in',
-                        "ask": 'where to open URLs,\nand select by default',
-                        "deny": 'be allowed to open URLs in'
-                    },
-                    multi_target_descr={
-                        "allow": 'open URLs in',
-                        "ask": 'where to open URLs in',
-                        "deny": 'be allowed to open URLs in'
-                    }
-                ),
-                rule_class=RuleTargeted)
+        self.handlers['url'] = DispvmExceptionHandler(
+            gtk_builder=self.builder,
+            qapp=self.qapp,
+            service_name="qubes.OpenURL",
+            policy_file_name="50-config-openurl",
+            prefix="url",
+            policy_manager=self.policy_manager,
+        )
         self.progress_bar_dialog.update_progress(page_progress)
 
         self.handlers['thisdevice'] = ThisDeviceHandler(self.qapp, self.builder)

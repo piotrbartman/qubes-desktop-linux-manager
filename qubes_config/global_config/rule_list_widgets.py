@@ -64,6 +64,11 @@ LIMITED_CATEGORIES = {
     "@type:DispVM": "TYPE: DISPOSABLE",
 }
 
+DISPVM_CATEGORIES = {
+    "@dispvm": "Default Disposable Template",
+}
+
+
 class VMWidget(Gtk.Box):
     """VM/category selection widget."""
     def __init__(self,
@@ -105,6 +110,9 @@ class VMWidget(Gtk.Box):
         self.name_widget = TokenName(self.selected_value, self.qapp,
                                      categories=categories)
 
+        self.selectors_hidden: bool = False  # in some rare cases,
+        # combobox and name widget should be hidden
+
         self.combobox.set_no_show_all(True)
         self.name_widget.set_no_show_all(True)
 
@@ -132,8 +140,9 @@ class VMWidget(Gtk.Box):
         # reverted to initial state
         if not editable:
             self.revert_changes()
-        self.combobox.set_visible(editable)
-        self.name_widget.set_visible(not editable)
+        if not self.selectors_hidden:
+            self.combobox.set_visible(editable)
+            self.name_widget.set_visible(not editable)
 
     def is_changed(self) -> bool:
         """Return True if widget was changed from its initial state."""
@@ -159,6 +168,14 @@ class VMWidget(Gtk.Box):
         """Roll back to last saved state."""
         self.model.select_value(self.selected_value)
 
+    def hide_selectors(self):
+        self.selectors_hidden = True
+        self.combobox.set_visible(False)
+        self.name_widget.set_visible(False)
+
+    def show_selectors(self):
+        self.selectors_hidden = False
+        self.set_editable(True)
 
 class ActionWidget(Gtk.Box):
     """Action selection widget."""
@@ -206,14 +223,17 @@ class ActionWidget(Gtk.Box):
         self.name_widget.set_halign(Gtk.Align.START)
 
         self._format_new_value(self.selected_value)
-        self.combobox.connect('changed', self._format_verb_description)
+        self.callback: Optional[Callable] = None
+        self.combobox.connect('changed', self._combobox_changed)
         self.set_editable(False)
 
-    def _format_verb_description(self, *_args):
+    def _combobox_changed(self, *_args):
         if self.verb_description:
             self.additional_text_widget.set_text(
                 self.verb_description.get_verb_for_action_and_target(
                     self.get_selected(), self.rule.target))
+        if self.callback:
+            self.callback()
 
     def _format_new_value(self, new_value):
         self.name_widget.set_markup(f'{self.choices[new_value]}')
@@ -248,6 +268,10 @@ class ActionWidget(Gtk.Box):
     def revert_changes(self):
         """Roll back to last saved state."""
         self.model.select_value(self.selected_value)
+
+    def set_callback(self, callback: Callable):
+        """The callback should be a function that takes no arguments."""
+        self.callback = callback
 
 
 class RuleListBoxRow(Gtk.ListBoxRow):
@@ -465,9 +489,10 @@ class RuleListBoxRow(Gtk.ListBoxRow):
             show_error(self.source_widget, "Cannot save rule", str(ex))
             return False
 
+        self.rule.action = new_action
         self.rule.source = new_source
         self.rule.target = new_target
-        self.rule.action = new_action
+
         self.changed_from_initial = True
         self.set_edit_mode(False)
         self.get_parent().invalidate_sort()
@@ -475,7 +500,48 @@ class RuleListBoxRow(Gtk.ListBoxRow):
         self.get_parent().emit('rules-changed', None)
         return True
 
-class LimitedRuleListBoxRow(RuleListBoxRow):
+
+class FilteredListBoxRow(RuleListBoxRow):
+    """Row with limited set of source and target qubes"""
+    def __init__(self,
+                 parent_handler,
+                 rule: AbstractRuleWrapper,
+                 qapp: qubesadmin.Qubes,
+                 verb_description: Optional[AbstractVerbDescription] = None,
+                 enable_delete: bool = True,
+                 enable_vm_edit: bool = True,
+                 initial_verb: str = "uses",
+                 filter_target: Optional[Callable] = None,
+                 filter_source: Optional[Callable] = None,
+                 is_new_row: bool = False,
+                 enable_adminvm: bool = False,
+                 source_categories: Optional[Dict] = None,
+                 target_categories: Optional[Dict] = None):
+        self.filter_target = filter_target
+        self.filter_source = filter_source
+        self.source_categories = source_categories
+        self.target_categories = target_categories
+        super().__init__(parent_handler, rule, qapp, verb_description,
+                         enable_delete, enable_vm_edit, initial_verb,
+                         is_new_row=is_new_row, enable_adminvm=enable_adminvm)
+
+    def get_source_widget(self) -> VMWidget:
+        """Widget to be used for source VM"""
+        return VMWidget(
+            self.qapp, self.source_categories, self.rule.source,
+            additional_text=self.initial_verb,
+            filter_function=self.filter_source
+        )
+
+    def get_target_widget(self) -> VMWidget:
+        """Widget to be used for target VM"""
+        return VMWidget(
+            self.qapp, self.target_categories, self.rule.target,
+            additional_widget=self._get_delete_button(),
+            filter_function=self.filter_target)
+
+
+class LimitedRuleListBoxRow(FilteredListBoxRow):
     """Row for a rule with limited set of target VMs."""
     def __init__(self,
                  parent_handler,
@@ -506,45 +572,43 @@ class LimitedRuleListBoxRow(RuleListBoxRow):
             additional_widget=self._get_delete_button(),
             filter_function=self.filter_function)
 
-class NoActionListBoxRow(RuleListBoxRow):
+
+class NoActionListBoxRow(FilteredListBoxRow):
     """Row for a rule where we do not want to set or see Action."""
-    def __init__(self,
-                 parent_handler,
-                 rule: AbstractRuleWrapper,
-                 qapp: qubesadmin.Qubes,
-                 verb_description: Optional[AbstractVerbDescription] = None,
-                 enable_delete: bool = True,
-                 enable_vm_edit: bool = True,
-                 initial_verb: str = "uses",
-                 filter_target: Optional[Callable] = None,
-                 filter_source: Optional[Callable] = None,
-                 is_new_row: bool = False):
-        self.filter_target = filter_target
-        self.filter_source = filter_source
-        super().__init__(parent_handler, rule, qapp, verb_description,
-                         enable_delete, enable_vm_edit, initial_verb,
-                         is_new_row=is_new_row)
-
-    def get_source_widget(self) -> VMWidget:
-        """Widget to be used for source VM"""
-        return VMWidget(
-            self.qapp, None, self.rule.source,
-            additional_text=self.initial_verb,
-            filter_function=self.filter_source
-        )
-
-    def get_target_widget(self) -> VMWidget:
-        """Widget to be used for target VM"""
-        return VMWidget(
-            self.qapp, None, self.rule.target,
-            additional_widget=self._get_delete_button(),
-            filter_function=self.filter_target)
-
     def get_action_widget(self) -> ActionWidget:
         action_widget = super().get_action_widget()
         action_widget.set_no_show_all(True)
         action_widget.set_visible(False)
         return action_widget
+
+
+class DispvmRuleRow(FilteredListBoxRow):
+    def __init__(self,
+                 parent_handler,
+                 rule: AbstractRuleWrapper,
+                 qapp: qubesadmin.Qubes,
+                 verb_description: Optional[AbstractVerbDescription] = None,
+                 is_new_row: bool = False):
+        super().__init__(parent_handler=parent_handler, rule=rule, qapp=qapp,
+                         verb_description=verb_description, initial_verb="will",
+                         filter_target=self._dvm_template_filter,
+                         is_new_row=is_new_row,
+                         source_categories=SOURCE_CATEGORIES,
+                         target_categories=DISPVM_CATEGORIES)
+
+        self.action_widget.set_callback(self._hide_target_on_deny)
+        if self.action_widget.get_selected() == 'deny':
+            self.target_widget.hide_selectors()
+
+    @staticmethod
+    def _dvm_template_filter(vm: qubesadmin.vm.QubesVM):
+        return getattr(vm, 'template_for_dispvms', False)
+
+    def _hide_target_on_deny(self):
+        if self.action_widget.get_selected() == 'deny':
+            self.target_widget.hide_selectors()
+        else:
+            self.target_widget.show_selectors()
 
 
 class ErrorRuleRow(Gtk.ListBoxRow):

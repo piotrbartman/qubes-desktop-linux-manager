@@ -616,8 +616,6 @@ Proxy * @tag:whonix-updatevm @default allow target=anon-whonix
     assert handler.has_whonix
     assert handler.updatevm_model.get_selected() == 'sys-firewall'
     assert handler.whonix_updatevm_model.get_selected() == 'anon-whonix'
-    for rule in handler.current_exception_rules:
-        print(str(rule.raw_rule))
     assert len(handler.current_exception_rules) == 1
 
     for rule in handler.current_exception_rules:

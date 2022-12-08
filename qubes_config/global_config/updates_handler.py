@@ -436,8 +436,6 @@ class UpdateProxy:
         if self.has_whonix:
             def_whonix_updatevm = self.default_whonix_updatevm
 
-        remaining_rules = []
-
         for rule in reversed(self.rules):
             if rule.source == '@type:TemplateVM':
                 def_updatevm = rule.action.target

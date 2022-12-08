@@ -20,14 +20,22 @@
 """
 Class for handling a list of exceptions, such as for updateProxy.
 """
+from copy import deepcopy
 from typing import Optional, List, Callable
 
+import qubesadmin
+import qubesadmin.vm
 from qrexec.policy.parser import Rule
+from .page_handler import PageHandler
 
 from .policy_handler import PolicyHandler
-from .rule_list_widgets import NoActionListBoxRow, RuleListBoxRow, ErrorRuleRow
+from .policy_rules import SimpleVerbDescription, RuleDispVM
+from .rule_list_widgets import RuleListBoxRow, ErrorRuleRow, \
+    DispvmRuleRow
 
 import gi
+
+from ..widgets.gtk_widgets import QubeName
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
@@ -53,6 +61,7 @@ class PolicyExceptionsHandler:
         self.row_func = row_func  # takes a Rule and new/true/false
         self.new_rule = new_rule
 
+        self.initial_rules: List[Rule] = []
         self.rule_list: Gtk.ListBox = gtk_builder.get_object(
             f'{prefix}_exception_list')
 
@@ -71,18 +80,18 @@ class PolicyExceptionsHandler:
 
     def load_rules(self, rules: List[Rule]):
         """Load provided rules."""
-        actual_rules = []
-
+        self.initial_rules.clear()
         for rule in rules:
             if self.exclude_rule and self.exclude_rule(rule):
                 continue
-            actual_rules.append(rule)
+            self.initial_rules.append(rule)
 
         for child in self.rule_list.get_children():
             self.rule_list.remove(child)
 
         self.clear_errors()
-        for rule in actual_rules:
+
+        for rule in self.initial_rules:
             try:
                 self.rule_list.add(self.row_func(rule, False))
             except Exception:  # pylint: disable=broad-except
@@ -95,17 +104,34 @@ class PolicyExceptionsHandler:
         self.rule_list.add(new_row)
         new_row.activate()
 
-    def _rule_clicked(self, _list_box, row: NoActionListBoxRow, *_args):
+    def _rule_clicked(self, _list_box, row: RuleListBoxRow, *_args):
         if row.editing:
             # if the current row was clicked, nothing should happen
             return
         self.close_all_edits()
         row.set_edit_mode(True)
 
+    def get_unsaved(self) -> str:
+        self.close_all_edits()
+
+        if len(self.initial_rules) != len(self.current_rules):
+            return "Policy rules"
+        for rule1, rule2 in zip(self.initial_rules, self.current_rules):
+            if str(rule1) != str(rule2):
+                return "Policy rules"
+        return ""
+
+
     @property
     def current_rows(self) -> List[RuleListBoxRow]:
         """Get currently existing rows."""
         return self.rule_list.get_children()
+
+    @property
+    def current_rules(self) -> List[Rule]:
+        rules = [row.rule.raw_rule for row in self.current_rows if
+         not row.is_new_row or row.changed_from_initial]
+        return rules
 
     def close_all_edits(self):
         """Close all edited rows."""
@@ -124,5 +150,124 @@ class PolicyExceptionsHandler:
         for child in self.error_list.get_children():
             self.error_list.remove(child)
 
-# FOR DISPVMS: Open in Dispvm like update proxy
-# open in vm: just pick default target? and deny? default is ask
+    @staticmethod
+    def verify_rule_against_rows(other_rows: List[RuleListBoxRow],
+                                 row: RuleListBoxRow,
+                                 new_source: str, new_target: str,
+                                 new_action: str) -> Optional[str]:
+        """
+        Verify correctness of a rule with new_source, new_target and new_action
+        if it was to be associated with provided row. Return None if rule would
+        be correct, and string description of error otherwise.
+        """
+        for other_row in other_rows:
+            if other_row == row:
+                continue
+            if other_row.rule.is_rule_conflicting(new_source, new_target,
+                                                  new_action):
+                return str(other_row)
+        return None
+
+    def verify_new_rule(self, row: RuleListBoxRow,
+                        new_source: str, new_target: str,
+                        new_action: str) -> Optional[str]:
+        """
+        Verify correctness of a rule with new_source, new_target and new_action
+        if it was to be associated with provided row. Return None if rule would
+        be correct, and string description of error otherwise.
+        """
+        return self.verify_rule_against_rows(self.current_rows, row,
+                                      new_source, new_target, new_action)
+
+
+class DispvmExceptionHandler(PageHandler):
+    def __init__(self, gtk_builder: Gtk.Builder,
+                 qapp: qubesadmin.Qubes,
+                 service_name: str,
+                 prefix: str,
+                 policy_manager,
+                 policy_file_name: str
+                 ):
+        """
+        Handler for various dispvm-related exception lists
+        :param gtk_builder: Gtk.Builder instance
+        :param qapp: Qubes object
+        :param service_name: name of the service to be used
+        :param prefix: prefix for widgets; expects a
+            prefix_exception_list Gtk.ListBox,
+            prefix_add_rule_button Gtk.Button,
+            prefix_current_state_box Gtk.Box,
+            prefix_error_box Gtk.Box,
+            prefix_problem_box Gtk.Box,
+            prefix_error_list Gtk.ListBox,
+            prefix_problem_files_list Gtk.ListBox
+        :param policy_manager: PolicyManager object
+        :param policy_file_name: name of the policy file
+        """
+        self.qapp = qapp
+        self.service_name = service_name
+        self.policy_manager = policy_manager
+        self.policy_file_name = policy_file_name
+
+        self.list_handler = PolicyExceptionsHandler(
+            gtk_builder=gtk_builder,
+            prefix=prefix,
+            row_func=self._get_row,
+            new_rule=self._new_rule)
+
+        self.current_state_box: Gtk.Box = gtk_builder.get_object(
+            f'{prefix}_current_state_box')
+        self.current_state_widget: Optional[Gtk.Box] = None
+
+        self.initial_rules, self.current_token = \
+            self.policy_manager.get_rules_from_filename(
+                self.policy_file_name, "")
+
+        self.initialize()
+
+    def initialize(self):
+        if self.current_state_widget:
+            self.current_state_box.remove(self.current_state_widget)
+
+        def_dvm = self.qapp.domains[self.qapp.local_name].default_dispvm
+        self.current_state_widget = QubeName(def_dvm)
+        self.current_state_box.add(self.current_state_widget)
+
+        self.list_handler.load_rules(self.initial_rules)
+
+    def _get_row(self, rule: Rule, new: bool = False):
+        return DispvmRuleRow(
+            parent_handler=self.list_handler,
+            rule=RuleDispVM(rule),
+            qapp=self.qapp,
+            verb_description=SimpleVerbDescription({
+                "ask": "and default to",
+                "allow": "use",
+                "deny": "open in disposable qube"
+            }),
+            is_new_row=new,
+        )
+
+    def _new_rule(self) -> Rule:
+        return self.policy_manager.new_rule(
+            service=self.service_name, source='@anyvm',
+            target='@dispvm',
+            action='allow target=@dispvm')
+
+    def get_unsaved(self) -> str:
+        if self.list_handler.get_unsaved() != "":
+            return "Exceptions for disposable templates "
+        return ""
+
+    def reset(self):
+        self.initialize()
+
+    def save(self):
+        self.policy_manager.save_rules(
+            self.policy_file_name,
+            self.list_handler.current_rules, self.current_token)
+
+        _, self.current_token = self.policy_manager.get_rules_from_filename(
+            self.policy_file_name, "")
+
+        self.initial_rules = deepcopy(self.list_handler.current_rules)

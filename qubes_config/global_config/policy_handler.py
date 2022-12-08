@@ -32,8 +32,8 @@ from ..widgets.gtk_utils import show_error, ask_question, show_dialog
 from .page_handler import PageHandler
 from .policy_rules import AbstractRuleWrapper, AbstractVerbDescription
 from .policy_manager import PolicyManager
-from .rule_list_widgets import RuleListBoxRow, LimitedRuleListBoxRow, \
-    ErrorRuleRow
+from .rule_list_widgets import RuleListBoxRow, FilteredListBoxRow, \
+    ErrorRuleRow, LIMITED_CATEGORIES
 from .conflict_handler import ConflictFileHandler
 
 import gi
@@ -543,12 +543,13 @@ class VMSubsetPolicyHandler(PolicyHandler):
         ))
 
     def _add_exception_rule(self, rule):
-        row = LimitedRuleListBoxRow(
+        row = FilteredListBoxRow(
             parent_handler=self,
             rule=self.exception_rule_class(rule),
             qapp=self.qapp,
             verb_description=self.exception_verb_description,
-            filter_function=lambda x: str(x) in self.select_qubes
+            filter_target=lambda x: str(x) in self.select_qubes,
+            source_categories=LIMITED_CATEGORIES
         )
         self.exception_list_box.add(row)
         return row

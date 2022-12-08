@@ -18,6 +18,8 @@ target= and default_target params.
 ## Widget naming convention
 
 Every instance of PolicyHandler has its own prefix.
+
+### Normal policy handler
 The following widgets are required:
 
 - Gtk.ListBox `{prefix}_main_list` that will contain fundamental rules
@@ -35,6 +37,17 @@ The following widgets are required:
 - Gtk.ListBox `{prefix}_problem_files_list` list of conflicting policy files
 - Gtk.Box `{prefix}_error_box` has information about errors in loaded policy
 - Gtk.ListBox `{prefix}_error_list` list of erroneous policy rules
+
+### Dispvm-related policy handler
+
+- Gtk.ListBox `{prefix}_exception_list` for exception RuleListBoxRows
+- Gtk.Button `{prefix}_add_rule_button` button to add new rules
+- Gtk.Box `{prefix}_current_state_box` box that contains the current state of dispvm
+- Gtk.Box `{prefix}_error_box` box that contains info about policy errors
+- Gtk.Box `{prefix}_problem_box` box that contains info about conflicting files
+- Gtk.ListBox `{prefix}_error_list` list of encountered policy errors
+- Gtk.ListBox `{prefix}_problem_files_list` list of conflicting policy files
+
 
 ## Testing
 

@@ -32,12 +32,8 @@ class AbstractRuleWrapper(abc.ABC):
 
     def __init__(self, rule: Rule):
         """
-        :param rule:
+        :param rule: Rule object
         """
-        errors = self.get_rule_errors(str(rule.source),
-                                      str(rule.target), str(rule.action))
-        if errors:
-            raise ValueError(errors)
         self._rule = rule
 
     @property
@@ -114,6 +110,15 @@ class RuleSimple(AbstractRuleWrapper):
         "allow": "always",
         "deny": "never"
     }
+    def __init__(self, rule: Rule):
+        """
+        :param rule: Rule object
+        """
+        super().__init__(rule)
+
+        if str(rule.action) not in ['ask', 'deny', 'allow']:
+            raise ValueError(f'Unrecognized action: {str(rule.action)}')
+
     @property
     def target(self):
         return str(self._rule.target)
@@ -148,14 +153,6 @@ class RuleSimple(AbstractRuleWrapper):
     def raw_rule(self):
         return self._rule
 
-    @staticmethod
-    def get_rule_errors(source: str, target: str, action: str) -> \
-            Optional[str]:
-        # action must be a simple ask/allow/deny
-        if action not in ['ask', 'allow', 'deny']:
-            return f'Unrecognized action: {action}'
-        return None
-
 class RuleSimpleAskIsAllow(RuleSimple):
     """Simple rule where there is no Allow and Ask is pretending to be Allow.
     Used chiefly by Clipboard rules."""
@@ -163,6 +160,14 @@ class RuleSimpleAskIsAllow(RuleSimple):
         "ask": "always",
         "deny": "never"
     }
+    def __init__(self, rule: Rule):
+        """
+        :param rule: Rule object
+        """
+        super().__init__(rule)
+
+        if str(rule.action) not in ['ask', 'deny']:
+            raise ValueError(f'Unrecognized action: {str(rule.action)}')
 
     @staticmethod
     def get_rule_errors(source: str, target: str, action: str) -> \
@@ -178,6 +183,16 @@ class RuleSimpleNoAllow(RuleSimple):
         "ask": "can",
         "deny": "can not"
     }
+
+    def __init__(self, rule: Rule):
+        """
+        :param rule: Rule object
+        """
+        super().__init__(rule)
+
+        if str(rule.action) not in ['ask', 'deny']:
+            raise ValueError(f'Unrecognized action: {str(rule.action)}')
+
     @staticmethod
     def get_rule_errors(source: str, target: str, action: str) -> \
             Optional[str]:
@@ -203,6 +218,18 @@ class RuleTargeted(AbstractRuleWrapper):
         "allow": "automatically",
         "deny": "never"
     }
+
+    def __init__(self, rule: Rule):
+        """
+        :param rule: Rule object
+        """
+        super().__init__(rule)
+
+        errors = self.get_rule_errors(str(rule.source), str(rule.target),
+                                str(rule.action))
+        if errors:
+            raise ValueError(errors)
+
     @property
     def target(self):
         if isinstance(self._rule.action, Ask):
@@ -288,6 +315,108 @@ class RuleTargeted(AbstractRuleWrapper):
         return False
 
 
+class RuleDispVM(AbstractRuleWrapper):
+    """
+    Rule wrapper for rules used with target=@dispvm. The following applies:
+    - source is source
+    - in policy, target=@dispvm
+    - if action = deny, wrapped rule does not show any target
+    - if action = allow, show the target of target=...; store target as
+    @dispvm:target_name, or @dispvm if it's default dispvm
+    - if action = ask, show the target of default_target=...; store target as
+    @dispvm:target_name, or @dispvm if it's default dispvm
+    Returns and accepts strings as target/source/action.
+    """
+    ACTION_CHOICES = {
+        "ask": "ask",
+        "allow": "always",
+        "deny": "never"
+    }
+    def __init__(self, rule: Rule):
+        """
+        :param rule: Rule object
+        """
+        super().__init__(rule)
+
+        if str(rule.target) != '@dispvm':
+            raise ValueError('Target must be @dispvm')
+        action = str(rule.action)
+
+        if action.startswith('ask') and 'default_target=@dispvm' not in action:
+            raise ValueError("default_target must include @dispvm")
+        if action.startswith('allow') and 'target=@dispvm' not in action:
+            raise ValueError("target must include @dispvm")
+
+    @property
+    def target(self):
+        target = ""
+        if isinstance(self._rule.action, Ask):
+            target = str(self._rule.action.default_target or '')
+        if isinstance(self._rule.action, Allow):
+            target = str(self._rule.action.target or '')
+        if target.startswith("@dispvm:"):
+            target = target[len("@dispvm:"):]
+        return target
+
+    @target.setter
+    def target(self, new_value):
+        # when setting to a non-@dispvm, append @dispvm: at the start
+        if not new_value.startswith('@dispvm'):
+            new_value = '@dispvm:' + new_value
+        new_target = Target(new_value)
+
+        if isinstance(self._rule.action, Ask):
+            self._rule.action.default_target = new_target
+            return
+        if isinstance(self._rule.action, Allow):
+            self._rule.action.target = new_target
+            return
+        return # deny has no target
+
+    @property
+    def source(self):
+        return str(self._rule.source)
+
+    @source.setter
+    def source(self, new_value):
+        new_source = Source(new_value)
+        self._rule.source = new_source
+
+    @property
+    def action(self):
+        return type(self._rule.action).__name__.lower()
+
+    @action.setter
+    def action(self, new_value):
+        if self.action == 'deny':
+            old_target = '@dispvm'
+        else:
+            old_target = self.target
+        new_action = Action[new_value].value(self._rule)
+        self._rule.action = new_action
+        if new_value != 'deny':
+            # when switching from anything to deny,
+            # there is no need to change target
+            self.target = old_target
+
+    @property
+    def raw_rule(self):
+        return self._rule
+
+    def is_rule_fundamental(self) -> bool:
+        return False
+
+    def is_rule_conflicting(self, other_source: str, other_target: str,
+                            other_action: str) -> bool:
+        """
+        Return True if rule with other_source and other_target would conflict
+         with self.
+        """
+        if other_source == self.source:
+            return True
+        return False
+
+
 class AbstractVerbDescription(abc.ABC):
     """Class used to represent human-readable verb descriptions:
         Qube1 (will) ACTION (verb_description) Qube2"""
@@ -307,9 +436,13 @@ class SimpleVerbDescription(AbstractVerbDescription):
         ask, allow, deny
         """
         self.descr = descr
+        if self.descr:
+            self.max_length = max((len(x) for x in self.descr.values()))
+        else:
+            self.max_length = 0
 
     def get_verb_for_action_and_target(self, action: str, target: str) -> str:
-        return self.descr.get(action, "")
+        return self.descr.get(action, "").rjust(self.max_length, " ")
 
 
 class TargetedVerbDescription(AbstractVerbDescription):
@@ -327,7 +460,14 @@ class TargetedVerbDescription(AbstractVerbDescription):
         self.single_target_descr = single_target_descr
         self.multi_target_descr = multi_target_descr
 
+        self.max_length = max(
+            (len(x) for x in [*self.single_target_descr.values(),
+                              *self.multi_target_descr.values()]))
+
+
     def get_verb_for_action_and_target(self, action: str, target: str) -> str:
         if target.startswith('@') and target != '@dispvm':
-            return self.multi_target_descr.get(action, "")
-        return self.single_target_descr.get(action, "")
+            return self.multi_target_descr.get(action, "").rjust(
+                self.max_length, " ")
+        return self.single_target_descr.get(action, "").rjust(
+            self.max_length, " ")

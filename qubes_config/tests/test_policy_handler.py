@@ -40,7 +40,7 @@ def compare_rule_lists(rule_list_1, rule_list_2) -> bool:
     return True
 
 
-def add_rule(handler:PolicyHandler, source = None, target = None,
+def add_rule(handler, source = None, target = None,
              action = None, expect_error: bool = False):
     # attempt to add a new rule
     handler.add_button.clicked()

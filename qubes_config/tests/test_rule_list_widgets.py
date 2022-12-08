@@ -25,7 +25,7 @@ from qrexec.policy.parser import Rule
 from ..global_config.policy_handler import PolicyHandler
 from ..global_config.policy_rules import RuleSimple, SimpleVerbDescription
 from ..global_config.rule_list_widgets import VMWidget, ActionWidget,\
-    RuleListBoxRow, NoActionListBoxRow, LimitedRuleListBoxRow
+    RuleListBoxRow, NoActionListBoxRow, FilteredListBoxRow
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -144,14 +144,18 @@ def test_action_widget_verbdescr():
     action_widget = ActionWidget(rule.ACTION_CHOICES, VERB_DESCR, rule)
 
     assert action_widget.additional_text_widget
-    assert action_widget.additional_text_widget.get_text() == 'ASK'
+    ask_text = action_widget.additional_text_widget.get_text()
+    assert ask_text.endswith('ASK')
 
     action_widget.combobox.set_active_id(RuleSimple.ACTION_CHOICES['allow'])
-    assert action_widget.additional_text_widget.get_text() == 'ALLOW'
+    allow_text = action_widget.additional_text_widget.get_text()
+    assert allow_text.endswith('ALLOW')
 
     action_widget.combobox.set_active_id(RuleSimple.ACTION_CHOICES['deny'])
-    assert action_widget.additional_text_widget.get_text() == 'DENY'
+    deny_text = action_widget.additional_text_widget.get_text()
+    assert deny_text.endswith('DENY')
 
+    assert len(ask_text) == len(allow_text) == len(deny_text)
 
 def test_rule_row(test_qapp):
     mock_handler = Mock(spec=PolicyHandler)
@@ -281,11 +285,11 @@ def test_limited_selection_row(test_qapp):
     mock_handler.verify_new_rule.return_value = None
     rule = make_rule('test-blue', 'test-red', 'ask')
 
-    rule_row = LimitedRuleListBoxRow(
+    rule_row = FilteredListBoxRow(
         parent_handler=mock_handler,
         rule=rule,
         qapp=test_qapp,
-        filter_function=lambda vm: 'test' in vm.name
+        filter_target=lambda vm: 'test' in vm.name
     )
     vm_blue = test_qapp.domains['test-blue']
     vm_red = test_qapp.domains['test-red']

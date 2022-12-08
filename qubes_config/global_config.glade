@@ -5909,49 +5909,25 @@ Documentation will open in a disposable qube.</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkRadioButton" id="openinvm_disable_radio">
+                          <object class="GtkBox" id="openinvm_current_state_box">
                             <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">False</property>
-                            <property name="active">True</property>
-                            <property name="draw-indicator">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="spacing">10</property>
                             <child>
-                              <object class="GtkBox">
+                              <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;Default policy.&lt;/b&gt;</property>
-                                    <property name="use-markup">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">You will always be asked for permission when attempting to open files from one qube in another.</property>
-                                    <style>
-                                      <class name="explanation_text"/>
-                                    </style>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
+                                <property name="label" translatable="yes">Curent Default Disposable Template:</property>
                               </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
                             </child>
-                            <style>
-                              <class name="enable_opts"/>
-                            </style>
+                            <child>
+                              <placeholder/>
+                            </child>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -5960,110 +5936,19 @@ Documentation will open in a disposable qube.</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkRadioButton" id="openinvm_enable_radio">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">False</property>
-                            <property name="draw-indicator">True</property>
-                            <property name="group">openinvm_disable_radio</property>
-                            <child>
-                              <object class="GtkBox">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;Custom policy.&lt;/b&gt;</property>
-                                    <property name="use-markup">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">As specified below:</property>
-                                    <style>
-                                      <class name="explanation_text"/>
-                                    </style>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
-                              </object>
-                            </child>
-                            <style>
-                              <class name="enable_opts"/>
-                            </style>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">16</property>
-                          </packing>
-                        </child>
-                        <child>
                           <object class="GtkBox">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="margin-start">50</property>
-                            <property name="margin-top">15</property>
-                            <property name="orientation">vertical</property>
+                            <property name="margin-start">10</property>
+                            <property name="margin-top">20</property>
+                            <property name="margin-bottom">10</property>
                             <child>
-                              <object class="GtkBox">
+                              <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="homogeneous">True</property>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="halign">start</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;Origin qube&lt;/b&gt;</property>
-                                    <property name="use-markup">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="halign">start</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;Permission&lt;/b&gt;</property>
-                                    <property name="use-markup">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="halign">start</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;Destination qube&lt;/b&gt;</property>
-                                    <property name="use-markup">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">2</property>
-                                  </packing>
-                                </child>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">&lt;b&gt;Exceptions:&lt;/b&gt;</property>
+                                <property name="use-markup">True</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -6075,6 +5960,47 @@ Documentation will open in a disposable qube.</property>
                               <object class="GtkSeparator">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
+                                <property name="valign">center</property>
+                                <property name="hexpand">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">16</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="margin-start">30</property>
+                            <property name="margin-top">10</property>
+                            <property name="homogeneous">True</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">&lt;b&gt;Qube&lt;/b&gt;</property>
+                                <property name="use-markup">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -6083,149 +6009,17 @@ Documentation will open in a disposable qube.</property>
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkListBox" id="openinvm_main_list">
+                              <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-start">10</property>
-                                <property name="selection-mode">none</property>
-                                <style>
-                                  <class name="permission_list"/>
-                                </style>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">&lt;b&gt;Disposable Qube Template&lt;/b&gt;</property>
+                                <property name="use-markup">True</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
                                 <property name="fill">True</property>
                                 <property name="position">2</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkBox">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="margin-start">10</property>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="halign">start</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;With the following exceptions:&lt;/b&gt;</property>
-                                    <property name="use-markup">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkSeparator">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="valign">center</property>
-                                    <property name="hexpand">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">3</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkListBox" id="openinvm_exception_list">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="margin-start">10</property>
-                                <property name="selection-mode">none</property>
-                                <child type="placeholder">
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">No exceptions</property>
-                                    <style>
-                                      <class name="permission_row"/>
-                                    </style>
-                                  </object>
-                                </child>
-                                <style>
-                                  <class name="permission_list"/>
-                                </style>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">4</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkSeparator">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">5</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkButton" id="openinvm_add_rule_button">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">True</property>
-                                <property name="halign">start</property>
-                                <property name="relief">none</property>
-                                <child>
-                                  <object class="GtkBox">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <child>
-                                      <object class="GtkLabel">
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">False</property>
-                                        <property name="label" translatable="yes">+ADD</property>
-                                        <style>
-                                          <class name="add_label"/>
-                                        </style>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">0</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkLabel">
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">False</property>
-                                        <property name="xpad">5</property>
-                                        <property name="label" translatable="yes">new</property>
-                                        <style>
-                                          <class name="explanation_text"/>
-                                        </style>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">1</property>
-                                      </packing>
-                                    </child>
-                                  </object>
-                                </child>
-                                <style>
-                                  <class name="flat"/>
-                                </style>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">6</property>
                               </packing>
                             </child>
                           </object>
@@ -6236,63 +6030,23 @@ Documentation will open in a disposable qube.</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton" id="openinvm_raw_event">
+                          <object class="GtkListBox" id="openinvm_exception_list">
                             <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
-                            <child>
-                              <object class="GtkBox">
+                            <property name="can-focus">False</property>
+                            <property name="margin-start">30</property>
+                            <child type="placeholder">
+                              <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <child>
-                                  <object class="GtkImage" id="openinvm_raw_expander">
-                                    <property name="width-request">30</property>
-                                    <property name="height-request">25</property>
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="xpad">5</property>
-                                    <property name="ypad">5</property>
-                                    <property name="pixel-size">18</property>
-                                    <property name="icon-name">qubes-expander-hidden</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">False</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel" id="openinvm_advanced_label">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;View or edit&lt;/b&gt; raw policy file for:</property>
-                                    <property name="use-markup">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">qubes.OpenInVM</property>
-                                    <style>
-                                      <class name="red_code"/>
-                                    </style>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">2</property>
-                                  </packing>
-                                </child>
+                                <property name="label" translatable="yes">No exceptions</property>
+                                <style>
+                                  <class name="permission_row"/>
+                                  <class name="didascalia"/>
+                                </style>
                               </object>
                             </child>
                             <style>
-                              <class name="invisible_button"/>
+                              <class name="permission_list"/>
                             </style>
                           </object>
                           <packing>
@@ -6302,76 +6056,53 @@ Documentation will open in a disposable qube.</property>
                           </packing>
                         </child>
                         <child>
-                          <!-- n-columns=3 n-rows=2 -->
-                          <object class="GtkGrid" id="openinvm_raw_box">
-                            <property name="can-focus">False</property>
+                          <object class="GtkButton" id="openinvm_add_rule_button">
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="receives-default">True</property>
+                            <property name="halign">start</property>
+                            <property name="margin-start">30</property>
+                            <property name="margin-bottom">100</property>
+                            <property name="relief">none</property>
                             <child>
-                              <object class="GtkTextView" id="openinvm_raw_text">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="left-margin">30</property>
-                                <property name="right-margin">30</property>
-                                <property name="top-margin">10</property>
-                                <property name="bottom-margin">10</property>
-                                <property name="monospace">True</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">0</property>
-                                <property name="width">3</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkButton" id="openinvm_raw_save">
-                                <property name="label" translatable="yes">   SAVE   </property>
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">True</property>
-                                <property name="halign">end</property>
-                                <property name="relief">none</property>
-                                <style>
-                                  <class name="button_save"/>
-                                  <class name="flat"/>
-                                  <class name="flat_button"/>
-                                </style>
-                              </object>
-                              <packing>
-                                <property name="left-attach">2</property>
-                                <property name="top-attach">1</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkButton" id="openinvm_raw_cancel">
-                                <property name="label" translatable="yes">CANCEL</property>
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">True</property>
-                                <property name="halign">end</property>
-                                <property name="relief">none</property>
-                                <style>
-                                  <class name="flat"/>
-                                  <class name="button_cancel"/>
-                                  <class name="flat_button"/>
-                                </style>
-                              </object>
-                              <packing>
-                                <property name="left-attach">1</property>
-                                <property name="top-attach">1</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLabel">
+                              <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="hexpand">True</property>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">+ADD</property>
+                                    <style>
+                                      <class name="add_label"/>
+                                    </style>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="xpad">5</property>
+                                    <property name="label" translatable="yes">exception</property>
+                                    <style>
+                                      <class name="explanation_text"/>
+                                    </style>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
                               </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">1</property>
-                              </packing>
                             </child>
                             <style>
-                              <class name="raw_text"/>
+                              <class name="flat"/>
                             </style>
                           </object>
                           <packing>
@@ -6428,7 +6159,7 @@ Documentation will open in a disposable qube.</property>
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">Open URL</property>
+                            <property name="label" translatable="yes">Open URL in Disposable Qube</property>
                             <property name="xalign">0</property>
                             <style>
                               <class name="group_title"/>
@@ -6445,7 +6176,7 @@ Documentation will open in a disposable qube.</property>
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">This policy governs Qubes OS behavior when using &lt;tt&gt;qubes-open-in-vm&lt;/tt&gt; with URLs.</property>
+                            <property name="label" translatable="yes">This policy governs Qubes OS behavior when using &lt;tt&gt;qubes-open-in-dvm&lt;/tt&gt; with URLs.</property>
                             <property name="use-markup">True</property>
                             <property name="wrap">True</property>
                             <property name="xalign">0</property>
@@ -6589,50 +6320,25 @@ Documentation will open in a disposable qube.</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkRadioButton" id="url_disable_radio">
+                          <object class="GtkBox" id="url_current_state_box">
                             <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">False</property>
-                            <property name="active">True</property>
-                            <property name="draw-indicator">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="spacing">10</property>
                             <child>
-                              <object class="GtkBox">
+                              <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;Default policy.&lt;/b&gt;</property>
-                                    <property name="use-markup">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Any qube can open URLs in disposable qubes, but you will be asked before opening URLs 
-from one qube in another non-disposable qube.</property>
-                                    <style>
-                                      <class name="explanation_text"/>
-                                    </style>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
+                                <property name="label" translatable="yes">Curent Default Disposable Template:</property>
                               </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
                             </child>
-                            <style>
-                              <class name="enable_opts"/>
-                            </style>
+                            <child>
+                              <placeholder/>
+                            </child>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -6641,110 +6347,19 @@ from one qube in another non-disposable qube.</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkRadioButton" id="url_enable_radio">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">False</property>
-                            <property name="draw-indicator">True</property>
-                            <property name="group">url_disable_radio</property>
-                            <child>
-                              <object class="GtkBox">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;Custom policy.&lt;/b&gt;</property>
-                                    <property name="use-markup">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">As specified below:</property>
-                                    <style>
-                                      <class name="explanation_text"/>
-                                    </style>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
-                              </object>
-                            </child>
-                            <style>
-                              <class name="enable_opts"/>
-                            </style>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">6</property>
-                          </packing>
-                        </child>
-                        <child>
                           <object class="GtkBox">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="margin-start">50</property>
-                            <property name="margin-top">15</property>
-                            <property name="orientation">vertical</property>
+                            <property name="margin-start">10</property>
+                            <property name="margin-top">20</property>
+                            <property name="margin-bottom">10</property>
                             <child>
-                              <object class="GtkBox">
+                              <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="homogeneous">True</property>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="halign">start</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;Origin qube&lt;/b&gt;</property>
-                                    <property name="use-markup">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="halign">start</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;Permission&lt;/b&gt;</property>
-                                    <property name="use-markup">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="halign">start</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;Destination qube&lt;/b&gt;</property>
-                                    <property name="use-markup">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">2</property>
-                                  </packing>
-                                </child>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">&lt;b&gt;Exceptions:&lt;/b&gt;</property>
+                                <property name="use-markup">True</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -6756,6 +6371,47 @@ from one qube in another non-disposable qube.</property>
                               <object class="GtkSeparator">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
+                                <property name="valign">center</property>
+                                <property name="hexpand">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">6</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkBox">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="margin-start">30</property>
+                            <property name="margin-top">10</property>
+                            <property name="homogeneous">True</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">&lt;b&gt;Qube&lt;/b&gt;</property>
+                                <property name="use-markup">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -6764,149 +6420,17 @@ from one qube in another non-disposable qube.</property>
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkListBox" id="url_main_list">
+                              <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="margin-start">10</property>
-                                <property name="selection-mode">none</property>
-                                <style>
-                                  <class name="permission_list"/>
-                                </style>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">&lt;b&gt;Disposable Qube Template&lt;/b&gt;</property>
+                                <property name="use-markup">True</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
                                 <property name="fill">True</property>
                                 <property name="position">2</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkBox">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="margin-start">10</property>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="halign">start</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;With the following exceptions:&lt;/b&gt;</property>
-                                    <property name="use-markup">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkSeparator">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="valign">center</property>
-                                    <property name="hexpand">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">3</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkListBox" id="url_exception_list">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="margin-start">10</property>
-                                <property name="selection-mode">none</property>
-                                <child type="placeholder">
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">No exceptions</property>
-                                    <style>
-                                      <class name="permission_row"/>
-                                    </style>
-                                  </object>
-                                </child>
-                                <style>
-                                  <class name="permission_list"/>
-                                </style>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">4</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkSeparator">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">5</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkButton" id="url_add_rule_button">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">True</property>
-                                <property name="halign">start</property>
-                                <property name="relief">none</property>
-                                <child>
-                                  <object class="GtkBox">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <child>
-                                      <object class="GtkLabel">
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">False</property>
-                                        <property name="label" translatable="yes">+ADD</property>
-                                        <style>
-                                          <class name="add_label"/>
-                                        </style>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">0</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkLabel">
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">False</property>
-                                        <property name="xpad">5</property>
-                                        <property name="label" translatable="yes">new</property>
-                                        <style>
-                                          <class name="explanation_text"/>
-                                        </style>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">1</property>
-                                      </packing>
-                                    </child>
-                                  </object>
-                                </child>
-                                <style>
-                                  <class name="flat"/>
-                                </style>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">6</property>
                               </packing>
                             </child>
                           </object>
@@ -6917,63 +6441,23 @@ from one qube in another non-disposable qube.</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton" id="url_raw_event">
+                          <object class="GtkListBox" id="url_exception_list">
                             <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                            <property name="receives-default">True</property>
-                            <child>
-                              <object class="GtkBox">
+                            <property name="can-focus">False</property>
+                            <property name="margin-start">30</property>
+                            <child type="placeholder">
+                              <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <child>
-                                  <object class="GtkImage" id="url_raw_expander">
-                                    <property name="width-request">30</property>
-                                    <property name="height-request">25</property>
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="xpad">5</property>
-                                    <property name="ypad">5</property>
-                                    <property name="pixel-size">18</property>
-                                    <property name="icon-name">qubes-expander-hidden</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">False</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel" id="url_expander_label">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;View or edit&lt;/b&gt; raw policy file for:</property>
-                                    <property name="use-markup">True</property>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">1</property>
-                                  </packing>
-                                </child>
-                                <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">qubes.OpenURL</property>
-                                    <style>
-                                      <class name="red_code"/>
-                                    </style>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">2</property>
-                                  </packing>
-                                </child>
+                                <property name="label" translatable="yes">No exceptions</property>
+                                <style>
+                                  <class name="permission_row"/>
+                                  <class name="didascalia"/>
+                                </style>
                               </object>
                             </child>
                             <style>
-                              <class name="invisible_button"/>
+                              <class name="permission_list"/>
                             </style>
                           </object>
                           <packing>
@@ -6983,76 +6467,53 @@ from one qube in another non-disposable qube.</property>
                           </packing>
                         </child>
                         <child>
-                          <!-- n-columns=3 n-rows=2 -->
-                          <object class="GtkGrid" id="url_raw_box">
-                            <property name="can-focus">False</property>
+                          <object class="GtkButton" id="url_add_rule_button">
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="receives-default">True</property>
+                            <property name="halign">start</property>
+                            <property name="margin-start">30</property>
+                            <property name="margin-bottom">100</property>
+                            <property name="relief">none</property>
                             <child>
-                              <object class="GtkTextView" id="url_raw_text">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="left-margin">30</property>
-                                <property name="right-margin">30</property>
-                                <property name="top-margin">10</property>
-                                <property name="bottom-margin">10</property>
-                                <property name="monospace">True</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">0</property>
-                                <property name="width">3</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkButton" id="url_raw_save">
-                                <property name="label" translatable="yes">   SAVE   </property>
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">True</property>
-                                <property name="halign">end</property>
-                                <property name="relief">none</property>
-                                <style>
-                                  <class name="button_save"/>
-                                  <class name="flat"/>
-                                  <class name="flat_button"/>
-                                </style>
-                              </object>
-                              <packing>
-                                <property name="left-attach">2</property>
-                                <property name="top-attach">1</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkButton" id="url_raw_cancel">
-                                <property name="label" translatable="yes">CANCEL</property>
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">True</property>
-                                <property name="halign">end</property>
-                                <property name="relief">none</property>
-                                <style>
-                                  <class name="flat"/>
-                                  <class name="button_cancel"/>
-                                  <class name="flat_button"/>
-                                </style>
-                              </object>
-                              <packing>
-                                <property name="left-attach">1</property>
-                                <property name="top-attach">1</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLabel">
+                              <object class="GtkBox">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="hexpand">True</property>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">+ADD</property>
+                                    <style>
+                                      <class name="add_label"/>
+                                    </style>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="xpad">5</property>
+                                    <property name="label" translatable="yes">exception</property>
+                                    <style>
+                                      <class name="explanation_text"/>
+                                    </style>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
                               </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">1</property>
-                              </packing>
                             </child>
                             <style>
-                              <class name="raw_text"/>
+                              <class name="flat"/>
                             </style>
                           </object>
                           <packing>

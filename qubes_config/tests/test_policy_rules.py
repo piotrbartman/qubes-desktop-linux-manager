@@ -23,7 +23,7 @@
 import pytest
 
 from qrexec.policy.parser import Rule
-from ..global_config.policy_rules import RuleSimple, RuleTargeted
+from ..global_config.policy_rules import RuleSimple, RuleTargeted, RuleDispVM
 
 def make_rule(source, target, action):
     return Rule.from_line(
@@ -231,3 +231,112 @@ def test_targeted_conflict():
     assert not wrapped_deny.is_rule_conflicting(other_source='vm1',
                                                 other_target='vm3',
                                                 other_action='allow')
+
+def test_dispvm_rule():
+    deny_rule = make_rule('vm1', '@dispvm', 'deny')
+    wrapped_rule = RuleDispVM(deny_rule)
+    assert wrapped_rule.raw_rule == deny_rule
+    assert wrapped_rule.source == 'vm1'
+    assert wrapped_rule.target == ''
+    assert wrapped_rule.action == 'deny'
+
+    allow_rule = make_rule('vm1', '@dispvm', 'allow target=@dispvm:vm2')
+    wrapped_rule = RuleDispVM(allow_rule)
+    assert wrapped_rule.raw_rule == allow_rule
+    assert wrapped_rule.source == 'vm1'
+    assert wrapped_rule.target == 'vm2'
+    assert wrapped_rule.action == 'allow'
+
+    ask_rule = make_rule('vm1', '@dispvm', 'ask default_target=@dispvm:vm2')
+    wrapped_rule = RuleDispVM(ask_rule)
+    assert wrapped_rule.raw_rule == ask_rule
+    assert wrapped_rule.source == 'vm1'
+    assert wrapped_rule.target == 'vm2'
+    assert wrapped_rule.action == 'ask'
+
+
+def test_dispvm_tokens():
+    # treat dispvm correctly
+    allow_rule = make_rule('vm1', '@dispvm', 'allow target=@dispvm:vm2')
+    wrapped_rule = RuleDispVM(allow_rule)
+    assert wrapped_rule.raw_rule == allow_rule
+    assert wrapped_rule.source == 'vm1'
+    assert wrapped_rule.target == 'vm2'
+    assert wrapped_rule.action == 'allow'
+
+    wrapped_rule.target = 'vm3'
+    assert str(wrapped_rule.raw_rule) == \
+           str(make_rule('vm1', '@dispvm', 'allow target=@dispvm:vm3'))
+    wrapped_rule.target = '@dispvm'
+    assert str(wrapped_rule.raw_rule) == \
+           str(make_rule('vm1', '@dispvm', 'allow target=@dispvm'))
+
+
+def test_dispvm_change_action():
+    allow_rule = make_rule('vm1', '@dispvm', 'allow target=@dispvm:vm2')
+    ask_rule = make_rule('vm1', '@dispvm', 'ask default_target=@dispvm:vm2')
+
+    wrapped_allow = RuleDispVM(allow_rule)
+    wrapped_ask = RuleDispVM(ask_rule)
+
+    wrapped_allow.action = 'ask'
+    assert str(wrapped_allow.raw_rule) == str(wrapped_ask.raw_rule)
+
+    allow_rule = make_rule('vm1', '@dispvm', 'allow target=@dispvm:vm2')
+    ask_rule = make_rule('vm1', '@dispvm', 'ask default_target=@dispvm:vm2')
+    deny_rule = make_rule('vm1', '@dispvm', 'deny')
+
+    wrapped_allow = RuleDispVM(allow_rule)
+    wrapped_ask = RuleDispVM(ask_rule)
+    wrapped_deny = RuleDispVM(deny_rule)
+
+    wrapped_ask.action = 'allow'
+    assert str(wrapped_allow.raw_rule) == str(wrapped_ask.raw_rule)
+
+    wrapped_ask.action = 'deny'
+    assert str(wrapped_deny.raw_rule) == str(wrapped_ask.raw_rule)
+
+
+def test_dispvm_validity():
+    with pytest.raises(ValueError):
+        rule = make_rule('vm1', 'vm2', 'deny')
+        RuleDispVM(rule)
+
+    with pytest.raises(ValueError):
+        rule = make_rule('vm1', '@dispvm', 'ask')
+        RuleDispVM(rule)
+
+    with pytest.raises(ValueError):
+        rule = make_rule('vm1', '@dispvm', 'allow')
+        RuleDispVM(rule)
+
+    with pytest.raises(ValueError):
+        rule = make_rule('vm1', 'vm2', 'allow target=vm2')
+        RuleDispVM(rule)
+
+    with pytest.raises(ValueError):
+        rule = make_rule('vm1', '@dispvm', 'allow target=vm2')
+        RuleDispVM(rule)
+
+
+def test_dispvm_conflict():
+    rule_allow = make_rule('vm1', '@dispvm', 'allow target=@dispvm:vm2')
+    rule_ask = make_rule('vm1', '@dispvm', 'ask default_target=@dispvm:vm2')
+    rule_deny = make_rule('vm1', '@dispvm', 'deny')
+
+    wrapped_allow = RuleDispVM(rule_allow)
+    wrapped_ask = RuleDispVM(rule_ask)
+    wrapped_deny = RuleDispVM(rule_deny)
+
+    for rule in [wrapped_ask, wrapped_allow, wrapped_deny]:
+        assert rule.is_rule_conflicting(other_source='vm1',
+                                        other_target='vm3',
+                                        other_action='deny')
+
+        assert rule.is_rule_conflicting(other_source='vm1',
+                                        other_target='vm3',
+                                        other_action='ask')
+
+        assert rule.is_rule_conflicting(other_source='vm1',
+                                        other_target='vm3',
+                                        other_action='allow')

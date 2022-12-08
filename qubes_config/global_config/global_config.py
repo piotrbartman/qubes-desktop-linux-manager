@@ -144,7 +144,7 @@ qubes.Filecopy * @anyvm @anyvm ask""",
             policy_file_name="50-config-filecopy",
             verb_description=SimpleVerbDescription({
                 "ask": "to be allowed to copy files to",
-                "allow": "allow files to copied to",
+                "allow": "allow files to be copied to",
                 "deny": "be allowed to copy files to"
             }),
             rule_class=RuleSimple)

@@ -616,13 +616,15 @@ Proxy * @tag:whonix-updatevm @default allow target=anon-whonix
     assert handler.has_whonix
     assert handler.updatevm_model.get_selected() == 'sys-firewall'
     assert handler.whonix_updatevm_model.get_selected() == 'anon-whonix'
+    for rule in handler.current_exception_rules:
+        print(str(rule.raw_rule))
     assert len(handler.current_exception_rules) == 1
 
     for rule in handler.current_exception_rules:
         assert rule.source == 'fedora-36'
         assert rule.target == 'sys-net'
 
-    assert len(handler.updatevm_exception_list.get_children()) == 1
+    assert len(handler.exception_list_handler.rule_list.get_children()) == 1
 
 def test_update_proxy_add_exception(real_builder, test_qapp_whonix,
                                   test_policy_manager):
@@ -630,9 +632,9 @@ def test_update_proxy_add_exception(real_builder, test_qapp_whonix,
                           'proxy-file', 'Proxy')
 
     assert not handler.current_exception_rules
-    handler.add_updatevm_rule_button.clicked()
+    handler.exception_list_handler.add_button.clicked()
 
-    for child in handler.updatevm_exception_list.get_children():
+    for child in handler.exception_list_handler.rule_list.get_children():
         assert isinstance(child, NoActionListBoxRow)
         if not child.editing:
             assert False # wait where is a non-edited row from??
@@ -658,12 +660,12 @@ def test_update_proxy_add_exception(real_builder, test_qapp_whonix,
            [str(rule) for rule in desired_rules]
 
     # if I keep clicking add, I won't get random useless rules
-    handler.add_updatevm_rule_button.clicked()
-    handler.add_updatevm_rule_button.clicked()
-    handler.add_updatevm_rule_button.clicked()
+    handler.exception_list_handler.add_button.clicked()
+    handler.exception_list_handler.add_button.clicked()
+    handler.exception_list_handler.add_button.clicked()
 
     # and the amount of rows is under control
-    assert len(handler.updatevm_exception_list.get_children()) == 2
+    assert len(handler.exception_list_handler.rule_list.get_children()) == 2
 
     handler.close_all_edits()
 
@@ -674,10 +676,10 @@ def test_update_proxy_add_exception_err(real_builder, test_qapp_whonix,
                                   test_policy_manager):
     handler = UpdateProxy(real_builder, test_qapp_whonix, test_policy_manager,
                           'proxy-file', 'Proxy')
-    handler.add_updatevm_rule_button.clicked()
+    handler.exception_list_handler.add_button.clicked()
 
     # can't add update proxy without anon-gateway for whonix vm
-    for child in handler.updatevm_exception_list.get_children():
+    for child in handler.exception_list_handler.rule_list.get_children():
         assert isinstance(child, NoActionListBoxRow)
         if not child.editing:
             assert False # wait where is a non-edited row from??
@@ -782,8 +784,8 @@ def test_update_proxy_save_add_rule(mock_feature, real_builder,
     handler = UpdateProxy(real_builder, test_qapp_whonix, test_policy_manager,
                           'proxy-file', 'Proxy')
 
-    handler.add_updatevm_rule_button.clicked()
-    for child in handler.updatevm_exception_list.get_children():
+    handler.exception_list_handler.add_button.clicked()
+    for child in handler.exception_list_handler.rule_list.get_children():
         assert isinstance(child, NoActionListBoxRow)
         if not child.editing:
             assert False # wait where is a non-edited row from??
@@ -838,7 +840,7 @@ Proxy * @tag:whonix-updatevm @default allow target=anon-whonix"""
         assert rule.source == 'fedora-36'
         assert rule.target == 'sys-net'
 
-    assert len(handler.updatevm_exception_list.get_children()) == 1
+    assert len(handler.exception_list_handler.rule_list.get_children()) == 1
     assert not handler.is_changed()
 
     # change things
@@ -848,8 +850,8 @@ Proxy * @tag:whonix-updatevm @default allow target=anon-whonix"""
     handler.updatevm_model.select_value('sys-net')
 
     # add exception
-    handler.add_updatevm_rule_button.clicked()
-    for child in handler.updatevm_exception_list.get_children():
+    handler.exception_list_handler.add_button.clicked()
+    for child in handler.exception_list_handler.rule_list.get_children():
         assert isinstance(child, NoActionListBoxRow)
         if not child.editing:
             continue
@@ -872,7 +874,7 @@ Proxy * @tag:whonix-updatevm @default allow target=anon-whonix"""
         assert rule.source == 'fedora-36'
         assert rule.target == 'sys-net'
 
-    assert len(handler.updatevm_exception_list.get_children()) == 1
+    assert len(handler.exception_list_handler.rule_list.get_children()) == 1
     assert not handler.is_changed()
 
 

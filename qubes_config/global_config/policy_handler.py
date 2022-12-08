@@ -32,7 +32,8 @@ from ..widgets.gtk_utils import show_error, ask_question, show_dialog
 from .page_handler import PageHandler
 from .policy_rules import AbstractRuleWrapper, AbstractVerbDescription
 from .policy_manager import PolicyManager
-from .rule_list_widgets import RuleListBoxRow, LimitedRuleListBoxRow
+from .rule_list_widgets import RuleListBoxRow, LimitedRuleListBoxRow, \
+    ErrorRuleRow
 from .conflict_handler import ConflictFileHandler
 
 import gi
@@ -42,24 +43,6 @@ import qubesadmin.vm
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
-
-class ErrorRuleRow(Gtk.ListBoxRow):
-    """A ListBox row representing an error-ed out rule."""
-    def __init__(self, rule: Rule):
-        super().__init__()
-        self.box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        self.add(self.box)
-
-        self.get_style_context().add_class('problem_row')
-
-        self.label = Gtk.Label()
-        self.label.set_text(str(rule))
-        self.label.get_style_context().add_class('red_code')
-        self.box.pack_start(self.label, False, False, 0)
-
-    def __str__(self):
-        # pylint: disable=arguments-differ
-        return self.label.get_text()
 
 
 class PolicyHandler(PageHandler):

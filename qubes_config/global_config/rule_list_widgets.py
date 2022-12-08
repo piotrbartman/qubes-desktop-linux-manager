@@ -545,3 +545,22 @@ class NoActionListBoxRow(RuleListBoxRow):
         action_widget.set_no_show_all(True)
         action_widget.set_visible(False)
         return action_widget
+
+
+class ErrorRuleRow(Gtk.ListBoxRow):
+    """A ListBox row representing an error-ed out rule."""
+    def __init__(self, rule):
+        super().__init__()
+        self.box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.add(self.box)
+
+        self.get_style_context().add_class('problem_row')
+
+        self.label = Gtk.Label()
+        self.label.set_text(str(rule))
+        self.label.get_style_context().add_class('red_code')
+        self.box.pack_start(self.label, False, False, 0)
+
+    def __str__(self):
+        # pylint: disable=arguments-differ
+        return self.label.get_text()

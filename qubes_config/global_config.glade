@@ -2979,7 +2979,7 @@ Documentation will open in a disposable qube.</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkBox" id="updates_error_box">
+                          <object class="GtkBox" id="updates_updatevm_error_box">
                             <property name="can-focus">False</property>
                             <property name="orientation">vertical</property>
                             <child>
@@ -2995,7 +2995,7 @@ Documentation will open in a disposable qube.</property>
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkListBox" id="updates_error_list">
+                              <object class="GtkListBox" id="updates_updatevm_error_list">
                                 <property name="can-focus">False</property>
                                 <property name="selection-mode">none</property>
                                 <property name="activate-on-single-click">False</property>
@@ -3250,7 +3250,7 @@ Documentation will open in a disposable qube.</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkButton" id="updates_add_updatevm_rule_button">
+                          <object class="GtkButton" id="updates_updatevm_add_rule_button">
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
                             <property name="receives-default">True</property>
@@ -5748,7 +5748,7 @@ Files cannot be copied to dom0.</property>
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">Open in Qube</property>
+                            <property name="label" translatable="yes">Open in Disposable Qube</property>
                             <property name="xalign">0</property>
                             <style>
                               <class name="group_title"/>
@@ -5765,7 +5765,7 @@ Files cannot be copied to dom0.</property>
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">This policy governs Qubes OS behavior when using &lt;tt&gt;qubes-open-in-vm&lt;/tt&gt; and &lt;tt&gt;qubes-open-in-dvm&lt;/tt&gt;with files. It is also used by various extensions, such as &lt;tt&gt;Edit in Disposable VM&lt;/tt&gt; in File Manager.</property>
+                            <property name="label" translatable="yes">This policy governs Qubes OS behavior when using &lt;tt&gt;qubes-open-in-dvm&lt;/tt&gt; with files. It is also used by various extensions, such as &lt;tt&gt;Edit in Disposable VM&lt;/tt&gt; in File Managers.</property>
                             <property name="use-markup">True</property>
                             <property name="wrap">True</property>
                             <property name="xalign">0</property>

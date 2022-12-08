@@ -35,6 +35,7 @@ from .policy_manager import PolicyManager
 from .rule_list_widgets import NoActionListBoxRow
 from .conflict_handler import ConflictFileHandler
 from .vm_flowbox import VMFlowboxHandler
+from .policy_exceptions_handler import PolicyExceptionsHandler
 
 import gi
 
@@ -363,6 +364,7 @@ class UpdateProxy:
         self.default_whonix_updatevm = self.qapp.domains.get('sys-whonix', None)
 
         self.first_eligible_vm = None
+
         for vm in self.qapp.domains:
             if vm.klass != 'AdminVM' and not vm.is_networked():
                 self.first_eligible_vm = vm
@@ -375,17 +377,14 @@ class UpdateProxy:
         self.whonix_updatevm_box: Gtk.Box = \
             gtk_builder.get_object('updates_whonix_updatevm_box')
 
-        self.updatevm_exception_list: Gtk.ListBox = \
-            gtk_builder.get_object('updates_updatevm_exception_list')
-        self.add_updatevm_rule_button: Gtk.Button = \
-            gtk_builder.get_object('updates_add_updatevm_rule_button')
-
-        self.problem_box: Gtk.Box = \
-            gtk_builder.get_object('updates_problem_policy')
-
         self.rules, self.current_token = \
             self.policy_manager.get_rules_from_filename(
                 self.policy_file_name, "")
+
+        self.exception_list_handler = PolicyExceptionsHandler(
+            gtk_builder=gtk_builder, prefix='updates_updatevm',
+            row_func=self._get_row, new_rule=self._new_rule,
+            exclude_rule=self._rule_filter)
 
         self.updatevm_model = VMListModeler(
             combobox=self.def_updatevm_combo, qapp=self.qapp,
@@ -395,12 +394,8 @@ class UpdateProxy:
             combobox=self.whonix_updatevm_combo, qapp=self.qapp,
             filter_function=self._whonixupdatevm_filter,
             current_value=None)
-        self.load_rules()
 
-        # connect events
-        self.updatevm_exception_list.connect('row-activated',
-                                             self._rule_clicked)
-        self.add_updatevm_rule_button.connect("clicked", self.add_new_rule)
+        self.load_rules()
 
         self.whonix_updatevm_box.set_visible(self.has_whonix)
 
@@ -417,6 +412,14 @@ class UpdateProxy:
     @staticmethod
     def _whonixupdatevm_filter(vm):
         return 'anon-gateway' in vm.tags
+
+    @staticmethod
+    def _rule_filter(rule):
+        if rule.source == '@type:TemplateVM':
+            return True
+        if rule.source == '@tag:whonix-updatevm':
+            return True
+        return False
 
     @staticmethod
     def _needs_updatevm_filter(vm):
@@ -440,8 +443,6 @@ class UpdateProxy:
                 def_updatevm = rule.action.target
             elif rule.source == '@tag:whonix-updatevm':
                 def_whonix_updatevm = rule.action.target
-            else:
-                remaining_rules.append(rule)
 
         self.updatevm_model.select_value(str(def_updatevm))
         self.updatevm_model.update_initial()
@@ -450,11 +451,7 @@ class UpdateProxy:
             self.whonix_updatevm_model.select_value(str(def_whonix_updatevm))
             self.whonix_updatevm_model.update_initial()
 
-        for child in self.updatevm_exception_list.get_children():
-            self.updatevm_exception_list.remove(child)
-
-        for rule in reversed(remaining_rules):
-            self.updatevm_exception_list.add(self._get_row(rule))
+        self.exception_list_handler.load_rules(self.rules)
 
     def _get_row(self, rule: Rule, new: bool = False):
         return NoActionListBoxRow(
@@ -468,28 +465,11 @@ class UpdateProxy:
             is_new_row=new
         )
 
-    def add_new_rule(self, *_args):
-        """Add a new rule."""
-        self.close_all_edits()
-        new_rule = self.policy_manager.new_rule(
+    def _new_rule(self) -> Rule:
+        return self.policy_manager.new_rule(
             service=self.service_name, source=str(self.first_eligible_vm),
             target='@default',
             action=f'allow target={self.default_updatevm}')
-        new_row = self._get_row(new_rule, new=True)
-        self.updatevm_exception_list.add(new_row)
-        new_row.activate()
-
-    def _rule_clicked(self, _list_box, row: NoActionListBoxRow, *_args):
-        if row.editing:
-            # if the current row was clicked, nothing should happen
-            return
-        self.close_all_edits()
-        row.set_edit_mode(True)
-
-    def close_all_edits(self):
-        """Close all edited rows"""
-        PolicyHandler.close_rows_in_list(
-            self.updatevm_exception_list.get_children())
 
     def verify_new_rule(self, row: NoActionListBoxRow,
                         new_source: str, new_target: str,
@@ -500,7 +480,7 @@ class UpdateProxy:
         be correct, and string description of error otherwise.
         """
         simple_verify = PolicyHandler.verify_rule_against_rows(
-            self.updatevm_exception_list.get_children(),
+            self.exception_list_handler.current_rows,
             row, new_source, new_target, new_action)
         if simple_verify:
             return simple_verify
@@ -515,7 +495,7 @@ class UpdateProxy:
     def current_exception_rules(self):
         """Current rules from the Exception list."""
         rules = []
-        for row in self.updatevm_exception_list.get_children():
+        for row in self.exception_list_handler.current_rows:
             rules.append(row.rule)
         return rules
 
@@ -573,6 +553,11 @@ class UpdateProxy:
             elif vm in new_update_proxies:
                 apply_feature_change(vm, 'service.qubes-updates-proxy',
                                      True)
+
+    def close_all_edits(self):
+        """Close all edited rows."""
+        self.exception_list_handler.close_all_edits()
+
 
 class UpdatesHandler(PageHandler):
     """Handler for all the disparate Updates functions."""

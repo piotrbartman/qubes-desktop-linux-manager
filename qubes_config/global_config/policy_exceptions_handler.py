@@ -140,10 +140,13 @@ class PolicyExceptionsHandler:
 
     def get_unsaved(self) -> str:
         self.close_all_edits()
-        if compare_rule_lists(self.initial_rules, self.current_rules):
-            return ""
-        return "Policy rules"
+        changed = []
+        if self.raw_handler and self.raw_handler.get_unsaved():
+            changed.append("Raw policy text")
 
+        if not compare_rule_lists(self.initial_rules, self.current_rules):
+            changed.append("Policy rules")
+        return "\n".join(changed)
 
     @property
     def current_rows(self) -> List[RuleListBoxRow]:

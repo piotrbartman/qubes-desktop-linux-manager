@@ -365,10 +365,13 @@ class PolicyHandler(PageHandler):
         """Get human-readable description of unsaved changes, or
         empty string if none were found."""
         self.close_all_edits()
+        changed = []
+        if self.raw_handler.get_unsaved():
+            changed.append("Raw policy text")
 
-        if compare_rule_lists(self.initial_rules, self.current_rules):
-            return ""
-        return "Policy rules"
+        if not compare_rule_lists(self.initial_rules, self.current_rules):
+            changed.append("Policy rules")
+        return "\n".join(changed)
 
     def on_switch(self, *_args):
         if self.error_handler.get_errors():
@@ -463,6 +466,11 @@ class RawPolicyTextHandler:
         """Fill raw text window with provided rules"""
         self.last_known_rules = rules
         self.text_buffer.set_text(self.policy_manager.rules_to_text(rules))
+        self.text_buffer.set_modified(False)
+
+    def get_unsaved(self) -> bool:
+        """Return True if the raw rule text was changed."""
+        return self.text_buffer.get_modified()
 
 
 class VMSubsetPolicyHandler(PolicyHandler):

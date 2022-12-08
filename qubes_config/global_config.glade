@@ -6062,7 +6062,6 @@ Documentation will open in a disposable qube.</property>
                             <property name="receives-default">True</property>
                             <property name="halign">start</property>
                             <property name="margin-start">30</property>
-                            <property name="margin-bottom">100</property>
                             <property name="relief">none</property>
                             <child>
                               <object class="GtkBox">
@@ -6109,6 +6108,152 @@ Documentation will open in a disposable qube.</property>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
                             <property name="position">19</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkButton" id="openinvm_raw_event">
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="receives-default">True</property>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <child>
+                                  <object class="GtkImage" id="openinvm_raw_expander">
+                                    <property name="width-request">30</property>
+                                    <property name="height-request">25</property>
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="xpad">5</property>
+                                    <property name="ypad">5</property>
+                                    <property name="pixel-size">18</property>
+                                    <property name="icon-name">qubes-expander-hidden</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">False</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="openinvm_advanced_label">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">&lt;b&gt;View or edit&lt;/b&gt; raw policy file for:</property>
+                                    <property name="use-markup">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">qubes.OpenInVM</property>
+                                    <style>
+                                      <class name="red_code"/>
+                                    </style>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">2</property>
+                                  </packing>
+                                </child>
+                              </object>
+                            </child>
+                            <style>
+                              <class name="invisible_button"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">20</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <!-- n-columns=3 n-rows=2 -->
+                          <object class="GtkGrid" id="openinvm_raw_box">
+                            <property name="can-focus">False</property>
+                            <property name="margin-bottom">100</property>
+                            <child>
+                              <object class="GtkTextView" id="openinvm_raw_text">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="left-margin">30</property>
+                                <property name="right-margin">30</property>
+                                <property name="top-margin">10</property>
+                                <property name="bottom-margin">10</property>
+                                <property name="monospace">True</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">0</property>
+                                <property name="width">3</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="openinvm_raw_save">
+                                <property name="label" translatable="yes">   SAVE   </property>
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="halign">end</property>
+                                <property name="relief">none</property>
+                                <style>
+                                  <class name="button_save"/>
+                                  <class name="flat"/>
+                                  <class name="flat_button"/>
+                                </style>
+                              </object>
+                              <packing>
+                                <property name="left-attach">2</property>
+                                <property name="top-attach">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="openinvm_raw_cancel">
+                                <property name="label" translatable="yes">CANCEL</property>
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="halign">end</property>
+                                <property name="relief">none</property>
+                                <style>
+                                  <class name="flat"/>
+                                  <class name="button_cancel"/>
+                                  <class name="flat_button"/>
+                                </style>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="hexpand">True</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">1</property>
+                              </packing>
+                            </child>
+                            <style>
+                              <class name="raw_text"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">21</property>
                           </packing>
                         </child>
                         <style>
@@ -6473,7 +6618,6 @@ Documentation will open in a disposable qube.</property>
                             <property name="receives-default">True</property>
                             <property name="halign">start</property>
                             <property name="margin-start">30</property>
-                            <property name="margin-bottom">100</property>
                             <property name="relief">none</property>
                             <child>
                               <object class="GtkBox">
@@ -6520,6 +6664,152 @@ Documentation will open in a disposable qube.</property>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
                             <property name="position">9</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkButton" id="url_raw_event">
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="receives-default">True</property>
+                            <child>
+                              <object class="GtkBox">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <child>
+                                  <object class="GtkImage" id="url_raw_expander">
+                                    <property name="width-request">30</property>
+                                    <property name="height-request">25</property>
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="xpad">5</property>
+                                    <property name="ypad">5</property>
+                                    <property name="pixel-size">18</property>
+                                    <property name="icon-name">qubes-expander-hidden</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">False</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel" id="url_advanced_label">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">&lt;b&gt;View or edit&lt;/b&gt; raw policy file for:</property>
+                                    <property name="use-markup">True</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">qubes.OpenURL</property>
+                                    <style>
+                                      <class name="red_code"/>
+                                    </style>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">2</property>
+                                  </packing>
+                                </child>
+                              </object>
+                            </child>
+                            <style>
+                              <class name="invisible_button"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">10</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <!-- n-columns=3 n-rows=2 -->
+                          <object class="GtkGrid" id="url_raw_box">
+                            <property name="can-focus">False</property>
+                            <property name="margin-bottom">100</property>
+                            <child>
+                              <object class="GtkTextView" id="url_raw_text">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="left-margin">30</property>
+                                <property name="right-margin">30</property>
+                                <property name="top-margin">10</property>
+                                <property name="bottom-margin">10</property>
+                                <property name="monospace">True</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">0</property>
+                                <property name="width">3</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="url_raw_save">
+                                <property name="label" translatable="yes">   SAVE   </property>
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="halign">end</property>
+                                <property name="relief">none</property>
+                                <style>
+                                  <class name="button_save"/>
+                                  <class name="flat"/>
+                                  <class name="flat_button"/>
+                                </style>
+                              </object>
+                              <packing>
+                                <property name="left-attach">2</property>
+                                <property name="top-attach">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="url_raw_cancel">
+                                <property name="label" translatable="yes">CANCEL</property>
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="halign">end</property>
+                                <property name="relief">none</property>
+                                <style>
+                                  <class name="flat"/>
+                                  <class name="button_cancel"/>
+                                  <class name="flat_button"/>
+                                </style>
+                              </object>
+                              <packing>
+                                <property name="left-attach">1</property>
+                                <property name="top-attach">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="hexpand">True</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">1</property>
+                              </packing>
+                            </child>
+                            <style>
+                              <class name="raw_text"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">11</property>
                           </packing>
                         </child>
                         <style>

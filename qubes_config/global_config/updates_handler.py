@@ -383,8 +383,9 @@ class UpdateProxy:
 
         self.exception_list_handler = PolicyExceptionsHandler(
             gtk_builder=gtk_builder, prefix='updates_updatevm',
+            policy_manager=self.policy_manager,
             row_func=self._get_row, new_rule=self._new_rule,
-            exclude_rule=self._rule_filter)
+            exclude_rule=self._rule_filter, enable_raw=False)
 
         self.updatevm_model = VMListModeler(
             combobox=self.def_updatevm_combo, qapp=self.qapp,
@@ -449,7 +450,7 @@ class UpdateProxy:
             self.whonix_updatevm_model.select_value(str(def_whonix_updatevm))
             self.whonix_updatevm_model.update_initial()
 
-        self.exception_list_handler.load_rules(self.rules)
+        self.exception_list_handler.initialize_with_rules(self.rules)
 
     def _get_row(self, rule: Rule, new: bool = False):
         return NoActionListBoxRow(

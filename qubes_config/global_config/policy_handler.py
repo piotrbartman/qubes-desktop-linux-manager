@@ -22,7 +22,7 @@
 RPC Policy-related functionality.
 """
 from copy import deepcopy
-from typing import Optional, List, Type, Set
+from typing import Optional, List, Type, Set, Callable
 
 from qrexec.policy.parser import Rule
 from qrexec.exc import PolicySyntaxError
@@ -100,31 +100,15 @@ class PolicyHandler(PageHandler):
         self.disable_radio: Gtk.RadioButton = gtk_builder.get_object(
             f'{prefix}_disable_radio')
 
-        # raw policy text widgets
-        self.raw_event_button: Gtk.Button = \
-            gtk_builder.get_object(f'{prefix}_raw_event')
-        self.raw_box: Gtk.Box = \
-            gtk_builder.get_object(f'{prefix}_raw_box')
-        self.raw_expander_icon: Gtk.Image = \
-            gtk_builder.get_object(f'{prefix}_raw_expander')
-        self.raw_text: Gtk.TextView = gtk_builder.get_object(
-            f'{prefix}_raw_text')
-        self.raw_save: Gtk.Button = gtk_builder.get_object(
-            f'{prefix}_raw_save')
-        self.raw_cancel: Gtk.Button = gtk_builder.get_object(
-            f'{prefix}_raw_cancel')
-        self.text_buffer: Gtk.TextBuffer = self.raw_text.get_buffer()
-
         # connect events
         self.add_button.connect("clicked", self.add_new_rule)
 
         self.exception_list_box.connect('row-activated', self._rule_clicked)
         self.main_list_box.connect('row-activated', self._rule_clicked)
-        self.exception_list_box.connect('rules-changed', self.fill_raw_rules)
-        self.main_list_box.connect('rules-changed', self.fill_raw_rules)
-
-        self.raw_save.connect("clicked", self._save_raw)
-        self.raw_cancel.connect("clicked", self._cancel_raw)
+        self.exception_list_box.connect('rules-changed',
+                                        self._populate_raw_rules)
+        self.main_list_box.connect('rules-changed',
+                                   self._populate_raw_rules)
 
         self.enable_radio.connect("toggled", self._custom_toggled)
         self.disable_radio.connect("toggled", self._custom_toggled)
@@ -138,26 +122,24 @@ class PolicyHandler(PageHandler):
             own_file_name=self.policy_file_name,
             policy_manager=self.policy_manager)
 
-        self.expander_handler = ExpanderHandler(
-            event_button=self.raw_event_button,
-            data_container=self.raw_box,
-            icon=self.raw_expander_icon,
-            event_callback=self._raw_hide_show
-        )
-
         self.error_handler = ErrorHandler(gtk_builder, prefix)
 
-        self.initial_rules, self.current_token = \
-            self.policy_manager.get_rules_from_filename(
-                self.policy_file_name, self.default_policy)
+        self.raw_handler = RawPolicyTextHandler(
+            gtk_builder=gtk_builder, prefix=prefix,
+            policy_manager=self.policy_manager,
+            error_handler=self.error_handler,
+            callback_on_save_raw=self.populate_rule_lists,
+            callback_on_open_raw=self.close_all_edits)
 
         # fill data
-        rules = deepcopy(self.initial_rules)
-        self.populate_rule_lists(rules)
-        self.fill_raw_rules()
-        self.check_custom_rules(rules)
+        self.initial_rules: List[Rule] = []
+        self.current_token: str = ''
+        self.initialize_data()
 
         self.main_list_box.connect('map', self.on_switch)
+
+    def _populate_raw_rules(self, *_args):
+        self.raw_handler.fill_raw(self.current_rules)
 
     def add_new_rule(self, *_args):
         """Add a new rule."""
@@ -180,7 +162,7 @@ class PolicyHandler(PageHandler):
         if self.disable_radio.get_active():
             return self.policy_manager.text_to_rules(self.default_policy)
         return [row.rule.raw_rule for row in self.current_rows if
-                not row.is_new_row or row.changed_from_initial]
+                not row.is_new_row]
 
     @property
     def current_rows(self) -> List[RuleListBoxRow]:
@@ -190,12 +172,24 @@ class PolicyHandler(PageHandler):
         return self.exception_list_box.get_children() + \
                self.main_list_box.get_children()
 
+    def initialize_data(self):
+        rules, self.current_token = \
+            self.policy_manager.get_rules_from_filename(
+                self.policy_file_name, self.default_policy)
+
+        # fill data
+        self.populate_rule_lists(rules)
+        self.raw_handler.fill_raw(rules)
+
+        self.initial_rules = deepcopy(self.current_rules)
+
     def populate_rule_lists(self, rules: List[Rule]):
         """Populate rule lists with the provided set of Rule objects."""
         for child in self.main_list_box.get_children():
             self.main_list_box.remove(child)
         for child in self.exception_list_box.get_children():
             self.exception_list_box.remove(child)
+
         self.error_handler.clear_all_errors()
 
         for rule in rules:
@@ -232,52 +226,13 @@ class PolicyHandler(PageHandler):
                     enable_delete=False, enable_vm_edit=False,
                     enable_adminvm=self.include_adminvm))
 
+        self.check_custom_rules(rules)
+
     def set_custom_editable(self, state: bool):
         """If true, set widgets to accept editing custom rules."""
         self.add_button.set_sensitive(state)
         self.main_list_box.set_sensitive(state)
         self.exception_list_box.set_sensitive(state)
-
-    def _save_raw(self, _widget):
-        try:
-            rules: List[Rule] = self.policy_manager.text_to_rules(
-                self.text_buffer.get_text(
-                    self.text_buffer.get_start_iter(),
-                    self.text_buffer.get_end_iter(), False))
-            self.populate_rule_lists(rules)
-            if self.error_handler.get_errors():
-                rule_text = "\n".join(str(rule) for rule in
-                                      self.error_handler.get_errors())
-                show_error(
-                    parent=self.main_list_box.get_toplevel(),
-                    title="Unknown rule found",
-                    text="The following rules could not be parsed:\n"
-                         f"{rule_text}\n"
-                         "Changes will be reverted."
-                )
-                self.reset()
-                return
-            self.check_custom_rules(rules)
-            self.expander_handler.set_state(False)
-        except PolicySyntaxError as ex:
-            show_error(self.main_list_box, "Policy error",
-                       f"Cannot save policy.\n"
-                       f"Encountered the following error(s):\n{ex}")
-            return
-
-    def _cancel_raw(self, _widget):
-        self.fill_raw_rules()
-        self.expander_handler.set_state(False)
-
-    def _raw_hide_show(self, state):
-        if state:
-            self.close_all_edits()
-
-    def fill_raw_rules(self, *_args):
-        """Fill raw text window with appropriate data, based on whatever's
-        currently selected"""
-        self.text_buffer.set_text(self.policy_manager.rules_to_text(
-            self.current_rules))
 
     @staticmethod
     def cmp_token(token_1, token_2):
@@ -323,7 +278,7 @@ class PolicyHandler(PageHandler):
     def _custom_toggled(self, _widget=None):
         self.close_all_edits()
         self.set_custom_editable(self.enable_radio.get_active())
-        self.fill_raw_rules()
+        self.raw_handler.fill_raw(self.current_rules)
 
     def _rule_clicked(self, _list_box, row: RuleListBoxRow, *_args):
         if row.editing:
@@ -385,7 +340,7 @@ class PolicyHandler(PageHandler):
                 else:
                     row.revert()
 
-    def close_all_edits(self):
+    def close_all_edits(self, *_args):
         """Close all edited rows."""
         self.close_rows_in_list(self.current_rows)
 
@@ -393,8 +348,7 @@ class PolicyHandler(PageHandler):
         """Reset state to initial or last saved state, whichever is newer."""
         rules = deepcopy(self.initial_rules)
         self.populate_rule_lists(rules)
-        self.fill_raw_rules()
-        self.check_custom_rules(rules)
+        self.raw_handler.fill_raw(rules)
 
     def save(self):
         """Save current rules, whatever they are - custom or default."""
@@ -434,6 +388,87 @@ class PolicyHandler(PageHandler):
                      "This has probably happened due to manual editing of the"
                      "policy file. The rule will be discarded."
             )
+
+
+class RawPolicyTextHandler:
+    """Class that handles raw text widgets"""
+    def __init__(self, gtk_builder: Gtk.Builder, prefix: str,
+                 policy_manager: PolicyManager,
+                 error_handler: 'ErrorHandler',
+                 callback_on_save_raw: Callable[[List[Rule]], None],
+                 callback_on_open_raw: Callable):
+        """
+        :param gtk_builder: Gtk.Builder
+        :param prefix: prefix for widgets
+        :param policy_manager: PolicyManager
+        :param error_handler: ErrorHandler
+        :param callback_on_save_raw: callback to be executed
+        when save_raw is clicked; must take a List[Rule] as a parameter
+        :param callback_on_open_raw: called when raw edit is open/closed
+        """
+        self.policy_manager = policy_manager
+        self.error_handler = error_handler
+        self.callback_on_save_raw = callback_on_save_raw
+
+        self.raw_event_button: Gtk.Button = \
+            gtk_builder.get_object(f'{prefix}_raw_event')
+        self.raw_box: Gtk.Box = \
+            gtk_builder.get_object(f'{prefix}_raw_box')
+        self.raw_expander_icon: Gtk.Image = \
+            gtk_builder.get_object(f'{prefix}_raw_expander')
+        self.raw_text: Gtk.TextView = gtk_builder.get_object(
+            f'{prefix}_raw_text')
+        self.raw_save: Gtk.Button = gtk_builder.get_object(
+            f'{prefix}_raw_save')
+        self.raw_cancel: Gtk.Button = gtk_builder.get_object(
+            f'{prefix}_raw_cancel')
+        self.text_buffer: Gtk.TextBuffer = self.raw_text.get_buffer()
+
+        self.raw_save.connect("clicked", self._save_raw)
+        self.raw_cancel.connect("clicked", self._cancel_raw)
+
+        self.expander_handler = ExpanderHandler(
+            event_button=self.raw_event_button,
+            data_container=self.raw_box,
+            icon=self.raw_expander_icon,
+            event_callback=callback_on_open_raw
+        )
+
+        self.last_known_rules: List[Rule] = []
+
+    def _save_raw(self, _widget):
+        try:
+            rules: List[Rule] = self.policy_manager.text_to_rules(
+                self.text_buffer.get_text(
+                    self.text_buffer.get_start_iter(),
+                    self.text_buffer.get_end_iter(), False))
+            if self.callback_on_save_raw:
+                self.callback_on_save_raw(rules)
+
+            if self.error_handler.get_errors():
+                rule_text = "\n".join(str(rule) for rule in
+                                  self.error_handler.get_errors())
+                raise PolicySyntaxError(None, None, rule_text)
+
+            self.expander_handler.set_state(False)
+        except PolicySyntaxError as ex:
+            error_message = str(ex).split(':', 3)[2]
+            show_error(
+                parent=self.raw_box.get_toplevel(),
+                title="Error parsing rules",
+                text="The following rules could not be parsed:\n"
+                     f"{error_message}\n"
+            )
+            return
+
+    def _cancel_raw(self, _widget):
+        self.fill_raw(self.last_known_rules)
+        self.expander_handler.set_state(False)
+
+    def fill_raw(self, rules: List[Rule]):
+        """Fill raw text window with provided rules"""
+        self.last_known_rules = rules
+        self.text_buffer.set_text(self.policy_manager.rules_to_text(rules))
 
 
 class VMSubsetPolicyHandler(PolicyHandler):
@@ -533,6 +568,7 @@ class VMSubsetPolicyHandler(PolicyHandler):
             parent_handler=self,
             rule=self.exception_rule_class(rule),
             qapp=self.qapp,
+            initial_verb="will",
             verb_description=self.exception_verb_description,
             filter_target=lambda x: str(x) in self.select_qubes,
             source_categories=LIMITED_CATEGORIES
@@ -604,6 +640,8 @@ class VMSubsetPolicyHandler(PolicyHandler):
                 continue
         self.add_button.set_sensitive(bool(self.main_list_box.get_children()))
 
+        self.check_custom_rules(rules)
+
     def set_custom_editable(self, state: bool):
         super().set_custom_editable(state)
         self.add_select_button.set_sensitive(state)
@@ -651,7 +689,7 @@ class VMSubsetPolicyHandler(PolicyHandler):
             new_row.activate()
             break
 
-    def close_all_edits(self):
+    def close_all_edits(self, *_args):
         """Close all edited rows"""
         super().close_all_edits()
         if self.add_select_box.get_visible():

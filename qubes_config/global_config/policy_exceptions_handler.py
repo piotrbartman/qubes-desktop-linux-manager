@@ -28,7 +28,7 @@ import qubesadmin.vm
 from qrexec.policy.parser import Rule
 from .page_handler import PageHandler
 
-from .policy_handler import PolicyHandler, ErrorHandler
+from .policy_handler import PolicyHandler, ErrorHandler, RawPolicyTextHandler
 from .policy_rules import SimpleVerbDescription, RuleDispVM
 from .rule_list_widgets import RuleListBoxRow, DispvmRuleRow
 
@@ -44,21 +44,27 @@ class PolicyExceptionsHandler:
     Class for handling a list of policy exceptions
     """
     def __init__(self, gtk_builder: Gtk.Builder, prefix: str,
+                 policy_manager,
                  row_func: Callable[[Rule, bool], Gtk.ListBoxRow],
                  new_rule: Callable[..., Rule],
-                 exclude_rule: Optional[Callable[[Rule], bool]] = None):
+                 exclude_rule: Optional[Callable[[Rule], bool]] = None,
+                 enable_raw: bool = True
+                 ):
         """
         :param gtk_builder: Gtk.Builder instance
         :param prefix: prefix for widgets; expects a prefix_exception_list
         ListBox and prefix_add_rule_button Button
+        :param policy_manager: Policy Manager
         :param row_func: function that returns expected ListBoxRows
         :param new_rule: function that returns a new Rule
         :param exclude_rule: optional function that excludes some rules from
         being shown; if True, exclude rule
+        :param enable_raw: if False, do not handle raw policy text edit
         """
         self.exclude_rule = exclude_rule
         self.row_func = row_func  # takes a Rule and new/true/false
         self.new_rule = new_rule
+        self.policy_manager = policy_manager
 
         self.initial_rules: List[Rule] = []
         self.rule_list: Gtk.ListBox = gtk_builder.get_object(
@@ -69,12 +75,34 @@ class PolicyExceptionsHandler:
 
         self.error_handler = ErrorHandler(gtk_builder, prefix)
 
+        if enable_raw:
+            self.raw_handler = RawPolicyTextHandler(
+                gtk_builder=gtk_builder,
+                prefix=prefix,
+                policy_manager=self.policy_manager,
+                error_handler=self.error_handler,
+                callback_on_open_raw=self.close_all_edits,
+                callback_on_save_raw=self.populate_rule_lists,
+            )
+        else:
+            self.raw_handler = None
+
         # connect events
         self.rule_list.connect('row-activated', self._rule_clicked)
+        self.rule_list.connect('rules-changed', self._fill_raw_rules)
         self.add_button.connect("clicked", self.add_new_rule)
 
-    def load_rules(self, rules: List[Rule]):
-        """Load provided rules."""
+    def initialize_with_rules(self, rules: List[Rule]):
+        """Populate all widgets with provided rules"""
+        self.populate_rule_lists(rules)
+        self._fill_raw_rules()
+
+    def _fill_raw_rules(self, *_args):
+        if self.raw_handler:
+            self.raw_handler.fill_raw(self.current_rules)
+
+    def populate_rule_lists(self, rules: List[Rule]):
+        """Load provided rules to exception list."""
         self.error_handler.clear_all_errors()
 
         self.initial_rules.clear()
@@ -91,6 +119,9 @@ class PolicyExceptionsHandler:
                 self.rule_list.add(self.row_func(rule, False))
             except Exception:  # pylint: disable=broad-except
                 self.error_handler.add_error(rule)
+
+        for rule in self.error_handler.get_errors():
+            self.initial_rules.remove(rule)
 
     def add_new_rule(self, *_args):
         """Add a new rule."""
@@ -125,10 +156,10 @@ class PolicyExceptionsHandler:
     @property
     def current_rules(self) -> List[Rule]:
         rules = [row.rule.raw_rule for row in self.current_rows if
-         not row.is_new_row or row.changed_from_initial]
+                 not row.is_new_row]
         return rules
 
-    def close_all_edits(self):
+    def close_all_edits(self, *_args):
         """Close all edited rows."""
         PolicyHandler.close_rows_in_list(self.rule_list.get_children())
 
@@ -194,6 +225,7 @@ class DispvmExceptionHandler(PageHandler):
         self.list_handler = PolicyExceptionsHandler(
             gtk_builder=gtk_builder,
             prefix=prefix,
+            policy_manager=self.policy_manager,
             row_func=self._get_row,
             new_rule=self._new_rule)
 
@@ -215,7 +247,7 @@ class DispvmExceptionHandler(PageHandler):
         self.current_state_widget = QubeName(def_dvm)
         self.current_state_box.add(self.current_state_widget)
 
-        self.list_handler.load_rules(self.initial_rules)
+        self.list_handler.initialize_with_rules(self.initial_rules)
 
     def _get_row(self, rule: Rule, new: bool = False):
         return DispvmRuleRow(

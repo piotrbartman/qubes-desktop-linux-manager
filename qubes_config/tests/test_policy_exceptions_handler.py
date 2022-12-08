@@ -449,3 +449,22 @@ TestService * test-blue @dispvm deny"""
     assert compare_rule_lists(
         test_policy_manager.get_rules_from_filename('c-test', '')[0],
         current_policy_rules)
+
+def test_policy_exc_get_unsupported(
+        test_builder, test_qapp, test_policy_manager: PolicyManager):
+    current_policy = """TestService * test-vm @anyvm allow target=@dispvm
+TestService * test-red @dispvm ask default_target=@dispvm:default-dvm"""
+    # current_policy_rules = test_policy_manager.text_to_rules(current_policy)
+    test_policy_manager.policy_client.policy_replace('c-test',
+                                                     current_policy, 'any')
+
+    handler = DispvmExceptionHandler(
+        qapp=test_qapp,
+        gtk_builder=test_builder,
+        prefix='dispvmexctest',
+        policy_manager=test_policy_manager,
+        service_name="TestService",
+        policy_file_name="c-test")
+
+    assert not handler.get_unsaved()
+    assert handler.list_handler.error_handler.get_errors()

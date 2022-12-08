@@ -69,7 +69,7 @@ def add_rule(handler, source = None, target = None,
         assert False
 
 def get_raw_rules(handler: PolicyHandler):
-    text_buffer = handler.raw_text.get_buffer()
+    text_buffer = handler.raw_handler.raw_text.get_buffer()
     raw_text = text_buffer.get_text(text_buffer.get_start_iter(),
                                     text_buffer.get_end_iter(), False)
     rules = handler.policy_manager.text_to_rules(raw_text)
@@ -625,8 +625,8 @@ def test_policy_handler_edit_raw(
     TestService * @anyvm @anyvm deny"""
     expected_policy_rules = test_policy_manager.text_to_rules(expected_policy)
 
-    handler.text_buffer.set_text(expected_policy)
-    handler.raw_save.clicked()
+    handler.raw_handler.text_buffer.set_text(expected_policy)
+    handler.raw_handler.raw_save.clicked()
 
     assert compare_rule_lists(handler.current_rules, expected_policy_rules)
 
@@ -657,11 +657,11 @@ def test_policy_handler_edit_raw_error(
     TestService * test-vm @anyvm framboise
     TestService * @anyvm @anyvm deny"""
 
-    handler.text_buffer.set_text(expected_policy)
+    handler.raw_handler.text_buffer.set_text(expected_policy)
     with patch('qubes_config.global_config.policy_handler.show_error') as \
             mock_error:
         assert not mock_error.mock_calls
-        handler.raw_save.clicked()
+        handler.raw_handler.raw_save.clicked()
         assert mock_error.mock_calls
 
     assert compare_rule_lists(handler.current_rules, current_policy_rules)
@@ -670,8 +670,8 @@ def test_policy_handler_edit_raw_error(
     TestService * test-vm @anyvm allow
     TestService * @anyvm @anyvm deny"""
 
-    handler.text_buffer.set_text(expected_policy)
-    handler.raw_cancel.clicked()
+    handler.raw_handler.text_buffer.set_text(expected_policy)
+    handler.raw_handler.raw_cancel.clicked()
 
     assert compare_rule_lists(handler.current_rules, current_policy_rules)
 
@@ -701,7 +701,7 @@ def test_policy_handler_edit_raw_close(
     handler.add_button.clicked()
 
     # raw is hidden
-    assert not handler.raw_box.get_visible()
+    assert not handler.raw_handler.raw_box.get_visible()
 
     for row in handler.current_rows:
         if row.editing:
@@ -710,11 +710,11 @@ def test_policy_handler_edit_raw_close(
         assert False  # somehow the row didn't get added, bad
 
     # but now expand raw policy
-    handler.raw_event_button.emit('clicked')
+    handler.raw_handler.raw_event_button.emit('clicked')
     for row in handler.current_rows:
         if row.editing:
             assert False  # the row should have closed
-    assert handler.raw_box.get_visible()
+    assert handler.raw_handler.raw_box.get_visible()
 
 
 def test_policy_handler_sorting(
@@ -752,8 +752,8 @@ TestService * @anyvm @anyvm deny
 """
     expected_rules = test_policy_manager.text_to_rules(sensibly_sorted_policy)
 
-    handler.text_buffer.set_text(raw_policy)
-    handler.raw_save.clicked()
+    handler.raw_handler.text_buffer.set_text(raw_policy)
+    handler.raw_handler.raw_save.clicked()
 
     assert compare_rule_lists(handler.current_rules, expected_rules)
 
@@ -806,6 +806,37 @@ TestService * @anyvm @anyvm deny"""
             row.validate_and_save()
     assert handler.get_unsaved()
     handler.save()
+    assert not handler.get_unsaved()
+
+
+def test_policy_handler_get_unsaved_unsupported(
+        test_builder, test_qapp, test_policy_manager: PolicyManager):
+    current_policy = """TestService * test-vm test-blue allow target=test-red
+TestService * @anyvm @anyvm deny"""
+
+    test_policy_manager.policy_client.policy_replace('c-test',
+                                                     current_policy, 'any')
+
+    handler = PolicyHandler(
+        qapp=test_qapp,
+        gtk_builder=test_builder,
+        prefix='policytest',
+        policy_manager=test_policy_manager,
+        default_policy="",
+        service_name="TestService",
+        policy_file_name="c-test",
+        verb_description=SimpleVerbDescription({}),
+        rule_class=RuleSimple)
+
+    assert not handler.get_unsaved()
+    assert handler.error_handler.get_errors()
+
+    assert handler.enable_radio.get_active()
+    handler.disable_radio.set_active(True)
+    assert handler.get_unsaved()
+
+    handler.enable_radio.set_active(True)
+
     assert not handler.get_unsaved()
 
 
@@ -865,6 +896,35 @@ TestService * @anyvm test-red ask
 TestService * @anyvm vault ask"""
     expected_policy_rules = test_policy_manager.text_to_rules(expected_policy)
     assert compare_rule_lists(handler.current_rules, expected_policy_rules)
+
+def test_subset_handler_get_unsaved_unsupported(
+        test_builder, test_qapp, test_policy_manager: PolicyManager):
+    current_policy = """TestService * @anyvm test-blue allow target=test=red"""
+
+    test_policy_manager.policy_client.policy_replace('c-test',
+                                                     current_policy, 'any')
+
+    handler = PolicyHandler(
+        qapp=test_qapp,
+        gtk_builder=test_builder,
+        prefix='policytest',
+        policy_manager=test_policy_manager,
+        default_policy="",
+        service_name="TestService",
+        policy_file_name="c-test",
+        verb_description=SimpleVerbDescription({}),
+        rule_class=RuleSimple)
+
+    assert not handler.get_unsaved()
+    assert handler.error_handler.get_errors()
+
+    assert handler.enable_radio.get_active()
+    handler.disable_radio.set_active(True)
+    assert handler.get_unsaved()
+
+    handler.enable_radio.set_active(True)
+
+    assert not handler.get_unsaved()
 
 
 def test_subset_handler_limited_choice(test_builder, test_qapp,

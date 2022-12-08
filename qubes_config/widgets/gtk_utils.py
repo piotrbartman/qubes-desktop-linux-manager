@@ -18,6 +18,11 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with this program; if not, see <http://www.gnu.org/licenses/>.
 """Utility functions using Gtk"""
+import contextlib
+import os
+
+import fcntl
+
 from typing import Dict, Union
 
 import gi
@@ -33,6 +38,12 @@ RESPONSES_YES_NO_CANCEL = {
     "_No": Gtk.ResponseType.NO,
     "_Cancel": Gtk.ResponseType.CANCEL
 }
+
+APPVIEWER_LOCK = "/var/run/qubes/appviewer.lock"
+DATA = "/var/run/qubes/qubes-clipboard.bin"
+FROM = "/var/run/qubes/qubes-clipboard.bin.source"
+XEVENT = "/var/run/qubes/qubes-clipboard.bin.xevent"
+
 
 def load_icon_at_gtk_size(icon_name,
                           icon_size: Gtk.IconSize = Gtk.IconSize.LARGE_TOOLBAR):
@@ -179,3 +190,26 @@ def is_theme_light(widget):
     text_intensity = text_color.red + text_color.blue + text_color.green
 
     return text_intensity < background_intensity
+
+
+@contextlib.contextmanager
+def appviewer_lock():
+    """Used for purposes of copying to Qubes Global Clipboard"""
+    fd = os.open(APPVIEWER_LOCK, os.O_RDWR | os.O_CREAT, 0o0666)
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        yield
+    finally:
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        os.close(fd)
+
+
+def copy_to_global_clipboard(text: str):
+    """Copy provided text to global clipboard"""
+    with appviewer_lock():
+        with open(DATA, "w", encoding='utf-8') as contents:
+            contents.write(text)
+        with open(FROM, "w", encoding='ascii') as source:
+            source.write("dom0")
+        with open(XEVENT, "w", encoding='ascii') as timestamp:
+            timestamp.write(str(Gtk.get_current_event_time()))

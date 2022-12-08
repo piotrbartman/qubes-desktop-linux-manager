@@ -32,7 +32,8 @@ import qubesadmin
 import qubesadmin.events
 import qubesadmin.exc
 import qubesadmin.vm
-from ..widgets.gtk_utils import show_error, show_dialog, load_theme
+from ..widgets.gtk_utils import show_error, show_dialog, load_theme,\
+    copy_to_global_clipboard
 from ..widgets.gtk_widgets import ProgressBarDialog, ViewportHandler
 from .page_handler import PageHandler
 from .policy_handler import PolicyHandler, VMSubsetPolicyHandler
@@ -198,6 +199,9 @@ class ThisDeviceHandler(PageHandler):
         self.data_label: Gtk.Label = gtk_builder.get_object(
             'thisdevice_data_label')
 
+        self.copy_button: Gtk.Button = \
+            gtk_builder.get_object('thisdevice_copy_button')
+
         hcl_check = subprocess.check_output(['qubes-hcl-report']).decode()
 
         pattern = re.compile(
@@ -226,6 +230,18 @@ class ThisDeviceHandler(PageHandler):
 <b>Xen:</b> {match.group('xen')}
 """
         self.data_label.set_markup(label_text)
+
+        self.copy_button.connect('clicked', self._copy_to_clipboard)
+
+    def _copy_to_clipboard(self, *_args):
+        text = self.data_label.get_text()
+        try:
+            copy_to_global_clipboard(text)
+        except Exception:  # pylint: disable=broad-except
+            show_error(self.copy_button.get_toplevel(),
+                       "Failed to copy to Global Clipboard",
+                       "An error occurred while trying to access"
+                       " Global Clipboard")
 
     def reset(self):
         # does not apply

@@ -136,7 +136,8 @@ class RepoHandler:
         env['LC_ALL'] = 'C'
         # Fake up a "qrexec call" to dom0 because dom0 can't qrexec to itself
         cmd = '/etc/qubes-rpc/' + service
-        process = subprocess.run(['sudo', cmd, arg],
+        # --non-interactive is a workaround for sudo bug
+        process = subprocess.run(['sudo', '--non-interactive', cmd, arg],
                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                            check=False, env=env)
         if process.returncode != 0 or process.stderr:

@@ -1,3 +1,3 @@
 #!/bin/bash
 
-PYTHONPATH=../core-admin-client:../core-qrexec coverage run -m pytest -vv
+python3 -m coverage run -m pytest -vv qubes_config/tests qui/tests

@@ -79,13 +79,15 @@ class ClipboardHandler(PageHandler):
                 prefix="clipboard",
                 service_name='qubes.ClipboardPaste',
                 policy_file_name='50-config-clipboard',
-                default_policy="""qubes.ClipboardPaste * @adminvm @anyvm deny\n
+                default_policy="""qubes.ClipboardPaste * @adminvm @anyvm ask\n
 qubes.ClipboardPaste * @anyvm @anyvm ask\n""",
                 verb_description=SimpleVerbDescription({
                     "ask": 'be allowed to paste\n into clipboard of',
                     "deny": 'be allowed to paste\n into clipboard of'
                 }),
-                rule_class=RuleSimpleAskIsAllow),
+                rule_class=RuleSimpleAskIsAllow,
+                include_admin_vm=True
+            ),
             FeatureHandler(
                 trait_holder=self.vm, trait_name=self.COPY_FEATURE,
                 widget=self.copy_combo,
@@ -136,7 +138,7 @@ class FileAccessHandler(PageHandler):
             gtk_builder=gtk_builder,
             prefix="filecopy",
             policy_manager=self.policy_manager,
-            default_policy="""qubes.Filecopy * @adminvm @anyvm deny\n
+            default_policy="""qubes.Filecopy * @anyvm @adminvm deny\n
 qubes.Filecopy * @anyvm @anyvm ask""",
             service_name="qubes.Filecopy",
             policy_file_name="50-config-filecopy",
@@ -151,7 +153,7 @@ qubes.Filecopy * @anyvm @anyvm ask""",
             gtk_builder=gtk_builder,
             prefix="openinvm",
             policy_manager=self.policy_manager,
-            default_policy="""qubes.OpenInVM * @adminvm @anyvm deny\n
+            default_policy="""qubes.OpenInVM * @anyvm @adminvm deny\n
 qubes.OpenInVM * @anyvm @dispvm allow\n
 qubes.OpenInVM * @anyvm @anyvm ask""",
             service_name="qubes.OpenInVM",
@@ -393,7 +395,7 @@ class GlobalConfig(Gtk.Application):
                 prefix="url",
                 service_name='qubes.OpenURL',
                 policy_file_name='50-config-openurl',
-                default_policy="""qubes.OpenURL * @adminvm @anyvm deny\n
+                default_policy="""qubes.OpenURL * @anyvm @adminvm deny\n
 qubes.OpenURL * @anyvm @dispvm allow\n
 qubes.OpenURL * @anyvm @anyvm ask\n""",
                 verb_description=TargetedVerbDescription(

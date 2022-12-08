@@ -73,7 +73,8 @@ class PolicyHandler(PageHandler):
                  service_name: str,
                  policy_file_name: str,
                  verb_description: AbstractVerbDescription,
-                 rule_class: Type[AbstractRuleWrapper]):
+                 rule_class: Type[AbstractRuleWrapper],
+                 include_admin_vm: bool = False):
         """
         :param qapp: Qubes object
         :param gtk_builder: gtk_builder; to avoid inelegant design, this should
@@ -87,6 +88,8 @@ class PolicyHandler(PageHandler):
         :param verb_description: AbstractVerbDescription object
         :param rule_class: class to be used for Rules, must inherit from
          AbstractRuleWrapper
+        :param include_admin_vm: should adminvms be allowed as
+        target/source of policy?
         """
 
         self.qapp = qapp
@@ -96,6 +99,7 @@ class PolicyHandler(PageHandler):
         self.policy_file_name = policy_file_name
         self.verb_description = verb_description
         self.rule_class = rule_class
+        self.include_adminvm = include_admin_vm
 
         self._errors: List[Rule] = []
 
@@ -197,7 +201,8 @@ class PolicyHandler(PageHandler):
             target='@anyvm', action='deny')
         new_row = RuleListBoxRow(self,
             self.rule_class(deny_all_rule), self.qapp, self.verb_description,
-                                 is_new_row=True)
+                                 is_new_row=True,
+                                 enable_adminvm=self.include_adminvm)
         self.exception_list_box.add(new_row)
         new_row.activate()
 
@@ -230,18 +235,22 @@ class PolicyHandler(PageHandler):
             try:
                 wrapped_rule = self.rule_class(rule)
                 if wrapped_rule.is_rule_fundamental():
-                    self.main_list_box.add(RuleListBoxRow
-                                           (self, wrapped_rule,
-                                            self.qapp, self.verb_description,
-                                            enable_delete=False,
-                                            enable_vm_edit=False))
+                    self.main_list_box.add(
+                        RuleListBoxRow(
+                            self, wrapped_rule, self.qapp,
+                            self.verb_description, enable_delete=False,
+                            enable_vm_edit=False,
+                            enable_adminvm=self.include_adminvm))
                     continue
-                fundamental = not (rule.source == '@adminvm' and
-                                   rule.target == '@anyvm')
+                fundamental = self.include_adminvm and \
+                              rule.source == '@adminvm' and \
+                              rule.target == '@anyvm'
                 self.exception_list_box.add(RuleListBoxRow(self,
                     rule=wrapped_rule, qapp=self.qapp,
                     verb_description=self.verb_description,
-                    enable_delete=fundamental, enable_vm_edit=fundamental))
+                    enable_delete=not fundamental,
+                    enable_vm_edit=not fundamental,
+                    enable_adminvm=self.include_adminvm))
             except Exception:  # pylint: disable=broad-except
                 self.add_error(rule)
 
@@ -253,7 +262,8 @@ class PolicyHandler(PageHandler):
                 RuleListBoxRow(self,
                     self.rule_class(deny_all_rule), self.qapp,
                     self.verb_description,
-                    enable_delete=False, enable_vm_edit=False))
+                    enable_delete=False, enable_vm_edit=False,
+                    enable_adminvm=self.include_adminvm))
 
     def set_custom_editable(self, state: bool):
         """If true, set widgets to accept editing custom rules."""
@@ -545,7 +555,8 @@ class VMSubsetPolicyHandler(PolicyHandler):
             enable_vm_edit=False, initial_verb="",
             custom_deletion_warning="Are you sure you want to delete this "
                                     "rule? All related exceptions will also "
-                                    "be deleted."
+                                    "be deleted.",
+            enable_adminvm=self.include_adminvm
         ))
 
     def _add_exception_rule(self, rule):

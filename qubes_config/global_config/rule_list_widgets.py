@@ -40,6 +40,13 @@ SOURCE_CATEGORIES = {
     "@type:AppVM": "TYPE: APP",
     "@type:TemplateVM": "TYPE: TEMPLATES",
     "@type:DispVM": "TYPE: DISPOSABLE",
+}
+
+SOURCE_CATEGORIES_ADMIN = {
+    "@anyvm": "ALL QUBES",
+    "@type:AppVM": "TYPE: APP",
+    "@type:TemplateVM": "TYPE: TEMPLATES",
+    "@type:DispVM": "TYPE: DISPOSABLE",
     "@adminvm": "TYPE: ADMINVM"
 }
 
@@ -49,14 +56,12 @@ TARGET_CATEGORIES = {
     "@type:AppVM": "TYPE: APP",
     "@type:TemplateVM": "TYPE: TEMPLATES",
     "@type:DispVM": "TYPE: DISPOSABLE",
-    "@adminvm": "TYPE: ADMINVM"
 }
 
 LIMITED_CATEGORIES = {
     "@type:AppVM": "TYPE: APP",
     "@type:TemplateVM": "TYPE: TEMPLATES",
     "@type:DispVM": "TYPE: DISPOSABLE",
-    "@adminvm": "TYPE: ADMINVM"
 }
 
 class VMWidget(Gtk.Box):
@@ -257,7 +262,8 @@ class RuleListBoxRow(Gtk.ListBoxRow):
                  initial_verb: str = "will",
                  custom_deletion_warning: str = "Are you sure you want to "
                                                 "delete this rule?",
-                 is_new_row: bool = False):
+                 is_new_row: bool = False,
+                 enable_adminvm: bool = False):
         """
         :param parent_handler: PolicyHandler object this rule belongs to, or
         other owner object that implements verify_new_rule method.
@@ -269,6 +275,8 @@ class RuleListBoxRow(Gtk.ListBoxRow):
         :param initial_verb: verb between source_qube and action
         :param is_new_row: if True, the row is marked as new row and
         will be deleted when closing edit mode without saving changes
+        :param enable_adminvm: if True, include TYPE: Admin as a choice for
+         source
         """
         super().__init__()
 
@@ -281,6 +289,7 @@ class RuleListBoxRow(Gtk.ListBoxRow):
         self.parent_handler = parent_handler
         self.custom_deletion_warning = custom_deletion_warning
         self.is_new_row = is_new_row
+        self.enable_adminvm = enable_adminvm
 
         self.get_style_context().add_class("permission_row")
 
@@ -330,8 +339,12 @@ class RuleListBoxRow(Gtk.ListBoxRow):
 
     def get_source_widget(self) -> VMWidget:
         """Widget to be used for source VM"""
+        if self.enable_adminvm:
+            cat = SOURCE_CATEGORIES_ADMIN
+        else:
+            cat = SOURCE_CATEGORIES
         return VMWidget(
-            self.qapp, SOURCE_CATEGORIES, self.rule.source,
+            self.qapp, cat, self.rule.source,
             additional_text=self.initial_verb)
 
     def get_target_widget(self) -> VMWidget:
@@ -472,10 +485,13 @@ class LimitedRuleListBoxRow(RuleListBoxRow):
                  enable_delete: bool = True,
                  enable_vm_edit: bool = True,
                  initial_verb: str = "will",
-                 filter_function: Optional[Callable] = None):
+                 filter_function: Optional[Callable] = None,
+                 enable_adminvm: bool = False
+                 ):
         self.filter_function = filter_function
         super().__init__(parent_handler, rule, qapp, verb_description,
-                         enable_delete, enable_vm_edit, initial_verb)
+                         enable_delete, enable_vm_edit, initial_verb,
+                         enable_adminvm=enable_adminvm)
 
     def get_source_widget(self) -> VMWidget:
         """Widget to be used for source VM"""

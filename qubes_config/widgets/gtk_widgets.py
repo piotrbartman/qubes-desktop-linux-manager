@@ -199,6 +199,7 @@ class TextModeler(TraitSelector):
 
     def update_initial(self):
         self._initial_text = self._combo.get_active_text()
+        self._on_changed(None)
 
 
 class VMListModeler(TraitSelector):

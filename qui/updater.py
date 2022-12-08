@@ -332,7 +332,7 @@ class VMListBoxRow(Gtk.ListBoxRow):
 
     def set_label_text(self, _=None):
         if self.checkbox.get_active():
-            self.label.set_markup("<b>{}</b>".format(self.label_text))
+            self.label.set_markup(f"<b>{self.label_text}</b>")
         else:
             self.label.set_markup(self.label_text)
 

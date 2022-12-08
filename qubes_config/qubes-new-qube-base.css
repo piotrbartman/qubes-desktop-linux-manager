@@ -1,0 +1,79 @@
+.left_box {
+   background: @top-background;
+   border-width: 0px 1px 0px 1px;
+   border-color: @background-frame;
+   border-style: solid;
+}
+
+.big_title {
+    font-weight: 300;
+    font-size: 150%;
+    margin-top: 20px;
+    margin-bottom: 0px;
+}
+
+.qubes_logo {
+    margin: 10px;
+}
+
+.type_toggle {
+    font-weight: 600;
+    font-size: 120%;
+    border-radius: 0px;
+    border-width: 1px 0px 0px 0px;
+    border-color: @background-frame;
+    background: @top-background;
+    padding: 10px 15px 10px 20px;
+}
+
+.type_toggle_bottom {
+    border-width: 1px 0px 1px 0px;
+}
+
+.type_toggle:checked {
+    background: @qubes-blue;
+    color: white;
+}
+
+
+.info-tooltip {
+    margin-left: 5px;
+}
+
+radiobutton {
+    margin: 2px 0 2px 0;
+}
+
+checkbutton {
+    margin: 2px 0 2px 0;
+}
+
+radiobutton:checked radio {
+    background: @top-background;
+    color: @text-color;
+}
+
+#applications {
+    background: @top-background;
+    margin-top: 10px;
+    margin-right: 20px;
+    border-style: solid;
+    border-color: @background-frame;
+    border-radius: 10px;
+    border-width: 2px;
+    padding: 15px;
+}
+
+.content_box {
+    background: @top-background-2;
+    border-width: 2px;
+    border-color: @background-frame;
+    padding-left: 100px;
+    padding-right: 100px;
+    box-shadow: @background-frame 2px -2px 2px -2px inset;
+    padding-top: 50px;
+}
+
+#main_window {
+    background: @bottom-background;
+}

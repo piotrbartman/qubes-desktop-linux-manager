@@ -29,6 +29,24 @@ install-icons:
 	cp icons/72x72/qui-domains.png $(DESTDIR)/usr/share/icons/hicolor/72x72/apps/qui-domains.png
 	cp icons/96x96/qui-domains.png $(DESTDIR)/usr/share/icons/hicolor/96x96/apps/qui-domains.png
 	cp icons/128x128/qui-domains.png $(DESTDIR)/usr/share/icons/hicolor/128x128/apps/qui-domains.png
+	mkdir -p $(DESTDIR)/usr/share/icons/hicolor/scalable/apps
+	cp icons/scalable/config-program-icon.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-global-config.svg
+	cp icons/scalable/delete_icon.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-delete.svg
+	cp icons/scalable/new-qube-program-icon.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-new-qube.svg
+	cp icons/scalable/ok_icon.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-ok.svg
+	cp icons/scalable/padlock_icon.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-padlock.svg
+	cp icons/scalable/qubes-info.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-info.svg
+	cp icons/scalable/qubes-key.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-key.svg
+	cp icons/scalable/qubes_ask.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-ask.svg
+	cp icons/scalable/qubes_customize.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-customize.svg
+	cp icons/scalable/qubes_expander_hidden-black.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-expander-hidden-black.svg
+	cp icons/scalable/qubes_expander_hidden-white.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-expander-hidden-white.svg
+	cp icons/scalable/qubes_expander_shown-black.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-expander-shown-black.svg
+	cp icons/scalable/qubes_expander_shown-white.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-expander-shown-white.svg
+	cp icons/scalable/qubes_logo.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-logo.svg
+	cp icons/scalable/question_icon.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-question.svg
+	cp icons/scalable/question_icon_light.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-question-light.svg
+	cp icons/scalable/this-device-icon.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-this-device.svg
 
 install-autostart:
 	mkdir -p $(DESTDIR)/etc/xdg/autostart
@@ -38,11 +56,13 @@ install-autostart:
 	cp autostart/qui-disk-space.desktop $(DESTDIR)/etc/xdg/autostart
 	cp autostart/qui-updates.desktop $(DESTDIR)/etc/xdg/autostart
 	mkdir -p $(DESTDIR)/usr/share/applications
-	cp qubes-update-gui.desktop $(DESTDIR)/usr/share/applications/
+	cp desktop/qubes-update-gui.desktop $(DESTDIR)/usr/share/applications/
 	mkdir -p $(DESTDIR)/usr/bin
 	cp qui/widget-wrapper $(DESTDIR)/usr/bin/widget-wrapper
 	mkdir -p $(DESTDIR)/lib/systemd/user/
 	cp linux-systemd/qubes-widget@.service $(DESTDIR)/lib/systemd/user/
+	cp desktop/qubes-global-config.desktop $(DESTDIR)/usr/share/applications/
+	cp desktop/qubes-new-qube.desktop $(DESTDIR)/usr/share/applications/
 
 install: install-autostart install-icons
 

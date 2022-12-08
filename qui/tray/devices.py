@@ -169,8 +169,8 @@ class DevclassHeaderMenuItem(Gtk.MenuItem):
         super().__init__(*args, **kwargs)
 
         label = Gtk.Label(xalign=0)
-        label.set_markup("<b>{}</b>".format(
-            DEV_TYPE_NAMES.get(devclass, "Other Devices")))
+        type_name = DEV_TYPE_NAMES.get(devclass, "Other Devices")
+        label.set_markup(f"<b>{type_name}</b>")
 
         self.add(label)
         self.set_sensitive(False)

@@ -99,7 +99,7 @@ class DomainDecorator(PropertiesDecorator):
             if self.vm is None:
                 return
 
-            tooltip = "<b>{vmname}</b>".format(vmname=self.vm.name)
+            tooltip = f"<b>{self.vm.name}</b>"
 
             if self.vm.klass == 'AdminVM':
 
@@ -172,11 +172,12 @@ class DomainDecorator(PropertiesDecorator):
             if header:
                 markup = _('<b>CPU</b>')
             elif cpu > 0:
+                # pylint: disable=consider-using-f-string
                 markup = '{:3d}%'.format(cpu)
             else:
                 color = self.cpu_label.get_style_context() \
                             .get_color(Gtk.StateFlags.INSENSITIVE).to_color()
-                markup = '<span color="{}">0%</span>'.format(color.to_string())
+                markup = f'<span color="{color.to_string()}">0%</span>'
 
             self.cpu_label.set_markup(markup)
 
@@ -190,7 +191,7 @@ class DomainDecorator(PropertiesDecorator):
             if header:
                 markup = _('<b>RAM</b>')
             else:
-                markup = '{} MB'.format(str(int(memory/1024)))
+                markup = f'{str(int(memory/1024))} MB'
 
             self.mem_label.set_markup(markup)
 
@@ -246,11 +247,10 @@ def device_hbox(device) -> Gtk.Box:
     dev_icon = create_icon(icon)
 
     name_label = Gtk.Label(xalign=0)
-    name = "{}:{} - {}".format(device.backend_domain, device.ident,
-                               device.description)
+    name = f"{device.backend_domain}:{device.ident} - {device.description}"
     if device.attachments:
-        name_label.set_markup('<b>{} ({})</b>'.format(
-            name, ", ".join(list(device.attachments))))
+        dev_list = ", ".join(list(device.attachments))
+        name_label.set_markup(f'<b>{name} ({dev_list})</b>')
     else:
         name_label.set_text(name)
     name_label.set_max_width_chars(64)
@@ -281,7 +281,7 @@ def device_domain_hbox(vm, attached: bool) -> Gtk.Box:
 
     name = Gtk.Label(xalign=0)
     if attached:
-        name.set_markup('<b>{}</b>'.format(vm.vm_name))
+        name.set_markup(f'<b>{vm.vm_name}</b>')
     else:
         name.set_text(vm.vm_name)
 

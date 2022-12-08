@@ -95,7 +95,6 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 %dir %{python3_sitelib}/qui-*.egg-info
 %{python3_sitelib}/qui-*.egg-info/*
 
-
 %dir %{python3_sitelib}/qui
 %dir %{python3_sitelib}/qui/__pycache__
 %{python3_sitelib}/qui/__pycache__/*
@@ -114,6 +113,48 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 %{python3_sitelib}/qui/tray/devices.py
 %{python3_sitelib}/qui/tray/disk_space.py
 %{python3_sitelib}/qui/tray/updates.py
+
+%dir %{python3_sitelib}/qubes_config
+%dir %{python3_sitelib}/qubes_config/__pycache__
+%{python3_sitelib}/qubes_config/__init__.py
+%{python3_sitelib}/qubes_config/__pycache__/*
+%{python3_sitelib}/qubes_config/global_config/__init__.py
+%{python3_sitelib}/qubes_config/global_config/__pycache__/*
+%{python3_sitelib}/qubes_config/global_config/basics_handler.py
+%{python3_sitelib}/qubes_config/global_config/conflict_handler.py
+%{python3_sitelib}/qubes_config/global_config/global_config.py
+%{python3_sitelib}/qubes_config/global_config/page_handler.py
+%{python3_sitelib}/qubes_config/global_config/policy_handler.py
+%{python3_sitelib}/qubes_config/global_config/policy_manager.py
+%{python3_sitelib}/qubes_config/global_config/policy_rules.py
+%{python3_sitelib}/qubes_config/global_config/rule_list_widgets.py
+%{python3_sitelib}/qubes_config/global_config/updates_handler.py
+%{python3_sitelib}/qubes_config/global_config/usb_devices.py
+%{python3_sitelib}/qubes_config/global_config/vm_flowbox.py
+%{python3_sitelib}/qubes_config/new_qube/__init__.py
+%{python3_sitelib}/qubes_config/new_qube/__pycache__/*
+%{python3_sitelib}/qubes_config/new_qube/advanced_handler.py
+%{python3_sitelib}/qubes_config/new_qube/application_selector.py
+%{python3_sitelib}/qubes_config/new_qube/network_selector.py
+%{python3_sitelib}/qubes_config/new_qube/new_qube_app.py
+%{python3_sitelib}/qubes_config/new_qube/template_handler.py
+%{python3_sitelib}/qubes_config/widgets/__init__.py
+%{python3_sitelib}/qubes_config/widgets/__pycache__/*
+%{python3_sitelib}/qubes_config/widgets/gtk_utils.py
+%{python3_sitelib}/qubes_config/widgets/gtk_widgets.py
+%{python3_sitelib}/qubes_config/widgets/utils.py
+
+%{python3_sitelib}/qubes_config/global_config.glade
+%{python3_sitelib}/qubes_config/new_qube.glade
+%{python3_sitelib}/qubes_config/qubes-colors-dark.css
+%{python3_sitelib}/qubes_config/qubes-colors-light.css
+%{python3_sitelib}/qubes_config/qubes-global-config-base.css
+%{python3_sitelib}/qubes_config/qubes-global-config-light.css
+%{python3_sitelib}/qubes_config/qubes-global-config-dark.css
+%{python3_sitelib}/qubes_config/qubes-new-qube-base.css
+%{python3_sitelib}/qubes_config/qubes-new-qube-light.css
+%{python3_sitelib}/qubes_config/qubes-new-qube-dark.css
+%{python3_sitelib}/qubes_config/qubes-widgets-base.css
 
 %{_bindir}/qui-domains
 %{_bindir}/qui-devices
@@ -134,6 +175,12 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 /usr/share/locale/en/LC_MESSAGES/desktop-linux-manager.mo
 /usr/share/locale/pl/LC_MESSAGES/desktop-linux-manager.mo
 
+/usr/share/applications/qubes-global-config.desktop
+/usr/share/applications/qubes-new-qube.desktop
+
+%{_bindir}/qubes-new-qube
+%{_bindir}/qubes-global-config
+
 /usr/share/icons/hicolor/16x16/apps/qui-domains.png
 /usr/share/icons/hicolor/24x24/apps/qui-domains.png
 /usr/share/icons/hicolor/32x32/apps/qui-domains.png
@@ -142,6 +189,24 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 /usr/share/icons/hicolor/72x72/apps/qui-domains.png
 /usr/share/icons/hicolor/96x96/apps/qui-domains.png
 /usr/share/icons/hicolor/128x128/apps/qui-domains.png
+
+/usr/share/icons/hicolor/scalable/apps/qubes-ask.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-customize.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-delete.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-expander-hidden-black.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-expander-shown-black.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-expander-hidden-white.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-expander-shown-white.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-info.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-key.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-logo.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-ok.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-padlock.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-question-light.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-question.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-this-device.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-new-qube.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-global-config.svg
 
 %changelog
 @CHANGELOG@

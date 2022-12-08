@@ -4,3 +4,6 @@ docutils
 pylint
 pyinotify
 gbulb
+types-setuptools
+codecov
+pytest

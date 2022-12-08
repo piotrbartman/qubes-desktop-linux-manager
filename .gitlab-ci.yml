@@ -1,21 +1,41 @@
+include:
+  - project: 'QubesOS/qubes-continuous-integration'
+    file: '/r4.1/gitlab-base.yml'
+  - project: 'QubesOS/qubes-continuous-integration'
+    file: '/r4.1/gitlab-dom0.yml'
+  - project: 'QubesOS/qubes-continuous-integration'
+    file: '/r4.1/gitlab-vm.yml'
+  - project: 'QubesOS/qubes-continuous-integration'
+    file: '/r4.2/gitlab-base.yml'
+  - project: 'QubesOS/qubes-continuous-integration'
+    file: '/r4.2/gitlab-host.yml'
+  - project: 'QubesOS/qubes-continuous-integration'
+    file: '/r4.2/gitlab-vm.yml'
+
+checks:tests:
+  stage: checks
+  variables:
+    PYTEST_ADDOPTS: "--color=yes"
+  before_script: &before-script
+    - "PATH=$PATH:$HOME/.local/bin"
+    - sudo dnf install -y python3-gobject gtk3 python3-pytest
+      python3-coverage xorg-x11-server-Xvfb
+    - pip3 install --quiet -r ci/requirements.txt
+    - git clone https://github.com/QubesOS/qubes-core-admin-client ~/core-admin-client
+    - git clone https://github.com/QubesOS/qubes-core-qrexec ~/core-qrexec
+  script:
+    - PYTHONPATH=~/core-admin-client:~/core-qrexec xvfb-run ./run-tests.sh
+  after_script:
+    - "PATH=$PATH:$HOME/.local/bin"
+    - ci/codecov-wrapper
+
 checks:pylint:
   before_script:
-  - sudo dnf install -y python3-gobject gtk3 xorg-x11-server-Xvfb
+  - sudo dnf install -y python3-gobject gtk3 xorg-x11-server-Xvfb python3-mypy
   - pip3 install --quiet -r ci/requirements.txt
   - git clone https://github.com/QubesOS/qubes-core-admin-client ~/core-admin-client
+  - git clone https://github.com/QubesOS/qubes-core-qrexec ~/core-qrexec
   script:
-  - PYTHONPATH=~/core-admin-client python3 -m pylint --rcfile=.pylintrc qui
+  - PYTHONPATH=~/core-admin-client:~/core-qrexec python3 -m pylint --rcfile=.pylintrc qui qubes_config
+  - mypy
   stage: checks
-include:
-- file: /r4.1/gitlab-base.yml
-  project: QubesOS/qubes-continuous-integration
-- file: /r4.1/gitlab-dom0.yml
-  project: QubesOS/qubes-continuous-integration
-- file: /r4.1/gitlab-vm.yml
-  project: QubesOS/qubes-continuous-integration
-- file: /r4.2/gitlab-base.yml
-  project: QubesOS/qubes-continuous-integration
-- file: /r4.2/gitlab-host.yml
-  project: QubesOS/qubes-continuous-integration
-- file: /r4.2/gitlab-vm.yml
-  project: QubesOS/qubes-continuous-integration

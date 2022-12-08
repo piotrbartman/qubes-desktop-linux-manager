@@ -80,10 +80,11 @@ class VMUsageData:
         label_contents = []
 
         for volume_name, usage in vm_usage.problem_volumes.items():
+            # pylint: disable=consider-using-f-string
             label_contents.append('volume <b>{}</b> is {:.1%} full'.format(
                 volume_name, usage))
 
-        label_text = "<b>{}</b>: ".format(vm.name) + ", ".join(label_contents)
+        label_text = f"<b>{vm.name}</b>: " + ", ".join(label_contents)
         label_widget.set_markup(label_text)
 
         return vm, icon_img, label_widget
@@ -177,6 +178,7 @@ class PoolUsageData:
                     metadata_usage = pool.usage_details['metadata_usage'] / \
                                      pool.usage_details['metadata_size']
                     if metadata_usage >= URGENT_WARN_LEVEL:
+                        # pylint: disable=consider-using-f-string
                         self.warning_message.append(
                             "\nMetadata space for pool {} is running out. "
                             "Current usage: {.1%}".format(
@@ -211,7 +213,7 @@ class PoolUsageData:
                 pool, 'usage_details', {}) and \
                            pool.usage_details['metadata_size']
 
-            pool_name.set_markup('<b>{}</b>'.format(pool.name))
+            pool_name.set_markup(f'<b>{pool.name}</b>')
 
             data_name = Gtk.Label(xalign=0)
             data_name.set_markup("data")
@@ -250,9 +252,9 @@ class PoolUsageData:
 
             numeric_label = Gtk.Label()
             numeric_label.set_markup(
-                '<span color=\'grey\'><i>{}/{}</i></span>'.format(
-                    size_to_human(getattr(pool, 'usage', 0)),
-                    size_to_human(getattr(pool, 'size', 0))))
+                '<span color=\'grey\'><i>'
+                f'{size_to_human(getattr(pool, "usage", 0))}/'
+                f'{size_to_human(getattr(pool, "size", 0))}</i></span>')
             numeric_label.set_justify(Gtk.Justification.RIGHT)
 
             # pack with empty labels to guarantee proper alignment
@@ -263,7 +265,7 @@ class PoolUsageData:
         else:
             # pool that is included in other pools and/or has no usage data
             pool_name.set_markup(
-                '<span color=\'grey\'><i>{}</i></span>'.format(pool.name))
+                f'<span color=\'grey\'><i>{pool.name}</i></span>')
             name_box.pack_start(pool_name, True, True, 0)
 
         pool_name.set_margin_left(20)
@@ -279,6 +281,7 @@ def colored_percentage(value):
     else:
         color = 'red'
 
+    # pylint: disable=consider-using-f-string
     result = '<span color=\'{}\'>{:.1%}</span>'.format(color, value)
 
     return result
@@ -292,7 +295,7 @@ def emit_notification(gtk_app, title, text, vm=None):
 
     if vm:
         notification.add_button('Open qube settings',
-                                "app.prefs::{}".format(vm.name))
+                                f"app.prefs::{vm.name}")
 
     gtk_app.send_notification(None, notification)
 
@@ -354,8 +357,8 @@ class DiskSpace(Gtk.Application):
                     emit_notification(
                         self,
                         _("Qube usage warning"),
-                        _("Qube {} is running out of storage space.".format(
-                            vm.name)),
+                        _("Qube {} is running out of storage space.").format(
+                            vm.name),
                         vm=vm)
                     self.vms_warned.add(vm)
         else:
@@ -426,7 +429,7 @@ class DiskSpace(Gtk.Application):
     @staticmethod
     def make_title_item(text):
         label = Gtk.Label(xalign=0)
-        label.set_markup(_("<b>{}</b>".format(text)))
+        label.set_markup(_("<b>{}</b>").format(text))
         menu_item = Gtk.MenuItem()
         menu_item.add(label)
         menu_item.set_sensitive(False)

@@ -467,8 +467,8 @@ class DomainMenuItem(Gtk.ImageMenuItem):
             self.show_spinner()
         colormap = {'Paused': 'grey', 'Crashed': 'red', 'Transient': 'red'}
         if state in colormap:
-            self.name.label.set_markup('<span color=\'{}\'>{}</span>'.format(
-                colormap[state], self.vm.name))
+            self.name.label.set_markup(
+                f'<span color=\'{colormap[state]}\'>{self.vm.name}</span>')
         else:
             self.name.label.set_label(self.vm.name)
 

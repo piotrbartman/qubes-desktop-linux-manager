@@ -21,6 +21,7 @@ separator {
     padding-right: 100px;
     box-shadow: @background-frame 2px -2px 2px -2px inset;
     padding-top: 50px;
+    padding-bottom: 150px;
 }
 
 #main_notebook {

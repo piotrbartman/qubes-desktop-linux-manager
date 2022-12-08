@@ -23,6 +23,8 @@ from typing import Optional, List, Tuple
 
 from qrexec.policy.admin_client import PolicyClient
 from qrexec.policy.parser import StringPolicy, Rule
+from qubes_config.widgets.utils import compare_rule_lists
+
 
 class PolicyManager:
     """
@@ -79,12 +81,7 @@ class PolicyManager:
     def compare_rules_to_text(self, rules, file_text) -> bool:
         """Check if the list of rules is equivalent to policy file text."""
         second_rules = self.text_to_rules(file_text)
-        if len(rules) != len(second_rules):
-            return False
-        for rule, rule_2 in zip(rules, second_rules):
-            if str(rule) != str(rule_2):
-                return False
-        return True
+        return compare_rule_lists(rules, second_rules)
 
     @staticmethod
     def new_rule(service: str, source: str, target: str, action: str,

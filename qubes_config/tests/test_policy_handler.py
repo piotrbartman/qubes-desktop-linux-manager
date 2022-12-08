@@ -24,20 +24,12 @@ from ..global_config.policy_manager import PolicyManager
 from ..global_config.policy_handler import PolicyHandler, VMSubsetPolicyHandler
 from ..global_config.policy_rules import SimpleVerbDescription, RuleSimple, \
     RuleTargeted
+from ..widgets.utils import compare_rule_lists
 
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('GdkPixbuf', '2.0')
 from gi.repository import Gtk
-
-
-def compare_rule_lists(rule_list_1, rule_list_2) -> bool:
-    if len(rule_list_1) != len(rule_list_2):
-        return False
-    for rule, rule_2 in zip(rule_list_1, rule_list_2):
-        if str(rule) != str(rule_2):
-            return False
-    return True
 
 
 def add_rule(handler, source = None, target = None,

@@ -21,7 +21,8 @@ from unittest.mock import patch
 
 from ..global_config.policy_manager import PolicyManager
 from ..global_config.policy_exceptions_handler import DispvmExceptionHandler
-from .test_policy_handler import compare_rule_lists, add_rule
+from .test_policy_handler import add_rule
+from ..widgets.utils import compare_rule_lists
 
 import gi
 gi.require_version('Gtk', '3.0')

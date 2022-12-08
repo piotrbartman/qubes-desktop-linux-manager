@@ -21,7 +21,8 @@
 import abc
 
 from typing import Dict, Optional
-from qrexec.policy.parser import Rule, Allow, Ask, Source, Target, Action
+from qrexec.policy.parser import Rule, Allow, Ask, Source, Target, Action, \
+    DispVM, DispVMTemplate
 
 
 class AbstractRuleWrapper(abc.ABC):
@@ -340,11 +341,13 @@ class RuleDispVM(AbstractRuleWrapper):
 
         if str(rule.target) != '@dispvm':
             raise ValueError('Target must be @dispvm')
-        action = str(rule.action)
 
-        if action.startswith('ask') and 'default_target=@dispvm' not in action:
+        if isinstance(rule.action, Ask) and \
+                not isinstance(rule.action.default_target,
+                               (DispVM, DispVMTemplate)):
             raise ValueError("default_target must include @dispvm")
-        if action.startswith('allow') and 'target=@dispvm' not in action:
+        if isinstance(rule.action, Allow) and \
+                not isinstance(rule.action.target, (DispVM, DispVMTemplate)):
             raise ValueError("target must include @dispvm")
 
     @property

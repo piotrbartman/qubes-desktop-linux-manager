@@ -40,6 +40,7 @@ import gi
 
 import qubesadmin
 import qubesadmin.vm
+from ..widgets.utils import compare_rule_lists
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
@@ -133,7 +134,7 @@ class PolicyHandler(PageHandler):
 
         # fill data
         self.initial_rules: List[Rule] = []
-        self.current_token: str = ''
+        self.current_token: Optional[str] = None
         self.initialize_data()
 
         self.main_list_box.connect('map', self.on_switch)
@@ -365,16 +366,9 @@ class PolicyHandler(PageHandler):
         empty string if none were found."""
         self.close_all_edits()
 
-        unsaved_found = False
-        if len(self.initial_rules) != len(self.current_rules):
-            unsaved_found = True
-        for rule1, rule2 in zip(self.initial_rules, self.current_rules):
-            if str(rule1) != str(rule2):
-                unsaved_found = True
-
-        if unsaved_found:
-            return "Policy rules"
-        return ""
+        if compare_rule_lists(self.initial_rules, self.current_rules):
+            return ""
+        return "Policy rules"
 
     def on_switch(self, *_args):
         if self.error_handler.get_errors():

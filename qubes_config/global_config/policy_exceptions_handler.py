@@ -35,6 +35,7 @@ from .rule_list_widgets import RuleListBoxRow, DispvmRuleRow
 import gi
 
 from ..widgets.gtk_widgets import QubeName
+from ..widgets.utils import compare_rule_lists
 
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
@@ -76,14 +77,14 @@ class PolicyExceptionsHandler:
         self.error_handler = ErrorHandler(gtk_builder, prefix)
 
         if enable_raw:
-            self.raw_handler = RawPolicyTextHandler(
-                gtk_builder=gtk_builder,
-                prefix=prefix,
-                policy_manager=self.policy_manager,
-                error_handler=self.error_handler,
-                callback_on_open_raw=self.close_all_edits,
-                callback_on_save_raw=self.populate_rule_lists,
-            )
+            self.raw_handler: Optional[RawPolicyTextHandler] = \
+                RawPolicyTextHandler(
+                    gtk_builder=gtk_builder,
+                    prefix=prefix,
+                    policy_manager=self.policy_manager,
+                    error_handler=self.error_handler,
+                    callback_on_open_raw=self.close_all_edits,
+                    callback_on_save_raw=self.populate_rule_lists)
         else:
             self.raw_handler = None
 
@@ -139,13 +140,9 @@ class PolicyExceptionsHandler:
 
     def get_unsaved(self) -> str:
         self.close_all_edits()
-
-        if len(self.initial_rules) != len(self.current_rules):
-            return "Policy rules"
-        for rule1, rule2 in zip(self.initial_rules, self.current_rules):
-            if str(rule1) != str(rule2):
-                return "Policy rules"
-        return ""
+        if compare_rule_lists(self.initial_rules, self.current_rules):
+            return ""
+        return "Policy rules"
 
 
     @property
@@ -243,7 +240,7 @@ class DispvmExceptionHandler(PageHandler):
         if self.current_state_widget:
             self.current_state_box.remove(self.current_state_widget)
 
-        def_dvm = self.qapp.domains[self.qapp.local_name].default_dispvm
+        def_dvm = self.qapp.default_dispvm
         self.current_state_widget = QubeName(def_dvm)
         self.current_state_box.add(self.current_state_widget)
 

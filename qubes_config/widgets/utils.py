@@ -21,8 +21,9 @@
 import qubesadmin
 import qubesadmin.exc
 import qubesadmin.vm
+from qrexec.policy.parser import Rule
 
-from typing import Optional, Any, Dict
+from typing import Optional, Any, Dict, List
 
 
 def get_feature(vm, feature_name, default_value=None):
@@ -89,3 +90,14 @@ class BiDictionary(dict):
     def __delitem__(self, key):
         del self.inverted[self[key]]
         super().__delitem__(key)
+
+
+def compare_rule_lists(rule_list_1: List[Rule],
+                       rule_list_2: List[Rule]) -> bool:
+    """Check if two provided rule lists are the same. Return True if yes."""
+    if len(rule_list_1) != len(rule_list_2):
+        return False
+    for rule, rule_2 in zip(rule_list_1, rule_list_2):
+        if str(rule) != str(rule_2):
+            return False
+    return True

@@ -1,3 +1,24 @@
+qubes-desktop-linux-manager (4.2.0-1) unstable; urgency=medium
+
+  [ Marta Marczykowska-Górecka ]
+  * New Config Tool and new New Qube tool
+  * Add gitlab CI integration
+  * Show errors on loading policy rules
+  * Add 'copy system info to global clipboard' button
+  * Use --get-default-whitelist qubes-appmenus option for Create New
+    Qube
+  * Improve AdminVM approach: remove dom0 from most policy configs
+  * Refactor ExceptionsList to a separate files
+  * Change Open File/URL policy to more reasonable version
+  * Improve error handling in policy config
+  * Refactor raw policy handler as a separate handler
+  * Remove a superfluous variable
+  * Improve formatting
+  * Fix updating initial value in text dropdowns
+  * Add detecting changes in raw policy text
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Thu, 08 Dec 2022 23:35:50 +0100
+
 qubes-desktop-linux-manager (4.1.15-1) unstable; urgency=medium
 
   [ Marta Marczykowska-Górecka ]

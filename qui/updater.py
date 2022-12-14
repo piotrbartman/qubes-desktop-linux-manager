@@ -125,40 +125,29 @@ class QubesUpdater(Gtk.Application):
                 result = result or state
                 self.vm_list.add(VMListBoxRow(vm, state))
 
+        output = subprocess.check_output(
+            ['qubes-vm-update', '--dry-run', '--n', f'{7}'])
+
+        to_update = [vm_name.strip() for vm_name
+                     in output.decode().split("\n")[0].split(":")[1].split(",")]
+
         for vm in self.qapp.domains:
             if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM':
-                try:
-                    state = vm.features.get('updates-available', False)
-                except exc.QubesDaemonCommunicationError:
-                    state = False
-                result = result or state
-
-                today = datetime.today()
-                try:
-                    last_update_str = vm.features.get(
-                        'last-update',
-                        datetime.fromtimestamp(0).strftime(
-                            '%Y-%m-%d %H:%M:%S'))
-                    last_update = datetime.fromisoformat(last_update_str)
-                    if (today - last_update).days > 14:
-                        state = True
-                except exc.QubesDaemonCommunicationError:
-                    state = False
-                try:
-                    last_update_str = vm.features.get(
-                        'last-updates-check',
-                        datetime.fromtimestamp(0).strftime(
-                            '%Y-%m-%d %H:%M:%S'))
-                    last_update = datetime.fromisoformat(last_update_str)
-                    if (today - last_update).days > 7:
-                        state = True
-                except exc.QubesDaemonCommunicationError:
-                    state = False
-
-                state = str(vm.name).startswith("devel-")
+                state = vm.name in to_update
                 vmrow = VMListBoxRow(vm, state)
                 self.vm_list.add(vmrow)
                 vmrow.checkbox.connect('toggled', self.checkbox_checked)
+
+        # TODO
+        devel_deb = self.qapp.domains['devel-debian']
+        vmrow = VMListBoxRow(devel_deb, True)
+        self.vm_list.add(vmrow)
+        vmrow.checkbox.connect('toggled', self.checkbox_checked)
+        devel_fed = self.qapp.domains['devel-fedora']
+        vmrow = VMListBoxRow(devel_fed, True)
+        self.vm_list.add(vmrow)
+        vmrow.checkbox.connect('toggled', self.checkbox_checked)
+        # END TODO
 
         self.vm_list.connect("row-activated", self.toggle_row_selection)
         return result
@@ -301,7 +290,6 @@ class QubesUpdater(Gtk.Application):
                 for untrusted_line in iter(proc.stdout.readline, ''):
                     if untrusted_line:
                         stdout += untrusted_line
-                        pass
                     else:
                         break
                 proc.stdout.close()

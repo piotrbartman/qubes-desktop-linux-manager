@@ -30,8 +30,11 @@ install-icons:
 	cp icons/96x96/qui-domains.png $(DESTDIR)/usr/share/icons/hicolor/96x96/apps/qui-domains.png
 	cp icons/128x128/qui-domains.png $(DESTDIR)/usr/share/icons/hicolor/128x128/apps/qui-domains.png
 	mkdir -p $(DESTDIR)/usr/share/icons/hicolor/scalable/apps
-	cp icons/scalable/config-program-icon.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-global-config.svg
+	cp icons/scalable/check-yes.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-check-yes.svg
+	cp icons/scalable/check-maybe.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-check-maybe.svg
 	cp icons/scalable/delete_icon.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-delete.svg
+	cp icons/scalable/delete-x.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-delete-x.svg
+	cp icons/scalable/config-program-icon.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-global-config.svg
 	cp icons/scalable/new-qube-program-icon.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-new-qube.svg
 	cp icons/scalable/ok_icon.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-ok.svg
 	cp icons/scalable/padlock_icon.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-padlock.svg

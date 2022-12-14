@@ -102,9 +102,26 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 %{python3_sitelib}/qui/__init__.py
 %{python3_sitelib}/qui/decorators.py
 %{python3_sitelib}/qui/clipboard.py
-%{python3_sitelib}/qui/updater.py
 %{python3_sitelib}/qui/utils.py
 %{python3_sitelib}/qui/updater.glade
+%{python3_sitelib}/qui/updater_settings.glade
+%{python3_sitelib}/qui/qubes-colors-dark-updater.css
+%{python3_sitelib}/qui/qubes-colors-light-updater.css
+%{python3_sitelib}/qui/qubes-updater-base.css
+%{python3_sitelib}/qui/qubes-updater-light.css
+%{python3_sitelib}/qui/qubes-updater-dark.css
+%{python3_sitelib}/qui/qubes-widgets-base.css
+
+%dir %{python3_sitelib}/qui/updater/
+%dir %{python3_sitelib}/qui/updater/__pycache__
+%{python3_sitelib}/qui/updater/__pycache__/*
+%{python3_sitelib}/qui/updater/__init__.py
+%{python3_sitelib}/qui/updater/intro_page.py
+%{python3_sitelib}/qui/updater/progress_page.py
+%{python3_sitelib}/qui/updater/summary_page.py
+%{python3_sitelib}/qui/updater/updater.py
+%{python3_sitelib}/qui/updater/updater_settings.py
+%{python3_sitelib}/qui/updater/utils.py
 
 %dir %{python3_sitelib}/qui/tray/
 %dir %{python3_sitelib}/qui/tray/__pycache__
@@ -206,7 +223,10 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 
 /usr/share/icons/hicolor/scalable/apps/qubes-ask.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-customize.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-check-maybe.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-check-yes.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-delete.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-delete-x.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-expander-hidden-black.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-expander-shown-black.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-expander-hidden-white.svg

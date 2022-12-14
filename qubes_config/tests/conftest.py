@@ -180,7 +180,8 @@ def add_dom0_feature(qapp, feature, feature_value):
             b'0\x00' + f'{feature_value}'.encode()
     else:
         qapp.expected_calls[('dom0', 'admin.vm.feature.Get', feature, None)] = \
-            b'0\x00' + f'{feature_value}'.encode()
+            b'2\x00QubesFeatureNotFoundError\x00\x00' \
+            + str(feature).encode() + b'\x00'
 
 def add_feature_with_template_to_all(qapp, feature_name,
                                      enable_vm_names: List[str]):

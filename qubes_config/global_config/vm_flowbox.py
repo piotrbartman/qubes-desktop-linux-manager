@@ -217,6 +217,16 @@ class VMFlowboxHandler:
         """Is the flowbox changed from initial state?"""
         return self.selected_vms != self._initial_vms
 
+    @property
+    def added_vms(self) -> List[qubesadmin.vm.QubesVM]:
+        """Get vms added to initial state."""
+        return list(set(self.selected_vms) - set(self._initial_vms))
+
+    @property
+    def removed_vms(self) -> List[qubesadmin.vm.QubesVM]:
+        """Get vms removed from initial state."""
+        return list(set(self._initial_vms) - set(self.selected_vms))
+
     def save(self):
         """Mark changes as saved, for use in is_changed."""
         self._initial_vms = self.selected_vms

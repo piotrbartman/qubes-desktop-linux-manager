@@ -527,3 +527,21 @@ msgstr ""
 #: qui/updater.glade:264
 msgid "Cancel"
 msgstr ""
+
+msgid "Update in progress..."
+msgstr ""
+
+msgid "Update finished"
+msgstr ""
+
+msgid "Details for"
+msgstr ""
+
+msgid "updated successfully."
+msgstr ""
+
+msgid "attempted to update but found no updates."
+msgstr ""
+
+msgid "failed to update."
+msgstr ""

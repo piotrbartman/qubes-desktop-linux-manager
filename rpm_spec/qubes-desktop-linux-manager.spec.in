@@ -54,10 +54,8 @@ Requires:  libappindicator-gtk3
 Requires:  python%{python3_pkgversion}-systemd
 Requires:  gtk3
 Requires:  python%{python3_pkgversion}-qubesadmin >= 4.1.8
-%if !0%{?vm_package}
 # FIXME: we need some way for applying updates from GUI VM
-Requires:  qubes-mgmt-salt-dom0-update >= 4.0.5
-%endif
+#Requires:  qubes-mgmt-salt-dom0-update >= 4.0.5
 Requires:  qubes-artwork >= 4.1.5
 
 Provides:   qui = %{version}-%{release}

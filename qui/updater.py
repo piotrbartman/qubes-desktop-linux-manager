@@ -7,11 +7,12 @@ import time
 import threading
 import subprocess
 from datetime import datetime
+from typing import Optional
 
 import pkg_resources
 import gi  # isort:skip
 gi.require_version('Gtk', '3.0')  # isort:skip
-from gi.repository import Gtk, Gdk, GObject, Gio, GLib  # isort:skip
+from gi.repository import Gtk, Gdk, GObject, Gio, GLib, GdkPixbuf  # isort:skip
 from qubesadmin import Qubes
 from qubesadmin import exc
 
@@ -45,6 +46,33 @@ class QubesUpdater(Gtk.Application):
         self.main_window = self.builder.get_object("main_window")
 
         self.vm_list = self.builder.get_object("vm_list")
+
+        # Create a cell renderer for the checkboxes
+        cellrenderer0 = Gtk.CellRendererToggle()
+
+        # Create some columns for the tree view
+        column0 = Gtk.TreeViewColumn("[]", cellrenderer0, active=0)
+
+        # Connect the cell renderer's "toggled" signal to a callback function
+        cellrenderer0.connect("toggled", self.on_checkbox_toggled)
+        self.vm_list.append_column(column0)
+
+        column1 = Gtk.TreeViewColumn(
+            "", Gtk.CellRendererPixbuf(), pixbuf=1
+        )
+        self.vm_list.append_column(column1)
+
+        headers = ["Qube name", "Updates available", "Last checked",
+                   "Last updated"]
+
+        for i, header in enumerate(headers):
+            col = i + 2
+            column = Gtk.TreeViewColumn(
+                header, Gtk.CellRendererText(),
+                text=col
+            )
+            self.vm_list.append_column(column)
+            column.set_sort_column_id(col)
 
         self.updates_available = self.populate_vm_list()
 
@@ -89,6 +117,11 @@ class QubesUpdater(Gtk.Application):
         self.update_thread = None
         self.exit_triggered = False
 
+    def on_checkbox_toggled(self, widget, path):
+        if path is not None:
+            it = self.list_store.get_iter(path)
+            self.list_store[it][0] = not self.list_store[it][0]
+
     def do_activate(self, *_args, **_kwargs):
         if not self.primary:
             self.perform_setup()
@@ -116,6 +149,7 @@ class QubesUpdater(Gtk.Application):
 
     def populate_vm_list(self):
         result = False  # whether at least one VM has updates available
+        self.list_store = Gtk.ListStore(bool, GdkPixbuf.Pixbuf, str, UpdatesAvailable, str, str)  # TODO rename
         for vm in self.qapp.domains:
             if vm.klass == 'AdminVM':
                 try:
@@ -123,33 +157,38 @@ class QubesUpdater(Gtk.Application):
                 except exc.QubesDaemonCommunicationError:
                     state = False
                 result = result or state
-                self.vm_list.add(VMListBoxRow(vm, state))
+                self.list_store.append([False, get_domain_icon(vm), vm.name, UpdatesAvailable(True), "today", "02.02.2022"])
+                devel_deb = self.qapp.domains['devel-debian']
+                self.list_store.append([False, get_domain_icon(devel_deb), devel_deb.name, UpdatesAvailable(None), "yesterday", "yesterday"])
+                self.list_store.append([False, get_domain_icon(vm), "zzz", UpdatesAvailable(False), "01.01.2021", "today"])
 
-        output = subprocess.check_output(
-            ['qubes-vm-update', '--dry-run', '--n', f'{7}'])
+        # output = subprocess.check_output(
+        #     ['qubes-vm-update', '--dry-run', '--n', f'{7}'])
+        #
+        # to_update = [vm_name.strip() for vm_name
+        #              in output.decode().split("\n")[0].split(":")[1].split(",")]
+        #
+        # for vm in self.qapp.domains:
+        #     if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM':
+        #         state = vm.name in to_update
+        #         vmrow = VMListBoxRow(vm, state)
+        #         self.vm_list.add(vmrow)
+        #         vmrow.checkbox.connect('toggled', self.checkbox_checked)
+        #
+        # # TODO
+        # devel_deb = self.qapp.domains['devel-debian']
+        # vmrow = VMListBoxRow(devel_deb, True)
+        # self.vm_list.add(vmrow)
+        # vmrow.checkbox.connect('toggled', self.checkbox_checked)
+        # devel_fed = self.qapp.domains['devel-fedora']
+        # vmrow = VMListBoxRow(devel_fed, True)
+        # self.vm_list.add(vmrow)
+        # vmrow.checkbox.connect('toggled', self.checkbox_checked)
+        # # END TODO
 
-        to_update = [vm_name.strip() for vm_name
-                     in output.decode().split("\n")[0].split(":")[1].split(",")]
+        # self.vm_list.connect("row-activated", self.toggle_row_selection)
 
-        for vm in self.qapp.domains:
-            if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM':
-                state = vm.name in to_update
-                vmrow = VMListBoxRow(vm, state)
-                self.vm_list.add(vmrow)
-                vmrow.checkbox.connect('toggled', self.checkbox_checked)
-
-        # TODO
-        devel_deb = self.qapp.domains['devel-debian']
-        vmrow = VMListBoxRow(devel_deb, True)
-        self.vm_list.add(vmrow)
-        vmrow.checkbox.connect('toggled', self.checkbox_checked)
-        devel_fed = self.qapp.domains['devel-fedora']
-        vmrow = VMListBoxRow(devel_fed, True)
-        self.vm_list.add(vmrow)
-        vmrow.checkbox.connect('toggled', self.checkbox_checked)
-        # END TODO
-
-        self.vm_list.connect("row-activated", self.toggle_row_selection)
+        self.vm_list.set_model(self.list_store)
         return result
 
     def checkbox_checked(self, _emitter, *_args):
@@ -342,10 +381,45 @@ class QubesUpdater(Gtk.Application):
             self.release()
 
 
+class UpdatesAvailable(Gtk.Label):
+    def __init__(self, value: Optional[bool]):
+        if value is None:
+            self.value = "MAYBE"
+            self.__order = 1
+        elif value:
+            self.value = "YES"
+            self.__order = 2
+        else:
+            self.value = "NO"
+            self.__order = 0
+        super().__init__(label=self.value)
+
+    def __str__(self):
+        return self.value
+
+    def __eq__(self, other):
+        return self.__order == other.__order
+
+    def __ne__(self, other):
+        return self.__order != other.__order
+
+    def __lt__(self, other):
+        return self.__order < other.__order
+
+    def __le__(self, other):
+        return self.__order <= other.__order
+
+    def __gt__(self, other):
+        return self.__order > other.__order
+
+    def __ge__(self, other):
+        return self.__order >= other.__order
+
+
+
 def get_domain_icon(vm):
     icon_vm = Gtk.IconTheme.get_default().load_icon(vm.label.icon, 16, 0)
-    icon_img = Gtk.Image.new_from_pixbuf(icon_vm)
-    return icon_img
+    return icon_vm
 
 
 class VMListBoxRow(Gtk.ListBoxRow):

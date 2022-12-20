@@ -6,8 +6,8 @@ import re
 import time
 import threading
 import subprocess
-from datetime import datetime
-from typing import Optional
+from datetime import datetime, timedelta
+from typing import Optional, Union
 
 import pkg_resources
 import gi  # isort:skip
@@ -22,6 +22,7 @@ import locale
 from locale import gettext as _
 locale.bindtextdomain("desktop-linux-manager", "/usr/locales/")
 locale.textdomain('desktop-linux-manager')
+
 
 class QubesUpdater(Gtk.Application):
     # pylint: disable=too-many-instance-attributes
@@ -51,28 +52,61 @@ class QubesUpdater(Gtk.Application):
         cellrenderer0 = Gtk.CellRendererToggle()
 
         # Create some columns for the tree view
-        column0 = Gtk.TreeViewColumn("[]", cellrenderer0, active=0)
+        self.column0 = Gtk.TreeViewColumn("[]", cellrenderer0, active=0)
 
         # Connect the cell renderer's "toggled" signal to a callback function
         cellrenderer0.connect("toggled", self.on_checkbox_toggled)
-        self.vm_list.append_column(column0)
+        self.vm_list.append_column(self.column0)
 
         column1 = Gtk.TreeViewColumn(
             "", Gtk.CellRendererPixbuf(), pixbuf=1
         )
         self.vm_list.append_column(column1)
 
-        headers = ["Qube name", "Updates available", "Last checked",
-                   "Last updated"]
+        headers = [(2, "Qube name", 2), (3, "Updates available", 3),
+                   (5, "Last checked", 5), (6, "Last updated", 6)]
 
-        for i, header in enumerate(headers):
-            col = i + 2
-            column = Gtk.TreeViewColumn(
-                header, Gtk.CellRendererText(),
-                text=col
-            )
+        def cell_data_func(column, cell, model, it, data):
+            title = column.get_properties("title")
+            if title[0] == "Updates available":  # TODO
+                col = 3
+                obj = model.get_value(it, col)
+                cell.set_property("text", obj.value)
+                cell.set_property("foreground", "red")
+                return
+            else:
+                col = 5
+            # Get the object from the model
+            obj = model.get_value(it, col)
+            date_format = "%Y-%m-%d"
+            date_str = obj.strftime(date_format)
+            today_str = datetime.today().strftime(date_format)
+            yesterday = datetime.today() - timedelta(days=1)
+            yesterday_str = yesterday.strftime(date_format)
+            if date_str == today_str:
+                date_repr = "today"
+            elif date_str == yesterday_str:
+                date_repr = "yesterday"
+            else:
+                date_repr = date_str
+            # Set the cell value to the name of the object
+            cell.set_property("text", date_repr)
+
+        for col, header, sort_col in headers:
+            renderer = Gtk.CellRendererText()
+            if col in (3, 5):
+                column = Gtk.TreeViewColumn(header, renderer)
+                column.set_cell_data_func(renderer, cell_data_func)
+            else:
+                column = Gtk.TreeViewColumn(header, renderer, text=col)
+            if col > 2:
+                # center column content
+                renderer.props.xalign = 0.5
+                # center column header
+                column.set_alignment(0.5)
+
             self.vm_list.append_column(column)
-            column.set_sort_column_id(col)
+            column.set_sort_column_id(sort_col)
 
         self.updates_available = self.populate_vm_list()
 
@@ -149,7 +183,34 @@ class QubesUpdater(Gtk.Application):
 
     def populate_vm_list(self):
         result = False  # whether at least one VM has updates available
-        self.list_store = Gtk.ListStore(bool, GdkPixbuf.Pixbuf, str, UpdatesAvailable, str, str)  # TODO rename
+        self.list_store = Gtk.ListStore(
+            bool, GdkPixbuf.Pixbuf, str, object, int, object, str)  # TODO rename
+        def sort_func(model, iter1, iter2, data):
+            # Get the values at the two iter indices
+            value1 = model[iter1][5]
+            value2 = model[iter2][5]
+
+            # Compare the values and return -1, 0, or 1
+            if value1 < value2:
+                return -1
+            elif value1 == value2:
+                return 0
+            else:
+                return 1
+        self.list_store.set_sort_func(5, sort_func)
+        def sort_func(model, iter1, iter2, data):
+            # Get the values at the two iter indices
+            value1 = model[iter1][3]
+            value2 = model[iter2][3]
+
+            # Compare the values and return -1, 0, or 1
+            if value1 < value2:
+                return -1
+            elif value1 == value2:
+                return 0
+            else:
+                return 1
+        self.list_store.set_sort_func(3, sort_func)
         for vm in self.qapp.domains:
             if vm.klass == 'AdminVM':
                 try:
@@ -157,10 +218,10 @@ class QubesUpdater(Gtk.Application):
                 except exc.QubesDaemonCommunicationError:
                     state = False
                 result = result or state
-                self.list_store.append([False, get_domain_icon(vm), vm.name, UpdatesAvailable(True), "today", "02.02.2022"])
+                self.list_store.append([False, get_domain_icon(vm), vm.name, UpdatesAvailable(True), UpdatesAvailable(True).order, datetime(2020, 1, 1), "02.02.2022"])
                 devel_deb = self.qapp.domains['devel-debian']
-                self.list_store.append([False, get_domain_icon(devel_deb), devel_deb.name, UpdatesAvailable(None), "yesterday", "yesterday"])
-                self.list_store.append([False, get_domain_icon(vm), "zzz", UpdatesAvailable(False), "01.01.2021", "today"])
+                self.list_store.append([False, get_domain_icon(devel_deb), devel_deb.name, UpdatesAvailable(None), UpdatesAvailable(None).order, datetime.today() - timedelta(days=1), "yesterday"])
+                self.list_store.append([False, get_domain_icon(vm), "zzz", UpdatesAvailable(False), UpdatesAvailable(False).order, datetime.today(), "today"])
 
         # output = subprocess.check_output(
         #     ['qubes-vm-update', '--dry-run', '--n', f'{7}'])
@@ -381,39 +442,43 @@ class QubesUpdater(Gtk.Application):
             self.release()
 
 
-class UpdatesAvailable(Gtk.Label):
-    def __init__(self, value: Optional[bool]):
+class UpdatesAvailable:
+    def __init__(self, value: Union[Optional[bool], str]):
+        if isinstance(value, str):
+            if value.upper() == "No":
+                value = False
+            elif value.upper() == "YES":
+                value = True
+            else:
+                value = None
+
         if value is None:
             self.value = "MAYBE"
-            self.__order = 1
+            self.order = 1
         elif value:
             self.value = "YES"
-            self.__order = 2
+            self.order = 0
         else:
             self.value = "NO"
-            self.__order = 0
-        super().__init__(label=self.value)
-
-    def __str__(self):
-        return self.value
+            self.order = 2
 
     def __eq__(self, other):
-        return self.__order == other.__order
+        return self.order == other.order
 
     def __ne__(self, other):
-        return self.__order != other.__order
+        return self.order != other.order
 
     def __lt__(self, other):
-        return self.__order < other.__order
+        return self.order < other.order
 
     def __le__(self, other):
-        return self.__order <= other.__order
+        return self.order <= other.order
 
     def __gt__(self, other):
-        return self.__order > other.__order
+        return self.order > other.order
 
     def __ge__(self, other):
-        return self.__order >= other.__order
+        return self.order >= other.order
 
 
 

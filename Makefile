@@ -47,6 +47,9 @@ install-icons:
 	cp icons/scalable/question_icon.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-question.svg
 	cp icons/scalable/question_icon_light.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-question-light.svg
 	cp icons/scalable/this-device-icon.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-this-device.svg
+	cp icons/scalable/check_no.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/check_no.svg
+	cp icons/scalable/check_yes.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/check_yes.svg
+	cp icons/scalable/check_maybe.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/check_maybe.svg
 
 install-autostart:
 	mkdir -p $(DESTDIR)/etc/xdg/autostart

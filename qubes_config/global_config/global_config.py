@@ -20,10 +20,10 @@
 
 # pylint: disable=import-error
 """Global Qubes Config tool."""
-import re
 import sys
 import threading
 from typing import Dict, Optional, List, Union
+from html import escape
 import pkg_resources
 import subprocess
 import logging
@@ -32,8 +32,7 @@ import qubesadmin
 import qubesadmin.events
 import qubesadmin.exc
 import qubesadmin.vm
-from ..widgets.gtk_utils import show_error, show_dialog, load_theme,\
-    copy_to_global_clipboard
+from ..widgets.gtk_utils import show_error, show_dialog, load_theme
 from ..widgets.gtk_widgets import ProgressBarDialog, ViewportHandler
 from .page_handler import PageHandler
 from .policy_handler import PolicyHandler, VMSubsetPolicyHandler
@@ -45,6 +44,7 @@ from .updates_handler import UpdatesHandler
 from .usb_devices import DevicesHandler
 from .basics_handler import BasicSettingsHandler, FeatureHandler
 from .policy_exceptions_handler import DispvmExceptionHandler
+from .thisdevice_handler import ThisDeviceHandler
 
 import gi
 
@@ -176,74 +176,6 @@ qubes.Filecopy * @anyvm @anyvm ask""",
         return "\n".join(unsaved)
 
 
-class ThisDeviceHandler(PageHandler):
-    """Handler for the ThisDevice page."""
-    def __init__(self,
-                 qapp: qubesadmin.Qubes,
-                 gtk_builder: Gtk.Builder):
-        self.qapp = qapp
-
-        self.model_label: Gtk.Label = gtk_builder.get_object(
-            'thisdevice_model_label')
-        self.data_label: Gtk.Label = gtk_builder.get_object(
-            'thisdevice_data_label')
-
-        self.copy_button: Gtk.Button = \
-            gtk_builder.get_object('thisdevice_copy_button')
-
-        hcl_check = subprocess.check_output(['qubes-hcl-report']).decode()
-
-        pattern = re.compile(
-            r"Qubes release\s*(?P<qubes>.+)[\n.]*Brand:\s*(?P<brand>.+)[\n.]*"
-            r"Model:\s*(?P<model>.+)[\n.]*BIOS:\s*(?P<bios>.*)[\n.]+"
-            r"Xen:\s*(?P<xen>.+)[\n.]*Kernel:\s+(?P<kernel>.+)[\n.]*"
-            r"RAM:\s+(?P<ram>.+)[\n.]+CPU:\s*(?P<cpu>.*)[\n.]+"
-            r"Chipset:\s*(?P<chipset>.*)[\n.]+VGA:\s*(?P<vga>.*)")
-        match = pattern.search(hcl_check)
-        if not match:
-            label_text = hcl_check
-            self.data_label.get_style_context().add_class('red_code')
-        else:
-            label_text = f"""<b>Brand:</b> {match.group('brand')}
-<b>Model:</b> {match.group('model')}
-        
-<b>CPU:</b> {match.group('cpu')}
-<b>Chipset:</b> {match.group('chipset')}
-<b>Graphics:</b> {match.group('vga')}
-
-<b>RAM:</b> {match.group('ram')}
-
-<b>QubesOS version:</b> {match.group('qubes')}
-<b>BIOS:</b> {match.group('bios')}
-<b>Kernel:</b> {match.group('kernel')}
-<b>Xen:</b> {match.group('xen')}
-"""
-        self.data_label.set_markup(label_text)
-
-        self.copy_button.connect('clicked', self._copy_to_clipboard)
-
-    def _copy_to_clipboard(self, *_args):
-        text = self.data_label.get_text()
-        try:
-            copy_to_global_clipboard(text)
-        except Exception:  # pylint: disable=broad-except
-            show_error(self.copy_button.get_toplevel(),
-                       "Failed to copy to Global Clipboard",
-                       "An error occurred while trying to access"
-                       " Global Clipboard")
-
-    def reset(self):
-        # does not apply
-        pass
-
-    def save(self):
-        # does not apply
-        pass
-
-    def get_unsaved(self) -> str:
-        return ""
-
-
 class GlobalConfig(Gtk.Application):
     """
     Main Gtk.Application for new qube widget.
@@ -285,6 +217,12 @@ class GlobalConfig(Gtk.Application):
                            Gtk.Window,
                            GObject.SignalFlags.RUN_LAST, GObject.TYPE_PYOBJECT,
                            (GObject.TYPE_PYOBJECT,))
+
+        # signal that informs other pages that a given page has been changed
+        GObject.signal_new('page-changed',
+                           Gtk.Window,
+                           GObject.SignalFlags.RUN_LAST, GObject.TYPE_PYOBJECT,
+                           (GObject.TYPE_STRING,))
 
         GObject.signal_new('child-removed',
                            Gtk.FlowBox,
@@ -384,7 +322,9 @@ class GlobalConfig(Gtk.Application):
         )
         self.progress_bar_dialog.update_progress(page_progress)
 
-        self.handlers['thisdevice'] = ThisDeviceHandler(self.qapp, self.builder)
+        self.handlers['thisdevice'] = ThisDeviceHandler(self.qapp,
+                                                        self.builder,
+                                                        self.policy_manager)
         self.progress_bar_dialog.update_progress(page_progress)
 
         self.main_notebook.connect("switch-page", self._page_switched)
@@ -428,7 +368,8 @@ class GlobalConfig(Gtk.Application):
 
     def _handle_urls(self):
         url_label_ids = ["url_info", "openinvm_info", "splitgpg_info",
-                         "usb_info", "basics_info"]
+                         "usb_info", "basics_info", "thisdevice_security_info",
+                         "thisdevice_certified_yes_info"]
         for url_label_id in url_label_ids:
             label: Gtk.Label = self.builder.get_object(url_label_id)
             label.connect("activate-link", self._activate_link)
@@ -443,13 +384,30 @@ class GlobalConfig(Gtk.Application):
         default_dvm = self.qapp.default_dispvm
         subprocess.run(
             ['qvm-run', '-p', '--service', f'--dispvm={default_dvm}',
-             'qubes.OpenURL'], input=url.encode(), check=False)
+             'qubes.OpenURL'], input=url.encode(), check=False,
+            stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
     def get_current_page(self) -> Optional[PageHandler]:
         """Get currently visible page."""
         page_num = self.main_notebook.get_current_page()
         return self.handlers.get(
             self.main_notebook.get_nth_page(page_num).get_name(), None)
+
+    def save_page(self, page: PageHandler) -> bool:
+        """Save provided page and emit any necessary signals;
+        return True if successful, False otherwise"""
+        try:
+            page.save()
+            for name, handler in self.handlers.items():
+                if handler == page:
+                    self.main_window.emit('page-changed', name)
+                    break
+            page.reset()
+        except Exception as ex:
+            show_error(self.main_window, "Could not save changes",
+                       f"The following error occurred: {escape(str(ex))}")
+            return False
+        return True
 
     def verify_changes(self) -> bool:
         """Verify the current state of the page. Return True if page can
@@ -460,16 +418,10 @@ class GlobalConfig(Gtk.Application):
             if unsaved != '':
                 response = self._ask_unsaved(unsaved)
                 if response == Gtk.ResponseType.YES:
-                    try:
-                        page.save()
-                    except Exception as ex:
-                        show_error(self.main_window, "Could not save changes",
-                                   f"The following error occurred: {ex}")
-                        return False
-                elif response == Gtk.ResponseType.NO:
+                    return self.save_page(page)
+                if response == Gtk.ResponseType.NO:
                     page.reset()
-                else:
-                    return False
+                return False
         return True
 
     def _page_switched(self, *_args):
@@ -510,12 +462,7 @@ class GlobalConfig(Gtk.Application):
     def _apply(self, _widget=None):
         page = self.get_current_page()
         if page:
-            try:
-                page.save()
-                page.reset()
-            except Exception as ex:
-                show_error(self.main_window, "Could not save changes",
-                           f"The following error occurred: {ex}")
+            self.save_page(page)
 
     def _reset(self, _widget=None):
         page = self.get_current_page()

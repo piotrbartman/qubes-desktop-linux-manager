@@ -213,3 +213,15 @@ separator {
 .action_text_soft {
     color: @text-color;
 }
+
+.certified_yes {
+    margin: 30px;
+    padding: 30px 90px 30px 90px;
+    font-size: 120%;
+    border: 1px solid;
+    border-color: @background-frame;
+}
+
+.info_grid {
+    margin: 20px;
+}

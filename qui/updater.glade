@@ -2,6 +2,16 @@
 <!-- Generated with glade 3.38.2 -->
 <interface domain="desktop-linux-manager">
   <requires lib="gtk+" version="3.20"/>
+  <object class="GtkListStore" id="list_store">
+    <columns>
+      <column type="gboolean"/>
+      <column type="GdkPixbuf"/>
+      <column type="gchararray"/>
+      <column type="GObject"/>
+      <column type="GObject"/>
+      <column type="GObject"/>
+    </columns>
+  </object>
   <object class="GtkWindow" id="main_window">
     <property name="can-focus">False</property>
     <property name="hexpand">True</property>
@@ -48,14 +58,43 @@
                 <property name="orientation">vertical</property>
                 <property name="baseline-position">top</property>
                 <child>
-                  <object class="GtkLabel">
+                  <object class="GtkBox" id="list_page_header">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="halign">start</property>
-                    <property name="valign">start</property>
-                    <property name="margin-bottom">10</property>
-                    <property name="hexpand">True</property>
-                    <property name="label" translatable="yes">Select qubes to update:</property>
+                    <property name="vexpand">True</property>
+                    <property name="orientation">horizontal</property>
+                    <property name="baseline-position">top</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="valign">start</property>
+                        <property name="margin-bottom">10</property>
+                        <property name="hexpand">True</property>
+                        <property name="label" translatable="yes">Select qubes to update:</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkButton" id="button_settings">
+                        <property name="label">TODO</property>
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="receives-default">True</property>
+                        <property name="valign">end</property>
+                        <property name="use-underline">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -74,27 +113,70 @@
                         <property name="can-focus">False</property>
                         <child>
                           <object class="GtkTreeView" id="vm_list">
-                            <property name="model">
-                              <object class="GtkListStore">
-                                <columns>
-                                  <column type="gchararray"/>
-                                  <column type="gchararray"/>
-                                  <column type="gint"/>
-                                </columns>
-                                <data>
-                                  <row>
-                                    <col id="0">John</col>
-                                    <col id="1">Doe</col>
-                                    <col id="2">25</col>
-                                  </row>
-                                  <row>
-                                    <col id="0">Johan</col>
-                                    <col id="1">Dahlin</col>
-                                    <col id="2">50</col>
-                                  </row>
-                                </data>
+                            <property name="model">list_store</property>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="checkbox_column">
+                                <child>
+                                  <object class="GtkCellRendererToggle" id="toggle_renderer"/>
+                                  <attributes>
+                                    <attribute name="active">0</attribute>
+                                  </attributes>
+                                </child>
                               </object>
-                            </property>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="icon_column">
+                                <property name="title"></property>
+                                <child>
+                                  <object class="GtkCellRendererPixbuf" id="pixbuf_renderer"/>
+                                  <attributes>
+                                    <attribute name="pixbuf">1</attribute>
+                                  </attributes>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="name_column">
+                                <property name="title">Qube name</property>
+                                <property name="sort-column-id">2</property>
+                                <child>
+                                  <object class="GtkCellRendererText" id="name_renderer"/>
+                                  <attributes>
+                                    <attribute name="text">2</attribute>
+                                  </attributes>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="available_column">
+                                <property name="title">Updates available</property>
+                                <property name="sort-column-id">3</property>
+                                <property name="alignment">0.5</property>
+                                <child>
+                                  <object class="GtkCellRendererText" id="available_renderer"/>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="check_column">
+                                <property name="title">Last checked</property>
+                                <property name="sort-column-id">4</property>
+                                <property name="alignment">0.5</property>
+                                <child>
+                                  <object class="GtkCellRendererText" id="check_renderer"/>
+                                </child>
+                              </object>
+                            </child>
+                            <child>
+                              <object class="GtkTreeViewColumn" id="update_column">
+                                <property name="title">Last updated</property>
+                                <property name="sort-column-id">5</property>
+                                <property name="alignment">0.5</property>
+                                <child>
+                                  <object class="GtkCellRendererText" id="update_renderer"/>
+                                </child>
+                              </object>
+                            </child>
                             <style>
                               <class name="black-border"/>
                             </style>
@@ -304,7 +386,7 @@
             <property name="use-underline">True</property>
           </object>
           <packing>
-            <property name="left-attach">0</property>
+            <property name="left-attach">2</property>
             <property name="top-attach">1</property>
           </packing>
         </child>

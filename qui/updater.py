@@ -48,65 +48,30 @@ class QubesUpdater(Gtk.Application):
 
         self.vm_list = self.builder.get_object("vm_list")
 
-        # Create a cell renderer for the checkboxes
-        cellrenderer0 = Gtk.CellRendererToggle()
-
-        # Create some columns for the tree view
-        self.column0 = Gtk.TreeViewColumn("[]", cellrenderer0, active=0)
-
         # Connect the cell renderer's "toggled" signal to a callback function
-        cellrenderer0.connect("toggled", self.on_checkbox_toggled)
-        self.vm_list.append_column(self.column0)
+        toggle_renderer = self.builder.get_object("toggle_renderer")
+        toggle_renderer.connect("toggled", self.on_checkbox_toggled)
 
-        column1 = Gtk.TreeViewColumn(
-            "", Gtk.CellRendererPixbuf(), pixbuf=1
-        )
-        self.vm_list.append_column(column1)
-
-        headers = [(2, "Qube name", 2), (3, "Updates available", 3),
-                   (5, "Last checked", 5), (6, "Last updated", 6)]
+        headers = [(3, "available"),
+                   (4, "check"), (5, "update")]
 
         def cell_data_func(column, cell, model, it, data):
-            title = column.get_properties("title")
-            if title[0] == "Updates available":  # TODO
-                col = 3
-                obj = model.get_value(it, col)
-                cell.set_property("text", obj.value)
-                cell.set_property("foreground", "red")
-                return
-            else:
-                col = 5
             # Get the object from the model
-            obj = model.get_value(it, col)
-            date_format = "%Y-%m-%d"
-            date_str = obj.strftime(date_format)
-            today_str = datetime.today().strftime(date_format)
-            yesterday = datetime.today() - timedelta(days=1)
-            yesterday_str = yesterday.strftime(date_format)
-            if date_str == today_str:
-                date_repr = "today"
-            elif date_str == yesterday_str:
-                date_repr = "yesterday"
-            else:
-                date_repr = date_str
+            obj = model.get_value(it, data)
             # Set the cell value to the name of the object
-            cell.set_property("text", date_repr)
+            cell.set_property("text", str(obj))
 
-        for col, header, sort_col in headers:
-            renderer = Gtk.CellRendererText()
-            if col in (3, 5):
-                column = Gtk.TreeViewColumn(header, renderer)
-                column.set_cell_data_func(renderer, cell_data_func)
-            else:
-                column = Gtk.TreeViewColumn(header, renderer, text=col)
-            if col > 2:
-                # center column content
-                renderer.props.xalign = 0.5
-                # center column header
-                column.set_alignment(0.5)
-
-            self.vm_list.append_column(column)
-            column.set_sort_column_id(sort_col)
+        for col, name in headers:
+            renderer = self.builder.get_object(name + "_renderer")
+            column = self.builder.get_object(name + "_column")
+            # renderer = Gtk.CellRendererText()
+            # column = Gtk.TreeViewColumn(header, renderer)
+            column.set_cell_data_func(renderer, cell_data_func, col)
+            renderer.props.xalign = 0.5
+            # center column header
+            # column.set_alignment(0.5)
+            # self.vm_list.append_column(column)
+            # column.set_sort_column_id(col)
 
         self.updates_available = self.populate_vm_list()
 
@@ -183,12 +148,12 @@ class QubesUpdater(Gtk.Application):
 
     def populate_vm_list(self):
         result = False  # whether at least one VM has updates available
-        self.list_store = Gtk.ListStore(
-            bool, GdkPixbuf.Pixbuf, str, object, int, object, str)  # TODO rename
+        self.list_store = self.vm_list.get_model()
+
         def sort_func(model, iter1, iter2, data):
             # Get the values at the two iter indices
-            value1 = model[iter1][5]
-            value2 = model[iter2][5]
+            value1 = model[iter1][data]
+            value2 = model[iter2][data]
 
             # Compare the values and return -1, 0, or 1
             if value1 < value2:
@@ -197,20 +162,9 @@ class QubesUpdater(Gtk.Application):
                 return 0
             else:
                 return 1
-        self.list_store.set_sort_func(5, sort_func)
-        def sort_func(model, iter1, iter2, data):
-            # Get the values at the two iter indices
-            value1 = model[iter1][3]
-            value2 = model[iter2][3]
-
-            # Compare the values and return -1, 0, or 1
-            if value1 < value2:
-                return -1
-            elif value1 == value2:
-                return 0
-            else:
-                return 1
-        self.list_store.set_sort_func(3, sort_func)
+        self.list_store.set_sort_func(3, sort_func, 3)
+        self.list_store.set_sort_func(4, sort_func, 4)
+        self.list_store.set_sort_func(5, sort_func, 5)
         for vm in self.qapp.domains:
             if vm.klass == 'AdminVM':
                 try:
@@ -218,10 +172,30 @@ class QubesUpdater(Gtk.Application):
                 except exc.QubesDaemonCommunicationError:
                     state = False
                 result = result or state
-                self.list_store.append([False, get_domain_icon(vm), vm.name, UpdatesAvailable(True), UpdatesAvailable(True).order, datetime(2020, 1, 1), "02.02.2022"])
+                self.list_store.append(
+                    [False,
+                     get_domain_icon(vm),
+                     vm.name,
+                     UpdatesAvailable(True),
+                     Date(2020, 1, 1),
+                     Date(2022, 12, 25)]
+                )
                 devel_deb = self.qapp.domains['devel-debian']
-                self.list_store.append([False, get_domain_icon(devel_deb), devel_deb.name, UpdatesAvailable(None), UpdatesAvailable(None).order, datetime.today() - timedelta(days=1), "yesterday"])
-                self.list_store.append([False, get_domain_icon(vm), "zzz", UpdatesAvailable(False), UpdatesAvailable(False).order, datetime.today(), "today"])
+                self.list_store.append(
+                    [False,
+                     get_domain_icon(devel_deb),
+                     devel_deb.name, UpdatesAvailable(None),
+                     Date.from_datetime(datetime.today() - timedelta(days=1)),
+                     Date.from_datetime(datetime.today())]
+                )
+                self.list_store.append(
+                    [False,
+                     get_domain_icon(vm),
+                     "zzz",
+                     UpdatesAvailable(False),
+                     Date.from_datetime(datetime.today()),
+                     Date.from_datetime(datetime.today() - timedelta(days=1))]
+                )
 
         # output = subprocess.check_output(
         #     ['qubes-vm-update', '--dry-run', '--n', f'{7}'])
@@ -249,7 +223,7 @@ class QubesUpdater(Gtk.Application):
 
         # self.vm_list.connect("row-activated", self.toggle_row_selection)
 
-        self.vm_list.set_model(self.list_store)
+        # self.vm_list.set_model(self.list_store)
         return result
 
     def checkbox_checked(self, _emitter, *_args):
@@ -442,8 +416,40 @@ class QubesUpdater(Gtk.Application):
             self.release()
 
 
-class UpdatesAvailable:
+class Date(GObject.GObject):
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self.datetime = datetime(*args, *kwargs)
+        self.date_format = "%Y-%m-%d"
+
+    @classmethod
+    def from_datetime(cls, datetime_: datetime):
+        self = cls(1, 1, 1)
+        self.datetime = datetime_
+        return self
+
+    def __str__(self):
+        date_str = self.datetime.strftime(self.date_format)
+        today_str = datetime.today().strftime(self.date_format)
+        yesterday = datetime.today() - timedelta(days=1)
+        yesterday_str = yesterday.strftime(self.date_format)
+        if date_str == today_str:
+            return "today"
+        elif date_str == yesterday_str:
+            return "yesterday"
+        else:
+            return date_str
+
+    def __eq__(self, other):
+        return self.datetime == other.datetime
+
+    def __lt__(self, other):
+        return self.datetime < other.datetime
+
+
+class UpdatesAvailable(GObject.GObject):
     def __init__(self, value: Union[Optional[bool], str]):
+        super().__init__()
         if isinstance(value, str):
             if value.upper() == "No":
                 value = False
@@ -462,23 +468,14 @@ class UpdatesAvailable:
             self.value = "NO"
             self.order = 2
 
+    def __str__(self):
+        return self.value
+
     def __eq__(self, other):
         return self.order == other.order
 
-    def __ne__(self, other):
-        return self.order != other.order
-
     def __lt__(self, other):
         return self.order < other.order
-
-    def __le__(self, other):
-        return self.order <= other.order
-
-    def __gt__(self, other):
-        return self.order > other.order
-
-    def __ge__(self, other):
-        return self.order >= other.order
 
 
 

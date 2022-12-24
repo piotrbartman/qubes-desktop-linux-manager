@@ -1,0 +1,842 @@
+/* main_window */
+
+
+box-sizing: border-box;
+
+position: absolute;
+width: 580px;
+height: 627px;
+
+background: #F2F2F2;
+/* Gray 2 */
+
+border: 1px solid #4F4F4F;
+
+
+/* top bar */
+
+
+position: absolute;
+width: 580px;
+height: 25.04px;
+
+
+
+/* description */
+
+
+position: absolute;
+width: 473px;
+height: 32.05px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 400;
+font-size: 13px;
+line-height: 16px;
+
+color: #000000;
+
+
+
+/* settings button */
+
+
+position: absolute;
+width: 32px;
+height: 32.05px;
+
+
+
+/* select qubes to update */
+
+
+position: absolute;
+width: 128px;
+height: 16.03px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 400;
+font-size: 13px;
+line-height: 16px;
+/* identical to box height */
+
+
+color: #000000;
+
+
+
+/* explanation */
+
+
+position: absolute;
+width: 548px;
+height: 32.05px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 400;
+font-size: 13px;
+line-height: 16px;
+
+color: #000000;
+
+
+
+/* table background */
+
+
+position: absolute;
+width: 527px;
+height: 379.61px;
+
+background: rgba(255, 255, 255, 0.4);
+border: 0.8px solid #AFAFAF;
+box-shadow: inset 0px 1px 1px 0.5px rgba(0, 0, 0, 0.388986);
+
+
+/* top bar */
+
+
+position: absolute;
+width: 527px;
+height: 26.04px;
+
+/* Grey Butt */
+
+background: linear-gradient(180deg, rgba(244, 241, 241, 0.7) 0%, rgba(219, 219, 219, 0.7) 78.32%, rgba(204, 203, 203, 0.7) 100%);
+/* Gray 1 */
+
+border: 0.5px solid #333333;
+
+
+/* Rectangle */
+
+
+position: absolute;
+left: 14.29%;
+right: 14.29%;
+top: 14.29%;
+bottom: 14.29%;
+
+background: #FFFFFF;
+border: 1px solid #979797;
+
+
+/* CheckyCheck */
+
+
+position: absolute;
+left: 32.14%;
+right: 28.57%;
+top: 35.71%;
+bottom: 35.71%;
+
+border: 2.5px solid #000000;
+
+
+/* Last checked */
+
+
+position: absolute;
+width: 78px;
+height: 19.03px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 600;
+font-size: 13px;
+line-height: 16px;
+
+color: #000000;
+
+
+
+/* Last updated */
+
+
+position: absolute;
+width: 98px;
+height: 19.03px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 600;
+font-size: 13px;
+line-height: 16px;
+
+color: #000000;
+
+
+
+/* Updates available */
+
+
+position: absolute;
+width: 135px;
+height: 19.03px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 600;
+font-size: 13px;
+line-height: 16px;
+
+color: #000000;
+
+
+
+/* Qube name */
+
+
+position: absolute;
+width: 87px;
+height: 19.03px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 600;
+font-size: 13px;
+line-height: 16px;
+
+color: #000000;
+
+
+
+/* Vector 1 */
+
+
+position: absolute;
+width: 0px;
+height: 26.04px;
+
+/* Gray 3 */
+
+border: 0.25px solid #828282;
+
+
+/* Vector 2 */
+
+
+position: absolute;
+width: 0px;
+height: 26.04px;
+
+/* Gray 3 */
+
+border: 0.25px solid #828282;
+
+
+/* Vector 3 */
+
+
+position: absolute;
+width: 0px;
+height: 26.04px;
+
+/* Gray 3 */
+
+border: 0.25px solid #828282;
+
+
+/* Vector 4 */
+
+
+position: absolute;
+width: 0px;
+height: 26.04px;
+
+/* Gray 3 */
+
+border: 0.25px solid #828282;
+
+
+/* Vector 5 */
+
+
+position: absolute;
+width: 0px;
+height: 26.04px;
+
+/* Gray 3 */
+
+border: 0.25px solid #828282;
+
+
+/* Rectangle 2 */
+
+
+position: absolute;
+width: 526px;
+height: 34.05px;
+
+/* Gray 6 */
+
+background: #F2F2F2;
+
+
+/* Rectangle */
+
+
+position: absolute;
+left: 14.29%;
+right: 14.29%;
+top: 14.29%;
+bottom: 14.29%;
+
+background: #FFFFFF;
+border: 1px solid #979797;
+
+
+/* CheckyCheck */
+
+
+position: absolute;
+left: 32.14%;
+right: 28.57%;
+top: 35.71%;
+bottom: 35.71%;
+
+border: 2.5px solid #000000;
+
+
+/* fedora-35 */
+
+
+position: absolute;
+width: 52px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 15px;
+
+/* Gray 1 */
+
+color: #333333;
+
+
+
+/* YES */
+
+
+position: absolute;
+width: 20px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 15px;
+
+/* Green 1 */
+
+color: #219653;
+
+
+
+/* yesterday */
+
+
+position: absolute;
+width: 49px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 400;
+font-size: 12px;
+line-height: 15px;
+
+color: #000000;
+
+
+
+/* today */
+
+
+position: absolute;
+width: 29px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 400;
+font-size: 12px;
+line-height: 15px;
+
+color: #000000;
+
+
+
+/* Group 4 */
+
+
+position: absolute;
+width: 20px;
+height: 19.03px;
+
+
+
+/* Rectangle 2 */
+
+
+position: absolute;
+width: 526px;
+height: 34.05px;
+
+/* Gray 6 */
+
+background: #F2F2F2;
+
+
+/* Rectangle */
+
+
+position: absolute;
+left: 14.29%;
+right: 14.29%;
+top: 14.29%;
+bottom: 14.29%;
+
+background: #FFFFFF;
+border: 1px solid #979797;
+
+
+/* CheckyCheck */
+
+
+position: absolute;
+left: 32.14%;
+right: 28.57%;
+top: 35.71%;
+bottom: 35.71%;
+
+border: 2.5px solid #000000;
+
+
+/* debian-10 */
+
+
+position: absolute;
+width: 54px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 15px;
+
+/* Gray 1 */
+
+color: #333333;
+
+
+
+/* MAYBE */
+
+
+position: absolute;
+width: 36px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 15px;
+
+/* Orange */
+
+color: #F2994A;
+
+
+
+/* 2022-10-10 */
+
+
+position: absolute;
+width: 56px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 400;
+font-size: 12px;
+line-height: 15px;
+
+color: #000000;
+
+
+
+/* Group 4 */
+
+
+position: absolute;
+width: 20px;
+height: 19.03px;
+
+
+
+/* 2022-11-01 */
+
+
+position: absolute;
+width: 56px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 400;
+font-size: 12px;
+line-height: 15px;
+
+color: #000000;
+
+
+
+/* Rectangle 2 */
+
+
+position: absolute;
+width: 526px;
+height: 34.05px;
+
+/* Gray 6 */
+
+background: #F2F2F2;
+
+
+/* Rectangle */
+
+
+position: absolute;
+left: 14.29%;
+right: 14.29%;
+top: 14.29%;
+bottom: 14.29%;
+
+background: #FFFFFF;
+border: 1px solid #979797;
+
+
+/* whonix-gw-15 */
+
+
+position: absolute;
+width: 76px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 15px;
+
+/* Gray 1 */
+
+color: #333333;
+
+
+
+/* NO */
+
+
+position: absolute;
+width: 17px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 15px;
+
+/* Gray 1 */
+
+color: #333333;
+
+
+
+/* 2022-12-24 */
+
+
+position: absolute;
+width: 56px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 400;
+font-size: 12px;
+line-height: 15px;
+
+color: #000000;
+
+
+
+/* Group 4 */
+
+
+position: absolute;
+width: 20px;
+height: 19.03px;
+
+
+
+/* check disabled */
+
+
+position: absolute;
+width: 75px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 400;
+font-size: 12px;
+line-height: 15px;
+
+color: #000000;
+
+
+
+/* Rectangle 2 */
+
+
+position: absolute;
+width: 526px;
+height: 34.05px;
+
+
+
+/* Rectangle */
+
+
+position: absolute;
+left: 14.29%;
+right: 14.29%;
+top: 14.29%;
+bottom: 14.29%;
+
+background: #FFFFFF;
+border: 1px solid #979797;
+
+
+/* CheckyCheck */
+
+
+position: absolute;
+left: 32.14%;
+right: 28.57%;
+top: 35.71%;
+bottom: 35.71%;
+
+border: 2.5px solid #000000;
+
+
+/* Vector */
+
+
+position: absolute;
+width: 15px;
+height: 16.03px;
+
+background: #64120F;
+
+
+/* sys-net */
+
+
+position: absolute;
+width: 39px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 15px;
+
+color: #A81337;
+
+
+
+/* YES */
+
+
+position: absolute;
+width: 20px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 15px;
+
+/* Green 1 */
+
+color: #219653;
+
+
+
+/* 2022-12-20 */
+
+
+position: absolute;
+width: 56px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 400;
+font-size: 12px;
+line-height: 15px;
+
+color: #000000;
+
+
+
+/* 2022-12-29 */
+
+
+position: absolute;
+width: 56px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 400;
+font-size: 12px;
+line-height: 15px;
+
+color: #000000;
+
+
+
+/* table background */
+
+
+position: absolute;
+width: 527px;
+height: 379.61px;
+
+border: 0.8px solid #AFAFAF;
+box-shadow: inset 0px 1px 1px 0.5px rgba(0, 0, 0, 0.388986);
+
+
+/* Rectangle 2 */
+
+
+position: absolute;
+width: 526px;
+height: 34.05px;
+
+
+
+/* Rectangle */
+
+
+position: absolute;
+left: 14.29%;
+right: 14.29%;
+top: 14.29%;
+bottom: 14.29%;
+
+background: #FFFFFF;
+border: 1px solid #979797;
+
+
+/* debian-11 */
+
+
+position: absolute;
+width: 54px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 15px;
+
+/* Gray 1 */
+
+color: #333333;
+
+
+
+/* NO */
+
+
+position: absolute;
+width: 17px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 700;
+font-size: 12px;
+line-height: 15px;
+
+/* Gray 1 */
+
+color: #333333;
+
+
+
+/* today */
+
+
+position: absolute;
+width: 29px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 400;
+font-size: 12px;
+line-height: 15px;
+
+color: #000000;
+
+
+
+/* Group 4 */
+
+
+position: absolute;
+width: 20px;
+height: 19.03px;
+
+
+
+/* today */
+
+
+position: absolute;
+width: 29px;
+height: 15.02px;
+
+font-family: 'Source Sans Pro';
+font-style: normal;
+font-weight: 400;
+font-size: 12px;
+line-height: 15px;
+
+color: #000000;
+
+
+
+/* buttons */
+
+
+position: absolute;
+width: 229.29px;
+height: 39.06px;

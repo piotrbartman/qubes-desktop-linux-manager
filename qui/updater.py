@@ -24,6 +24,15 @@ locale.bindtextdomain("desktop-linux-manager", "/usr/locales/")
 locale.textdomain('desktop-linux-manager')
 
 
+class SettingsWindow(Gtk.Window):
+    def __init__(self):
+        print("Clicked")
+        Gtk.Window.__init__(self, title="GCT")
+        self.connect("destroy", lambda x: Gtk.main_quit())
+
+        self.add(Gtk.Label("This is another window"))
+        self.show_all()
+
 class QubesUpdater(Gtk.Application):
     # pylint: disable=too-many-instance-attributes
 
@@ -75,14 +84,10 @@ class QubesUpdater(Gtk.Application):
 
         self.updates_available = self.populate_vm_list()
 
-        self.no_updates_available_label = \
-            self.builder.get_object("no_updates_available")
-        self.no_updates_available_label.set_visible(not self.updates_available)
+        self.restart = self.builder.get_object("restart")
 
-        self.allow_update_unavailable_check = \
-            self.builder.get_object("allow_update_unavailable")
-        self.allow_update_unavailable_check.connect("clicked",
-                                                    self.set_update_available)
+        self.button_settings = self.builder.get_object("button_settings")
+        self.button_settings.connect("clicked", self.open_settings_window)
 
         self.next_button = self.builder.get_object("button_next")
         self.next_button.connect("clicked", self.next_clicked)
@@ -120,6 +125,9 @@ class QubesUpdater(Gtk.Application):
         if path is not None:
             it = self.list_store.get_iter(path)
             self.list_store[it][0] = not self.list_store[it][0]
+
+    def open_settings_window(self, _emitter):
+        subw = SettingsWindow()
 
     def do_activate(self, *_args, **_kwargs):
         if not self.primary:
@@ -238,14 +246,6 @@ class QubesUpdater(Gtk.Application):
         if row:
             row.checkbox.set_active(not row.checkbox.get_active())
             row.set_label_text()
-
-    def set_update_available(self, _emitter):
-        for vm_row in self.vm_list:
-            if not vm_row.updates_available:
-                vm_row.set_sensitive(
-                    self.allow_update_unavailable_check.get_active())
-                if not vm_row.get_sensitive():
-                    vm_row.checkbox.set_active(False)
 
     def next_clicked(self, _emitter):
         if self.stack.get_visible_child() == self.list_page:

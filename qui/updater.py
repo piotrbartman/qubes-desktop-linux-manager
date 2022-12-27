@@ -7,6 +7,7 @@ import time
 import threading
 import subprocess
 from datetime import datetime, timedelta
+from enum import Enum
 from typing import Optional, Union
 
 import pkg_resources
@@ -33,6 +34,7 @@ class SettingsWindow(Gtk.Window):
         self.add(Gtk.Label("This is another window"))
         self.show_all()
 
+
 class QubesUpdater(Gtk.Application):
     # pylint: disable=too-many-instance-attributes
 
@@ -57,6 +59,22 @@ class QubesUpdater(Gtk.Application):
 
         self.vm_list = self.builder.get_object("vm_list")
 
+        checkbox_column = self.builder.get_object("checkbox_column")
+        header_button = checkbox_column.get_button()
+
+        def pass_through_event_window(button):
+            if not isinstance(button, Gtk.Button):
+                raise TypeError("%r is not a gtk.Button" % button)
+            event_window = button.get_event_window()
+            event_window.set_pass_through(True)
+
+        header_button.connect('realize', pass_through_event_window)
+
+        self.block = False
+        self.checkbox_column_header = Select.WITH_UPDATES
+        self.checkbox_column_button = self.builder.get_object("checkbox_header")
+        self.checkbox_column_button.connect("toggled", self.on_header_toggled)
+
         # Connect the cell renderer's "toggled" signal to a callback function
         toggle_renderer = self.builder.get_object("toggle_renderer")
         toggle_renderer.connect("toggled", self.on_checkbox_toggled)
@@ -73,16 +91,10 @@ class QubesUpdater(Gtk.Application):
         for col, name in headers:
             renderer = self.builder.get_object(name + "_renderer")
             column = self.builder.get_object(name + "_column")
-            # renderer = Gtk.CellRendererText()
-            # column = Gtk.TreeViewColumn(header, renderer)
             column.set_cell_data_func(renderer, cell_data_func, col)
             renderer.props.xalign = 0.5
-            # center column header
-            # column.set_alignment(0.5)
-            # self.vm_list.append_column(column)
-            # column.set_sort_column_id(col)
 
-        self.updates_available = self.populate_vm_list()
+        self.populate_vm_list()
 
         self.restart = self.builder.get_object("restart")
 
@@ -121,10 +133,60 @@ class QubesUpdater(Gtk.Application):
         self.update_thread = None
         self.exit_triggered = False
 
-    def on_checkbox_toggled(self, widget, path):
+    def on_checkbox_toggled(self, _emitter, path):
+        self.block = True
         if path is not None:
             it = self.list_store.get_iter(path)
             self.list_store[it][0] = not self.list_store[it][0]
+            selected = 0
+            for vm_row in self.list_store:
+                if vm_row[0]:
+                    selected += 1
+            if selected == len(self.list_store):
+                self.checkbox_column_header = Select.ALL
+                self.checkbox_column_button.set_inconsistent(False)
+                self.checkbox_column_button.set_active(True)
+                self.next_button.set_sensitive(True)
+            elif selected == 0:
+                self.checkbox_column_header = Select.NONE
+                self.checkbox_column_button.set_inconsistent(False)
+                self.checkbox_column_button.set_active(False)
+                self.next_button.set_sensitive(False)
+            else:
+                self.checkbox_column_header = Select.SELECTED
+                self.checkbox_column_button.set_inconsistent(True)
+                self.next_button.set_sensitive(True)
+        self.block = False
+
+    def on_header_toggled(self, _emitter):
+        if self.block:
+            return
+        self.block = True
+        self.checkbox_column_header = self.checkbox_column_header.next()
+        if self.checkbox_column_header == Select.ALL:
+            self.checkbox_column_button.set_inconsistent(False)
+            self.checkbox_column_button.set_active(True)
+            self.next_button.set_sensitive(True)
+            allowed = ("YES", "MAYBE", "NO")
+        elif self.checkbox_column_header == Select.WITH_MAYBE_UPDATES:
+            self.checkbox_column_button.set_inconsistent(True)
+            self.next_button.set_sensitive(True)
+            allowed = ("YES", "MAYBE")
+        elif self.checkbox_column_header == Select.WITH_UPDATES:
+            self.checkbox_column_button.set_inconsistent(True)
+            self.next_button.set_sensitive(True)
+            allowed = ("YES",)
+        else:
+            self.checkbox_column_button.set_inconsistent(False)
+            self.checkbox_column_button.set_active(False)
+            self.next_button.set_sensitive(False)
+            allowed = ()
+        for row in self.list_store:
+            if row[3].value in allowed:
+                row[0] = True
+            else:
+                row[0] = False
+        self.block = False
 
     def open_settings_window(self, _emitter):
         subw = SettingsWindow()
@@ -173,96 +235,52 @@ class QubesUpdater(Gtk.Application):
         self.list_store.set_sort_func(3, sort_func, 3)
         self.list_store.set_sort_func(4, sort_func, 4)
         self.list_store.set_sort_func(5, sort_func, 5)
+        self.list_store.set_sort_func(6, sort_func, 6)
         for vm in self.qapp.domains:
             if vm.klass == 'AdminVM':
                 try:
-                    state = vm.features.get('updates-available', False)
+                    state = bool(vm.features.get('updates-available', False))
                 except exc.QubesDaemonCommunicationError:
                     state = False
                 result = result or state
-                self.list_store.append(
-                    [False,
-                     get_domain_icon(vm),
-                     vm.name,
-                     UpdatesAvailable(True),
-                     Date(2020, 1, 1),
-                     Date(2022, 12, 25)]
-                )
+                qube_info = QubeUpdateRow(vm, state)
+                self.list_store.append(qube_info.qube_row)
+
+                # TODO
                 devel_deb = self.qapp.domains['devel-debian']
-                self.list_store.append(
-                    [False,
-                     get_domain_icon(devel_deb),
-                     devel_deb.name, UpdatesAvailable(None),
-                     Date.from_datetime(datetime.today() - timedelta(days=1)),
-                     Date.from_datetime(datetime.today())]
-                )
-                self.list_store.append(
-                    [False,
-                     get_domain_icon(vm),
-                     "zzz",
-                     UpdatesAvailable(False),
-                     Date.from_datetime(datetime.today()),
-                     Date.from_datetime(datetime.today() - timedelta(days=1))]
-                )
+                qube_info = QubeUpdateRow(devel_deb, True)
+                self.list_store.append(qube_info.qube_row)
+                # END TODO
 
-        # output = subprocess.check_output(
-        #     ['qubes-vm-update', '--dry-run', '--n', f'{7}'])
-        #
-        # to_update = [vm_name.strip() for vm_name
-        #              in output.decode().split("\n")[0].split(":")[1].split(",")]
-        #
-        # for vm in self.qapp.domains:
-        #     if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM':
-        #         state = vm.name in to_update
-        #         vmrow = VMListBoxRow(vm, state)
-        #         self.vm_list.add(vmrow)
-        #         vmrow.checkbox.connect('toggled', self.checkbox_checked)
-        #
-        # # TODO
-        # devel_deb = self.qapp.domains['devel-debian']
-        # vmrow = VMListBoxRow(devel_deb, True)
-        # self.vm_list.add(vmrow)
-        # vmrow.checkbox.connect('toggled', self.checkbox_checked)
-        # devel_fed = self.qapp.domains['devel-fedora']
-        # vmrow = VMListBoxRow(devel_fed, True)
-        # self.vm_list.add(vmrow)
-        # vmrow.checkbox.connect('toggled', self.checkbox_checked)
-        # # END TODO
+        output = subprocess.check_output(
+            ['qubes-vm-update', '--dry-run', '--update-if-stale', f'{7}'])
 
-        # self.vm_list.connect("row-activated", self.toggle_row_selection)
+        to_update = [vm_name.strip() for vm_name
+                     in output.decode().split("\n")[0].split(":")[1].split(",")]
 
-        # self.vm_list.set_model(self.list_store)
+        for vm in self.qapp.domains:
+            if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM':
+                qube_info = QubeUpdateRow(vm, bool(vm.name in to_update))
+                self.list_store.append(qube_info.qube_row)
+
         return result
-
-    def checkbox_checked(self, _emitter, *_args):
-        for vm_row in self.vm_list:
-            if vm_row.checkbox.get_active():
-                self.next_button.set_sensitive(True)
-                return
-            self.next_button.set_sensitive(False)
-
-    @staticmethod
-    def toggle_row_selection(_emitter, row):
-        if row:
-            row.checkbox.set_active(not row.checkbox.get_active())
-            row.set_label_text()
 
     def next_clicked(self, _emitter):
         if self.stack.get_visible_child() == self.list_page:
             self.stack.set_visible_child(self.progress_page)
 
-            for row in self.vm_list:
-                if row.checkbox.get_active():
-                    self.progress_listview.add(ProgressListBoxRow(row.vm))
+            for row in self.list_store:
+                if row[0]:
+                    self.progress_listview.add(ProgressListBoxRow(row[-1].qube))
 
             self.progress_listview.show_all()
 
-            self.next_button.set_sensitive(False)
-            self.next_button.set_label(_("_Finish"))
+            # self.next_button.set_sensitive(False)
+            # self.next_button.set_label(_("_Finish"))
 
             # pylint: disable=attribute-defined-outside-init
-            self.update_thread = threading.Thread(target=self.perform_update)
-            self.update_thread.start()
+            # self.update_thread = threading.Thread(target=self.perform_update)
+            # self.update_thread.start()
 
         elif self.stack.get_visible_child() == self.progress_page:
             self.cancel_updates()
@@ -416,10 +434,86 @@ class QubesUpdater(Gtk.Application):
             self.release()
 
 
+class QubeUpdateRow(GObject.GObject):
+    def __init__(self, qube, to_update: bool):
+        super().__init__()
+        self.qube = qube
+        updates_available = bool(qube.features.get('updates-available', False))
+        if to_update and not updates_available:
+            updates_available = None
+        selected = updates_available is True
+        last_updates_check = qube.features.get('last-updates-check', None)
+        last_update = qube.features.get('last-update', None)
+        self.qube_row = [
+            selected,
+            get_domain_icon(qube),
+            qube.name,
+            UpdatesAvailable(updates_available),
+            Date(last_updates_check),
+            Date(last_update),
+            self
+        ]
+
+    def __eq__(self, other):
+        self_class = QubeClass[self.qube.klass]
+        other_class = QubeClass[other.qube.klass]
+        if self_class == other_class:
+            self_label = QubeLabel[self.qube.label.name]
+            other_label = QubeLabel[other.qube.label.name]
+            return self_label.value == other_label.value
+        return False
+
+    def __lt__(self, other):
+        self_class = QubeClass[self.qube.klass]
+        other_class = QubeClass[other.qube.klass]
+        if self_class == other_class:
+            self_label = QubeLabel[self.qube.label.name]
+            other_label = QubeLabel[other.qube.label.name]
+            return self_label.value < other_label.value
+        return self_class.value < other_class.value
+
+
+class QubeClass(Enum):
+    AdminVM = 0
+    TemplateVM = 1
+    StandaloneVM = 2
+    AppVM = 3
+    DispVM = 4
+
+
+class QubeLabel(Enum):
+    black = 0
+    purple = 1
+    blue = 2
+    gray = 3
+    green = 4
+    yellow = 5
+    orange = 6
+    red = 7
+
+
+class Select(Enum):
+    NONE = 0
+    WITH_UPDATES = 1
+    WITH_MAYBE_UPDATES = 2
+    ALL = 3
+    SELECTED = 4
+
+    def next(self):
+        new_value = (self.value + 1) % 4
+        return Select(new_value)
+
+
 class Date(GObject.GObject):
     def __init__(self, *args, **kwargs):
         super().__init__()
-        self.datetime = datetime(*args, *kwargs)
+        self.date_format_source = "%Y-%m-%d %H:%M:%S"
+        if len(args) == 1 and args[0] is None:
+            self.datetime = datetime.min
+        elif len(args) == 1 and isinstance(args[0], str):
+            self.datetime = datetime.strptime(args[0], self.date_format_source)
+        else:
+            self.datetime = datetime(*args, *kwargs)
         self.date_format = "%Y-%m-%d"
 
     @classmethod
@@ -433,10 +527,13 @@ class Date(GObject.GObject):
         today_str = datetime.today().strftime(self.date_format)
         yesterday = datetime.today() - timedelta(days=1)
         yesterday_str = yesterday.strftime(self.date_format)
+        never_str = datetime.min.strftime(self.date_format)
         if date_str == today_str:
             return "today"
         elif date_str == yesterday_str:
             return "yesterday"
+        elif date_str == never_str:
+            return "never"
         else:
             return date_str
 
@@ -451,7 +548,7 @@ class UpdatesAvailable(GObject.GObject):
     def __init__(self, value: Union[Optional[bool], str]):
         super().__init__()
         if isinstance(value, str):
-            if value.upper() == "No":
+            if value.upper() == "NO":
                 value = False
             elif value.upper() == "YES":
                 value = True
@@ -478,7 +575,6 @@ class UpdatesAvailable(GObject.GObject):
         return self.order < other.order
 
 
-
 def get_domain_icon(vm):
     icon_vm = Gtk.IconTheme.get_default().load_icon(vm.label.icon, 16, 0)
     return icon_vm
@@ -497,7 +593,8 @@ class VMListBoxRow(Gtk.ListBoxRow):
             self.label_text = _("{vm} (updates available)").format(
                 vm=self.label_text)
         self.label = Gtk.Label()
-        self.icon = get_domain_icon(self.vm)
+        self.icon = Gtk.Image.new_from_pixbuf(
+            get_domain_icon(self.vm))
 
         self.checkbox = Gtk.CheckButton()
         self.checkbox.set_active(self.updates_available)
@@ -548,7 +645,8 @@ class ProgressListBoxRow(Gtk.ListBoxRow):
 
         hbox = Gtk.HBox(orientation=Gtk.Orientation.HORIZONTAL)
 
-        self.icon = get_domain_icon(self.vm)
+        self.icon = Gtk.Image.new_from_pixbuf(
+            get_domain_icon(self.vm))
         self.icon.set_margin_right(10)
 
         self.label = Gtk.Label(vm.name)

@@ -25,14 +25,24 @@ locale.bindtextdomain("desktop-linux-manager", "/usr/locales/")
 locale.textdomain('desktop-linux-manager')
 
 
-class SettingsWindow(Gtk.Window):
-    def __init__(self):
-        print("Clicked")
-        Gtk.Window.__init__(self, title="GCT")
-        self.connect("destroy", lambda x: Gtk.main_quit())
+class Settings:
+    def __init__(self, builder):
+        self.builder = builder
+        self.settings_window = self.builder.get_object("settings_window")
+        self.settings_window.connect("delete-event", self.close_window)
+        self.cancel_button = self.builder.get_object("button_settings_cancel")
+        self.cancel_button.connect(
+            "clicked", lambda _: self.settings_window.close())
+        self.save_button = self.builder.get_object("button_settings_save")
+        self.save_button.connect(
+            "clicked", lambda _: self.settings_window.close())
 
-        self.add(Gtk.Label("This is another window"))
-        self.show_all()
+    def show(self):
+        self.settings_window.show_all()
+
+    def close_window(self, _emitter, _):
+        self.settings_window.hide()
+        return True
 
 
 class QubesUpdater(Gtk.Application):
@@ -56,6 +66,7 @@ class QubesUpdater(Gtk.Application):
             __name__, 'updater.glade'))
 
         self.main_window = self.builder.get_object("main_window")
+        self.settings = Settings(self.builder)
 
         self.vm_list = self.builder.get_object("vm_list")
 
@@ -73,6 +84,7 @@ class QubesUpdater(Gtk.Application):
         self.block = False
         self.checkbox_column_header = Select.WITH_UPDATES
         self.checkbox_column_button = self.builder.get_object("checkbox_header")
+        self.checkbox_column_button.set_inconsistent(True)
         self.checkbox_column_button.connect("toggled", self.on_header_toggled)
 
         # Connect the cell renderer's "toggled" signal to a callback function
@@ -189,7 +201,7 @@ class QubesUpdater(Gtk.Application):
         self.block = False
 
     def open_settings_window(self, _emitter):
-        subw = SettingsWindow()
+        self.settings.show()
 
     def do_activate(self, *_args, **_kwargs):
         if not self.primary:

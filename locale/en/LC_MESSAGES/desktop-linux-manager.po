@@ -530,3 +530,9 @@ msgstr ""
 
 msgid "Update in progress..."
 msgstr ""
+
+msgid "Update finished"
+msgstr ""
+
+msgid "Details for"
+msgstr ""

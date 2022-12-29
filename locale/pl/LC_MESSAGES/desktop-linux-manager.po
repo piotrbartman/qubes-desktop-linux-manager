@@ -554,3 +554,9 @@ msgstr "Anuluj"
 
 msgid "Update in progress..."
 msgstr "Aktualizacja w toku..."
+
+msgid "Update finished"
+msgstr "Aktualizacja zakończona"
+
+msgid "Details for"
+msgstr "Szczegóły dla"

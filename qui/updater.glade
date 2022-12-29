@@ -11,6 +11,7 @@
       <column type="GObject"/>
       <column type="GObject"/>
       <column type="GObject"/>
+      <column type="gint"/>
     </columns>
   </object>
   <object class="GtkCheckButton" id="checkbox_header">
@@ -566,10 +567,10 @@ CAUTION: this may cause data loss if you are currently running programs in those
                     <property name="hexpand">True</property>
                     <property name="vexpand">True</property>
                     <property name="headers-visible">False</property>
+                    <property name="activate-on-single-click">True</property>
                     <property name="model">list_store</property>
                     <child>
                       <object class="GtkTreeViewColumn" id="progress_icon_column">
-                        <property name="sort-column-id">6</property>
                         <child>
                           <object class="GtkCellRendererPixbuf" id="progress_pixbuf_renderer"/>
                           <attributes>
@@ -580,7 +581,6 @@ CAUTION: this may cause data loss if you are currently running programs in those
                     </child>
                     <child>
                       <object class="GtkTreeViewColumn" id="progress_name_column">
-                        <property name="sort-column-id">2</property>
                         <child>
                           <object class="GtkCellRendererText" id="progress_name_renderer"/>
                           <attributes>
@@ -591,7 +591,12 @@ CAUTION: this may cause data loss if you are currently running programs in those
                     </child>
                     <child>
                       <object class="GtkTreeViewColumn" id="progress_column">
-                        <property name="sort-column-id">2</property>
+                        <property name="fixed-width">100</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn">
+                        <property name="expand">True</property>
                       </object>
                     </child>
                   </object>
@@ -602,21 +607,87 @@ CAUTION: this may cause data loss if you are currently running programs in those
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkStack" id="qube_details">
+                  <object class="GtkBox" id="qube_details">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
+                    <property name="orientation">vertical</property>
                     <property name="hexpand">True</property>
                     <property name="vexpand">True</property>
                     <child>
-                      <object class="GtkLabel" id="more_details_label">
+                      <object class="GtkBox" id="qube_details_header">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="valign">start</property>
-                        <property name="margin-top">10</property>
-                        <property name="margin-bottom">10</property>
-                        <property name="label" translatable="yes">Select a qube to see details.</property>
+                        <property name="orientation">horizontal</property>
+                        <property name="hexpand">False</property>
+                        <property name="vexpand">False</property>
+                        <child>
+                          <object class="GtkLabel" id="details_label">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="valign">start</property>
+                            <property name="margin-top">10</property>
+                            <property name="margin-bottom">10</property>
+                            <property name="label" translatable="yes">Select a qube to see details.</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkImage" id="qube_icon">
+                            <property name="visible">False</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="valign">start</property>
+                            <property name="margin-top">10</property>
+                            <property name="margin-bottom">10</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="qube_label">
+                            <property name="visible">False</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="valign">start</property>
+                            <property name="margin-top">10</property>
+                            <property name="margin-bottom">10</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel" id="colon">
+                            <property name="visible">False</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="valign">start</property>
+                            <property name="margin-top">10</property>
+                            <property name="margin-bottom">10</property>
+                            <property name="label" translatable="yes">:</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">False</property>
+                            <property name="position">3</property>
+                          </packing>
+                        </child>
                       </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">False</property>
+                        <property name="position">0</property>
+                      </packing>
                     </child>
                     <child>
                       <object class="GtkScrolledWindow" id="progress_scrolled_window">
@@ -647,6 +718,11 @@ CAUTION: this may cause data loss if you are currently running programs in those
                           <class name="black-border"/>
                         </style>
                       </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
                     </child>
                   </object>
                   <packing>

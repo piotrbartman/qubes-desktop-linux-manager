@@ -68,9 +68,12 @@ class QubesUpdater(Gtk.Application):
         self.main_window = self.builder.get_object("main_window")
         self.settings = Settings(self.builder)
 
+        self.header_label = self.builder.get_object("header_label")
+
         self.vm_list = self.builder.get_object("vm_list")
 
         checkbox_column = self.builder.get_object("checkbox_column")
+        checkbox_column.connect("clicked", self.on_header_toggled)
         header_button = checkbox_column.get_button()
 
         def pass_through_event_window(button):
@@ -106,6 +109,11 @@ class QubesUpdater(Gtk.Application):
             column.set_cell_data_func(renderer, cell_data_func, col)
             renderer.props.xalign = 0.5
 
+        progress_column = self.builder.get_object("progress_column")
+        renderer = CellRendererProgressWithResult()
+        progress_column.pack_start(renderer, True)
+        progress_column.add_attribute(renderer, "text", 2)
+
         self.populate_vm_list()
 
         self.restart = self.builder.get_object("restart")
@@ -128,19 +136,10 @@ class QubesUpdater(Gtk.Application):
         self.progress_textview = self.builder.get_object("progress_textview")
         self.progress_scrolled_window = self.builder.get_object(
             "progress_scrolled_window")
-        self.progress_listview = self.builder.get_object("progress_listview")
-
-        self.details_visible = True
-        self.details_icon = self.builder.get_object("details_icon")
-        self.builder.get_object("details_icon_events").connect(
-            "button-press-event", self.toggle_details)
-        self.builder.get_object("details_label").connect(
-            "clicked", self.toggle_details)
 
         self.load_css()
 
         self.main_window.show_all()
-        self.toggle_details()
 
         self.update_thread = None
         self.exit_triggered = False
@@ -282,13 +281,14 @@ class QubesUpdater(Gtk.Application):
             self.stack.set_visible_child(self.progress_page)
 
             for row in self.list_store:
-                if row[0]:
-                    self.progress_listview.add(ProgressListBoxRow(row[-1].qube))
+                if not row[0]:
+                    self.list_store.remove(row.iter)
 
-            self.progress_listview.show_all()
-
-            # self.next_button.set_sensitive(False)
-            # self.next_button.set_label(_("_Finish"))
+            self.next_button.set_sensitive(False)
+            self.next_button.set_label(_("_Next"))
+            self.cancel_button.set_label(_("_Cancel updates"))
+            self.header_label.set_text(_("Update in progress..."))
+            self.header_label.set_halign(Gtk.Align.CENTER)
 
             # pylint: disable=attribute-defined-outside-init
             # self.update_thread = threading.Thread(target=self.perform_update)
@@ -298,34 +298,15 @@ class QubesUpdater(Gtk.Application):
             self.cancel_updates()
             return
 
-    def toggle_details(self, *_args, **_kwargs):
-        # pylint: disable=attribute-defined-outside-init
-        self.details_visible = not self.details_visible
-        self.progress_textview.set_visible(self.details_visible)
-
-        if self.details_visible:
-            self.progress_textview.show()
-            self.progress_scrolled_window.show()
-        else:
-            self.progress_textview.hide()
-            self.progress_scrolled_window.hide()
-
-        if self.details_visible:
-            self.details_icon.set_from_icon_name("pan-down-symbolic",
-                                                 Gtk.IconSize.BUTTON)
-        else:
-            self.details_icon.set_from_icon_name("pan-end-symbolic",
-                                                 Gtk.IconSize.BUTTON)
-
     def append_text_view(self, text):
         buffer = self.progress_textview.get_buffer()
         buffer.insert(buffer.get_end_iter(), text + '\n')
 
     def perform_update(self):
-        admin = [row for row in self.progress_listview
-                 if row.vm.klass == 'AdminVM']
-        templs = [row for row in self.progress_listview
-                  if row.vm.klass != 'AdminVM']
+        admin = [row for row in self.list_store
+                 if row[0] and row[-1].qube.klass == 'AdminVM']
+        templs = [row for row in self.list_store
+                  if row[0] and row[-1].qube.klass != 'AdminVM']
 
         if admin:
             if self.exit_triggered:
@@ -586,6 +567,18 @@ class UpdatesAvailable(GObject.GObject):
     def __lt__(self, other):
         return self.order < other.order
 
+
+class CellRendererProgressWithResult(Gtk.CellRendererText):
+    def __init__(self):
+        super().__init__()
+
+    def do_get_size(self, *args):
+        print("get_size", *args)
+        return self.get_size(*args)
+
+    def do_render(self, *args):
+        print("render", *args)
+        return self.render(*args)
 
 def get_domain_icon(vm):
     icon_vm = Gtk.IconTheme.get_default().load_icon(vm.label.icon, 16, 0)

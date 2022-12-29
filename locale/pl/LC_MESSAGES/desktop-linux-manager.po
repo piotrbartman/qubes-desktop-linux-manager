@@ -551,3 +551,6 @@ msgstr ""
 #: qui/updater.glade:264
 msgid "Cancel"
 msgstr "Anuluj"
+
+msgid "Update in progress..."
+msgstr "Aktualizacja w toku..."

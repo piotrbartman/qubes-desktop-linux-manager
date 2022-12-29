@@ -357,7 +357,7 @@
     <property name="vexpand">False</property>
     <property name="default-height">627</property>
     <property name="default-width">580</property>
-    <property name="title" translatable="yes">Qubes Update</property>
+    <property name="title" translatable="yes">Qubes OS Update</property>
     <child>
       <!-- n-columns=4 n-rows=3 -->
       <object class="GtkGrid">
@@ -372,43 +372,32 @@
         <property name="column-spacing">20</property>
         <property name="column-homogeneous">True</property>
         <child>
-          <object class="GtkBox" id="list_page_header">
+          <object class="GtkOverlay" id="header">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
             <property name="vexpand">False</property>
-            <property name="orientation">horizontal</property>
-            <property name="baseline-position">top</property>
             <child>
-              <object class="GtkLabel">
+              <object class="GtkLabel" id="header_label">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="halign">start</property>
                 <property name="valign">start</property>
-                <property name="margin-top">20</property>
+                <property name="margin-top">10</property>
+                <property name="margin-bottom">10</property>
                 <property name="hexpand">True</property>
                 <property name="label" translatable="yes">Select qubes to update:</property>
               </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
             </child>
-            <child>
+            <child type="overlay">
               <object class="GtkButton" id="button_settings">
                 <property name="label">TODO</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
                 <property name="valign">end</property>
+                <property name="halign">end</property>
                 <property name="use-underline">True</property>
-                <property name="margin-top">10</property>
               </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">False</property>
-                <property name="position">1</property>
-              </packing>
             </child>
           </object>
           <packing>
@@ -441,6 +430,7 @@
                         <child>
                           <object class="GtkTreeViewColumn" id="checkbox_column">
                             <property name="widget">checkbox_header</property>
+                            <property name="clickable">True</property>
                             <child>
                               <object class="GtkCellRendererToggle" id="toggle_renderer"/>
                               <attributes>
@@ -543,7 +533,8 @@
                         <property name="halign">start</property>
                         <property name="valign">start</property>
                         <property name="hexpand">True</property>
-                        <property name="margin-top">10</property>
+                        <property name="margin-top">15</property>
+                        <property name="use-underline">True</property>
                         <property name="label" translatable="yes">_Restart updated qubes after install
 CAUTION: this may cause data loss if you are currently running programs in those qubes</property>
                       </object>
@@ -566,154 +557,96 @@ CAUTION: this may cause data loss if you are currently running programs in those
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="orientation">vertical</property>
+                <property name="hexpand">True</property>
+                <property name="vexpand">True</property>
                 <child>
-                  <object class="GtkBox" id="progress_page_inner">
+                  <object class="GtkTreeView" id="progress_list">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="orientation">vertical</property>
+                    <property name="hexpand">True</property>
+                    <property name="vexpand">True</property>
+                    <property name="headers-visible">False</property>
+                    <property name="model">list_store</property>
                     <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="label" translatable="yes">Update progress:</property>
+                      <object class="GtkTreeViewColumn" id="progress_icon_column">
+                        <property name="sort-column-id">6</property>
+                        <child>
+                          <object class="GtkCellRendererPixbuf" id="progress_pixbuf_renderer"/>
+                          <attributes>
+                            <attribute name="pixbuf">1</attribute>
+                          </attributes>
+                        </child>
                       </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">False</property>
-                        <property name="position">0</property>
-                      </packing>
                     </child>
                     <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="label" translatable="yes">Update progress:</property>
+                      <object class="GtkTreeViewColumn" id="progress_name_column">
+                        <property name="sort-column-id">2</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="progress_name_renderer"/>
+                          <attributes>
+                            <attribute name="text">2</attribute>
+                          </attributes>
+                        </child>
                       </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">False</property>
-                        <property name="position">0</property>
-                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="progress_column">
+                        <property name="sort-column-id">2</property>
+                      </object>
                     </child>
                   </object>
                   <packing>
-                    <property name="expand">False</property>
+                    <property name="expand">True</property>
                     <property name="fill">True</property>
                     <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkPaned">
+                  <object class="GtkStack" id="qube_details">
                     <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="orientation">vertical</property>
-                    <property name="wide-handle">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="hexpand">True</property>
+                    <property name="vexpand">True</property>
                     <child>
-                      <object class="GtkListBox" id="progress_listview">
+                      <object class="GtkLabel" id="more_details_label">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="vexpand">False</property>
-                        <property name="selection-mode">none</property>
-                        <style>
-                          <class name="black-border"/>
-                        </style>
+                        <property name="halign">start</property>
+                        <property name="valign">start</property>
+                        <property name="margin-top">10</property>
+                        <property name="margin-bottom">10</property>
+                        <property name="label" translatable="yes">Select a qube to see details.</property>
                       </object>
-                      <packing>
-                        <property name="resize">False</property>
-                        <property name="shrink">True</property>
-                      </packing>
                     </child>
                     <child>
-                      <object class="GtkBox" id="pane_2">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="orientation">vertical</property>
+                      <object class="GtkScrolledWindow" id="progress_scrolled_window">
+                        <property name="height-request">340</property>
+                        <property name="can-focus">True</property>
                         <child>
-                          <object class="GtkBox">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <child>
-                              <object class="GtkEventBox" id="details_icon_events">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <child>
-                                  <object class="GtkImage" id="details_icon">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="icon-name">pan-end-symbolic</property>
-                                  </object>
-                                </child>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkCheckButton" id="details_label">
-                                <property name="label" translatable="yes">_Details</property>
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">False</property>
-                                <property name="draw-indicator">True</property>
-                                <property name="use-underline">True</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkScrolledWindow" id="progress_scrolled_window">
-                            <property name="height-request">340</property>
+                          <object class="GtkTextView" id="progress_textview">
+                            <property name="height-request">300</property>
                             <property name="can-focus">True</property>
-                            <child>
-                              <object class="GtkTextView" id="progress_textview">
-                                <property name="height-request">300</property>
-                                <property name="can-focus">True</property>
-                                <property name="margin-top">20</property>
-                                <property name="margin-bottom">20</property>
-                                <property name="hexpand">True</property>
-                                <property name="vexpand">True</property>
-                                <property name="hscroll-policy">natural</property>
-                                <property name="vscroll-policy">natural</property>
-                                <property name="editable">False</property>
-                                <property name="wrap-mode">word</property>
-                                <property name="justification">fill</property>
-                                <property name="cursor-visible">False</property>
-                                <property name="accepts-tab">False</property>
-                                <property name="monospace">True</property>
-                                <style>
-                                  <class name="black-border"/>
-                                </style>
-                              </object>
-                            </child>
+                            <property name="margin-top">20</property>
+                            <property name="margin-bottom">20</property>
+                            <property name="hexpand">True</property>
+                            <property name="vexpand">True</property>
+                            <property name="hscroll-policy">natural</property>
+                            <property name="vscroll-policy">natural</property>
+                            <property name="editable">False</property>
+                            <property name="wrap-mode">word</property>
+                            <property name="justification">fill</property>
+                            <property name="cursor-visible">False</property>
+                            <property name="accepts-tab">False</property>
+                            <property name="monospace">True</property>
                             <style>
                               <class name="black-border"/>
                             </style>
                           </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">1</property>
-                          </packing>
                         </child>
+                        <style>
+                          <class name="black-border"/>
+                        </style>
                       </object>
-                      <packing>
-                        <property name="resize">True</property>
-                        <property name="shrink">True</property>
-                      </packing>
                     </child>
                   </object>
                   <packing>
@@ -738,7 +671,7 @@ CAUTION: this may cause data loss if you are currently running programs in those
         </child>
         <child>
           <object class="GtkButton" id="button_next">
-            <property name="label" translatable="yes">_Next</property>
+            <property name="label" translatable="yes">_Update</property>
             <property name="visible">True</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>

@@ -33,8 +33,12 @@ from typing import Optional, Callable, Dict, Any, Union, List
 
 from .gtk_utils import load_icon, is_theme_light
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
+
 NONE_CATEGORY = {
-    "None": "(none)"
+    "None": _("(none)")
 }
 
 
@@ -86,7 +90,7 @@ class QubeName(Gtk.Box):
         super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
         self.vm = vm
         self.label = Gtk.Label()
-        self.label.set_label(vm.name if vm else 'None')
+        self.label.set_label(vm.name if vm else _('None'))
 
         self.set_spacing(5)
 
@@ -303,7 +307,7 @@ class VMListModeler(TraitSelector):
         if additional_options:
             for api_name, display_name in additional_options.items():
                 if api_name == default_value:
-                    display_name = display_name + ' (default)'
+                    display_name += _(' (default)')
                 self._entries[display_name] = {
                     "api_name": api_name,
                     "icon": None,
@@ -318,7 +322,7 @@ class VMListModeler(TraitSelector):
             display_name = vm_name
 
             if domain == default_value:
-                display_name = display_name + ' (default)'
+                display_name = display_name + _(' (default)')
 
             self._entries[display_name] = {
                 "api_name": vm_name,
@@ -328,7 +332,7 @@ class VMListModeler(TraitSelector):
 
         if current_value:
             found_current = False
-            for _, value in self._entries.items():
+            for value in self._entries.values():
                 if value["api_name"] == current_value:
                     found_current = True
                     break
@@ -780,7 +784,7 @@ class ViewportHandler:
 
         adjustment: Gtk.Adjustment = current_window.get_vadjustment()
 
-        _, widget_top = child.translate_coordinates(current_window, 0, 0)
+        _x, widget_top = child.translate_coordinates(current_window, 0, 0)
         widget_bottom = widget_top + child.get_allocation().height
 
         # this adjusted page size is to make sure scrolling shows the

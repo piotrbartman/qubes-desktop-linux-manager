@@ -24,6 +24,9 @@ from typing import Dict, Optional
 from qrexec.policy.parser import Rule, Allow, Ask, Source, Target, Action, \
     DispVM, DispVMTemplate
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
 
 class AbstractRuleWrapper(abc.ABC):
     """Wrapper for Rule objects.
@@ -107,9 +110,9 @@ class RuleSimple(AbstractRuleWrapper):
     Returns and accepts strings as target/source/action.
     """
     ACTION_CHOICES = {
-        "ask": "ask",
-        "allow": "always",
-        "deny": "never"
+        "ask": _("ask"),
+        "allow": _("always"),
+        "deny": _("never")
     }
     def __init__(self, rule: Rule):
         """
@@ -118,7 +121,7 @@ class RuleSimple(AbstractRuleWrapper):
         super().__init__(rule)
 
         if str(rule.action) not in ['ask', 'deny', 'allow']:
-            raise ValueError(f'Unrecognized action: {str(rule.action)}')
+            raise ValueError(_('Unrecognized action: ') + str(rule.action))
 
     @property
     def target(self):
@@ -158,8 +161,8 @@ class RuleSimpleAskIsAllow(RuleSimple):
     """Simple rule where there is no Allow and Ask is pretending to be Allow.
     Used chiefly by Clipboard rules."""
     ACTION_CHOICES = {
-        "ask": "always",
-        "deny": "never"
+        "ask": _("always"),
+        "deny": _("never")
     }
     def __init__(self, rule: Rule):
         """
@@ -168,21 +171,21 @@ class RuleSimpleAskIsAllow(RuleSimple):
         super().__init__(rule)
 
         if str(rule.action) not in ['ask', 'deny']:
-            raise ValueError(f'Unrecognized action: {str(rule.action)}')
+            raise ValueError(_('Unrecognized action: ') + str(rule.action))
 
     @staticmethod
     def get_rule_errors(source: str, target: str, action: str) -> \
             Optional[str]:
         # action must be a simple ask/allow/deny
         if action not in ['ask', 'deny']:
-            return f'Unrecognized action: {action}'
+            return _('Unrecognized action: ') + action
         return None
 
 class RuleSimpleNoAllow(RuleSimple):
     """Simple rule that has no Allow option"""
     ACTION_CHOICES = {
-        "ask": "can",
-        "deny": "can not"
+        "ask": _("can"),
+        "deny": _("can not")
     }
 
     def __init__(self, rule: Rule):
@@ -192,14 +195,14 @@ class RuleSimpleNoAllow(RuleSimple):
         super().__init__(rule)
 
         if str(rule.action) not in ['ask', 'deny']:
-            raise ValueError(f'Unrecognized action: {str(rule.action)}')
+            raise ValueError(_('Unrecognized action: ') + str(rule.action))
 
     @staticmethod
     def get_rule_errors(source: str, target: str, action: str) -> \
             Optional[str]:
         # action must be a simple ask/allow/deny
         if action not in ['ask', 'deny']:
-            return f'Unrecognized action: {action}'
+            return _('Unrecognized action: ') + action
         return None
 
 class RuleTargeted(AbstractRuleWrapper):
@@ -215,9 +218,9 @@ class RuleTargeted(AbstractRuleWrapper):
     Returns and accepts strings as target/source/action.
     """
     ACTION_CHOICES = {
-        "ask": "ask",
-        "allow": "automatically",
-        "deny": "never"
+        "ask": _("ask"),
+        "allow": _("automatically"),
+        "deny": _("never")
     }
 
     def __init__(self, rule: Rule):
@@ -298,8 +301,8 @@ class RuleTargeted(AbstractRuleWrapper):
         if not source.startswith('@'):
             if target.startswith('@') and target != '@dispvm':
                 if action in ('ask', 'allow'):
-                    return 'This type of action supports only single-qube ' \
-                           'destination qubes for single-qube source qubes.'
+                    return _('This type of action supports only single-qube '
+                             'destination qubes for single-qube source qubes.')
         return None
 
     def is_rule_conflicting(self, other_source: str, other_target: str,
@@ -329,9 +332,9 @@ class RuleDispVM(AbstractRuleWrapper):
     Returns and accepts strings as target/source/action.
     """
     ACTION_CHOICES = {
-        "ask": "ask",
-        "allow": "always",
-        "deny": "never"
+        "ask": _("ask"),
+        "allow": _("always"),
+        "deny": _("never")
     }
     def __init__(self, rule: Rule):
         """

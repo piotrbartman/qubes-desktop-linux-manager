@@ -85,10 +85,11 @@ class EventHandler(pyinotify.ProcessEvent):
 
         size = clipboard_formatted_size()
 
-        body = _(f"Clipboard contents fetched from qube: <b>'{vmname}'</b>\n"
-                 f"Copied <b>{size}</b> to the global clipboard.\n"
-                 f"<small>Press {self.gtk_app.paste_shortcut} in qube "
-                 "to paste to local clipboard.</small>")
+        body = _("Clipboard contents fetched from qube: <b>'{vmname}'</b>\n"
+                 "Copied <b>{size}</b> to the global clipboard.\n"
+                 "<small>Press {shortcut} in qube "
+                 "to paste to local clipboard.</small>".format(
+            vmname=vmname, size=size, shortcut=self.gtk_app.paste_shortcut))
 
         self.gtk_app.update_clipboard_contents(vmname, size, message=body)
 
@@ -245,8 +246,9 @@ class NotificationApp(Gtk.Application):
 
         help_label = Gtk.Label(xalign=0)
         help_label.set_markup(
-            _(f"<i>Use <b>{self.copy_shortcut}</b> to copy and "
-              f"<b>{self.paste_shortcut}</b> to paste.</i>"))
+            _("<i>Use <b>{copy}</b> to copy and "
+              "<b>{paste}</b> to paste.</i>").format(
+                copy=self.copy_shortcut, paste=self.paste_shortcut))
         help_item = Gtk.MenuItem()
         help_item.set_margin_left(10)
         help_item.set_sensitive(False)
@@ -314,7 +316,7 @@ def main():
     pyinotify.AsyncioNotifier(wm, loop, default_proc_fun=handler)
 
     return run_asyncio_and_show_errors(loop, [asyncio.ensure_future(
-        dispatcher.listen_for_events())], "Qubes Clipboard Widget")
+        dispatcher.listen_for_events())], _("Qubes Clipboard Widget"))
 
 
 if __name__ == '__main__':

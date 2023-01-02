@@ -25,6 +25,10 @@ from qrexec.policy.parser import Rule
 
 from typing import Optional, Any, Dict, List
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
+
 
 def get_feature(vm, feature_name, default_value=None):
     """Get feature, with a working default_value."""
@@ -64,8 +68,8 @@ def apply_feature_change(vm: qubesadmin.vm.QubesVM,
     except qubesadmin.exc.QubesDaemonAccessError:
         # pylint: disable=raise-missing-from
         raise qubesadmin.exc.QubesException(
-            f"Failed to set {feature_name} due to insufficient "
-            "permissions")
+            _("Failed to set {feature_name} due to insufficient "
+            "permissions").format(feature_name=feature_name))
 
 
 class BiDictionary(dict):

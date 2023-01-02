@@ -51,8 +51,11 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GLib, GObject
 
+logger = logging.getLogger('qubes-global-config')
 
-logger = logging.getLogger('qubes-config-manager')
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
 
 
 class ClipboardHandler(PageHandler):
@@ -83,8 +86,8 @@ class ClipboardHandler(PageHandler):
                 default_policy="""qubes.ClipboardPaste * @adminvm @anyvm ask\n
 qubes.ClipboardPaste * @anyvm @anyvm ask\n""",
                 verb_description=SimpleVerbDescription({
-                    "ask": 'be allowed to paste\n into clipboard of',
-                    "deny": 'be allowed to paste\n into clipboard of'
+                    "ask": _('be allowed to paste\n into clipboard of'),
+                    "deny": _('be allowed to paste\n into clipboard of')
                 }),
                 rule_class=RuleSimpleAskIsAllow,
                 include_admin_vm=True
@@ -92,19 +95,19 @@ qubes.ClipboardPaste * @anyvm @anyvm ask\n""",
             FeatureHandler(
                 trait_holder=self.vm, trait_name=self.COPY_FEATURE,
                 widget=self.copy_combo,
-                options={'default (Ctrl+Shift+C)': None,
-                         'Ctrl+Shift+C': 'Ctrl-Shift-c',
-                         'Ctrl+Win+C': 'Ctrl-Mod4-c'},
-                readable_name="Global Clipboard copy shortcut"
+                options={_('default (Ctrl+Shift+C)'): None,
+                         _('Ctrl+Shift+C'): 'Ctrl-Shift-c',
+                         _('Ctrl+Win+C'): 'Ctrl-Mod4-c'},
+                readable_name=_("Global Clipboard copy shortcut")
             ),
             FeatureHandler(
                 trait_holder=self.vm, trait_name=self.PASTE_FEATURE,
                 widget=self.paste_combo,
-                options= {'default (Ctrl+Shift+V)': None,
-                          'Ctrl+Shift+V': 'Ctrl-Shift-V',
-                          'Ctrl+Win+V': 'Ctrl-Mod4-v',
-                          'Ctrl+Insert': 'Ctrl-Ins'},
-                readable_name="Global Clipboard paste shortcut"
+                options= {_('default (Ctrl+Shift+V)'): None,
+                          _('Ctrl+Shift+V'): 'Ctrl-Shift-V',
+                          _('Ctrl+Win+V'): 'Ctrl-Mod4-v',
+                          _('Ctrl+Insert'): 'Ctrl-Ins'},
+                readable_name=_("Global Clipboard paste shortcut")
             )
         ]
 
@@ -144,9 +147,9 @@ qubes.Filecopy * @anyvm @anyvm ask""",
             service_name="qubes.Filecopy",
             policy_file_name="50-config-filecopy",
             verb_description=SimpleVerbDescription({
-                "ask": "to be allowed to copy files to",
-                "allow": "allow files to be copied to",
-                "deny": "be allowed to copy files to"
+                "ask": _("to be allowed to copy files to"),
+                "allow": _("allow files to be copied to"),
+                "deny": _("be allowed to copy files to")
             }),
             rule_class=RuleSimple)
 
@@ -190,7 +193,7 @@ class GlobalConfig(Gtk.Application):
         self.policy_manager = policy_manager
 
         self.progress_bar_dialog = ProgressBarDialog(
-            self, "Loading system settings...")
+            self, _("Loading system settings..."))
         self.handlers: Dict[str, PageHandler] = {}
 
     def do_activate(self, *args, **kwargs):
@@ -288,14 +291,14 @@ class GlobalConfig(Gtk.Application):
                 default_policy="",
                 main_rule_class=RuleSimpleNoAllow,
                 main_verb_description=SimpleVerbDescription({
-                    "ask": "ask to access GPG\nkeys from",
-                    "deny": "access GPG\nkeys from"
+                    "ask": _("ask to access GPG\nkeys from"),
+                    "deny": _("access GPG\nkeys from")
                 }),
                 exception_rule_class=RuleTargeted,
                 exception_verb_description=SimpleVerbDescription({
-                    "allow": 'access GPG\nkeys from',
-                    "ask": 'to access GPG\nkeys from',
-                    "deny": 'access GPG\nkeys from'
+                    "allow": _('access GPG\nkeys from'),
+                    "ask": _('to access GPG\nkeys from'),
+                    "deny": _('access GPG\nkeys from')
                 }))
         self.progress_bar_dialog.update_progress(page_progress)
 
@@ -350,13 +353,13 @@ class GlobalConfig(Gtk.Application):
 
     def _usbvm_changed(self, *_args):
         response = show_dialog(
-            parent=self.main_window, title="USB qube change",
-            text="Changing USB qube requires restarting Global Settings to"
-            "correctly initialize all defaults. "
-            "Do you want to save changes and restart?",
+            parent=self.main_window, title=_("USB qube change"),
+            text=_("Changing USB qube requires restarting Global Settings to"
+                   "correctly initialize all defaults. "
+                   "Do you want to save changes and restart?"),
             buttons={
-                "_Save changes": Gtk.ResponseType.YES,
-                "_Discard changes": Gtk.ResponseType.NO
+                _("_Save changes"): Gtk.ResponseType.YES,
+                _("_Discard changes"): Gtk.ResponseType.NO
             }, icon_name="qubes-ask")
         if response == Gtk.ResponseType.YES:
             self._apply()
@@ -404,8 +407,8 @@ class GlobalConfig(Gtk.Application):
                     break
             page.reset()
         except Exception as ex:
-            show_error(self.main_window, "Could not save changes",
-                       f"The following error occurred: {escape(str(ex))}")
+            show_error(self.main_window, _("Could not save changes"),
+                       _("The following error occurred: ") + escape(str(ex)))
             return False
         return True
 
@@ -435,7 +438,8 @@ class GlobalConfig(Gtk.Application):
     def _ask_unsaved(self, description: str) -> Gtk.ResponseType:
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         label_1 = Gtk.Label()
-        label_1.set_markup("The following <b>unsaved changes</b> were found:")
+        label_1.set_markup(_("The following <b>unsaved changes</b> "
+                             "were found:"))
         label_1.set_xalign(0)
         label_2 = Gtk.Label()
         label_2.set_text(
@@ -443,18 +447,18 @@ class GlobalConfig(Gtk.Application):
         label_2.set_margin_start(20)
         label_2.set_xalign(0)
         label_3 = Gtk.Label()
-        label_3.set_text("Do you want to save changes?")
+        label_3.set_text(_("Do you want to save changes?"))
         label_3.set_xalign(0)
         box.pack_start(label_1, False, False, 10)
         box.pack_start(label_2, False, False, 10)
         box.pack_start(label_3, False, False, 10)
 
         response = show_dialog(
-            parent=self.main_window, title="Unsaved changes", text=box,
+            parent=self.main_window, title=_("Unsaved changes"), text=box,
             buttons={
-                "_Save changes": Gtk.ResponseType.YES,
-                "_Discard changes": Gtk.ResponseType.NO,
-                "_Cancel": Gtk.ResponseType.CANCEL,
+                _("_Save changes"): Gtk.ResponseType.YES,
+                _("_Discard changes"): Gtk.ResponseType.NO,
+                _("_Cancel"): Gtk.ResponseType.CANCEL,
             }, icon_name="qubes-ask")
 
         return response

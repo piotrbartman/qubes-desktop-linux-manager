@@ -31,8 +31,11 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
 
-logger = logging.getLogger('qubes-config-manager')
+logger = logging.getLogger('qubes-global-config')
 
 class ThisDeviceHandler(PageHandler):
     """Handler for the ThisDevice page."""
@@ -97,7 +100,8 @@ class ThisDeviceHandler(PageHandler):
             self.hcl_check = subprocess.check_output(
                 ['qubes-hcl-report', '-y']).decode()
         except subprocess.CalledProcessError as ex:
-            label_text += f"Failed to load system data: {str(ex)}\n"
+            label_text += _("Failed to load system data: {ex}\n").format(
+                ex=str(ex))
             self.hcl_check = ""
 
         try:
@@ -108,23 +112,32 @@ class ThisDeviceHandler(PageHandler):
             label_text = ""
         except (yaml.YAMLError, ValueError):
             self.hcl_yaml = {}
-            label_text += "Failed to load system data.\n"
+            label_text += _("Failed to load system data.\n")
             self.data_label.get_style_context().add_class('red_code')
 
-        label_text += f"""<b>Brand:</b> {self._get_data('brand')}
-<b>Model:</b> {self._get_data('model')}
+        label_text += _("""<b>Brand:</b> {brand}
+<b>Model:</b> {model}
 
-<b>CPU:</b> {self._get_data('cpu')}
-<b>Chipset:</b> {self._get_data('chipset')}
-<b>Graphics:</b> {self._get_data('gpu')}
+<b>CPU:</b> {cpu}
+<b>Chipset:</b> {chipset}
+<b>Graphics:</b> {gpu}
 
-<b>RAM:</b> {self._get_data('memory')} Mb
+<b>RAM:</b> {memory} Mb
 
-<b>QubesOS version:</b> {self._get_version('qubes')}
-<b>BIOS:</b> {self._get_data('bios')}
-<b>Kernel:</b> {self._get_version('kernel')}
-<b>Xen:</b> {self._get_version('xen')}
-"""
+<b>QubesOS version:</b> {qubes_ver}
+<b>BIOS:</b> {bios}
+<b>Kernel:</b> {kernel_ver}
+<b>Xen:</b> {xen_ver}
+""").format(brand=self._get_data('brand'),
+           model=self._get_data('model'),
+           cpu=self._get_data('cpu'),
+           chipset=self._get_data('chipset'),
+           gpu=self._get_data('gpu'),
+           memory=self._get_data('memory'),
+           qubes_ver=self._get_version('qubes'),
+           bios=self._get_data('bios'),
+           kernel_ver=self._get_version('kernel'),
+           xen_ver=self._get_version('xes'))
         self.set_state(self.compat_hvm_image, self._get_data('hvm'))
         self.compat_hvm_label.set_markup(f"<b>HVM:</b> {self._get_data('hvm')}")
 
@@ -141,15 +154,15 @@ class ThisDeviceHandler(PageHandler):
         if self._get_data('tpm') == '2.0':
             self.set_state(self.compat_tpm_image, 'maybe')
             self.compat_tpm_label.set_markup(
-                "<b>TPM version</b>: 2.0 (not yet supported)")
+                _("<b>TPM version</b>: 2.0 (not yet supported)"))
         elif self._get_data('tpm') == '1.2':
             self.set_state(self.compat_tpm_image, 'yes')
             self.compat_tpm_label.set_markup(
-                "<b>TPM version</b>: 1.2")
+                _("<b>TPM version</b>: 1.2"))
         else:
             self.set_state(self.compat_tpm_image, 'no')
             self.compat_tpm_label.set_markup(
-                "<b>TPM version</b>: device not found")
+                _("<b>TPM version</b>: device not found"))
 
         self.set_state(self.compat_remapping_image, self._get_data('remap'))
         self.compat_remapping_label.set_markup(
@@ -162,10 +175,9 @@ class ThisDeviceHandler(PageHandler):
 
         self.set_state(self.compat_pv_image, 'no' if pv_vms else 'yes')
         self.compat_pv_label.set_markup(
-            f'<b>PV qubes:</b> {len(pv_vms)} '
-            f'qube{"s" if len(pv_vms) != 1 else ""} found')
+            _("<b>PV qubes:</b> {num_pvs} found").format(num_pvs=len(pv_vms)))
         self.compat_pv_tooltip.set_tooltip_markup(
-            "<b>The following qubes have PV virtualization mode:</b>\n - " +
+            _("<b>The following qubes have PV virtualization mode:</b>\n - ") +
             '\n - '.join([vm.name for vm in pv_vms]))
         self.compat_pv_tooltip.set_visible(bool(pv_vms))
 
@@ -180,15 +192,15 @@ class ThisDeviceHandler(PageHandler):
                                                self._page_saved)
 
     def _get_data(self, name) -> str:
-        data = self.hcl_yaml.get(name, "unknown").strip()
-        return data if data else 'unknown'
+        data = self.hcl_yaml.get(name, _("unknown")).strip()
+        return data if data else _('unknown')
 
     def _get_version(self, name) -> str:
         try:
-            data = self.hcl_yaml['versions'][0].get(name, "unknown").strip()
+            data = self.hcl_yaml['versions'][0].get(name, _("unknown")).strip()
         except (KeyError, AttributeError):
-            return "unknown"
-        return data if data else 'unknown'
+            return _("unknown")
+        return data if data else _('unknown')
 
     def _copy_to_clipboard(self, widget: Gtk.Button):
         if widget.get_name() == 'copy_button':
@@ -201,9 +213,9 @@ class ThisDeviceHandler(PageHandler):
             copy_to_global_clipboard(text)
         except Exception:  # pylint: disable=broad-except
             show_error(self.copy_button.get_toplevel(),
-                       "Failed to copy to Global Clipboard",
-                       "An error occurred while trying to access"
-                       " Global Clipboard")
+                       _("Failed to copy to Global Clipboard"),
+                       _("An error occurred while trying to access"
+                         " Global Clipboard"))
 
     @staticmethod
     def set_state(image_widget: Gtk.Image, value: str):
@@ -224,14 +236,15 @@ class ThisDeviceHandler(PageHandler):
         for f in policy_files:
             if f.startswith('/etc/qubes-rpc'):
                 return 'legacy'
-            rules, _ = self.policy_manager.get_rules_from_filename(f, "")
+            rules, _token = self.policy_manager.get_rules_from_filename(f, "")
             for rule in rules:
                 if rule.service == self.INPUT_SERVICE:
                     if 'allow' in str(rule.action):
                         return 'allow'
         return 'deny'
 
-    def is_certified(self) -> bool:
+    @staticmethod
+    def is_certified() -> bool:
         """Is this device Qubes certified?"""
         return False
 
@@ -243,16 +256,16 @@ class ThisDeviceHandler(PageHandler):
         """Refresh policy state, because it might have changed since
          we last were here"""
         policy_state = self._get_policy_state()
-        label_text = "<b>USB keyboards</b>: "
+        label_text = _("<b>USB keyboards</b>: ")
         if policy_state == 'legacy':
             self.set_state(self.compat_usbk_image, "maybe")
-            label_text += "unknown (legacy policy found)"
+            label_text += _("unknown (legacy policy found)")
         elif policy_state == 'allow':
             self.set_state(self.compat_usbk_image, "no")
-            label_text += "insecure policy"
+            label_text += _("insecure policy")
         elif policy_state == 'deny':
             self.set_state(self.compat_usbk_image, "yes")
-            label_text += "secure policy"
+            label_text += _("secure policy")
         self.compat_usbk_label.set_markup(label_text)
 
     def reset(self):

@@ -29,8 +29,11 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
 
-logger = logging.getLogger('qubes-config-manager')
+logger = logging.getLogger('qubes-new-qube')
 WHONIX_QUBE_NAME = 'sys-whonix'
 
 class AdvancedHandler:
@@ -58,8 +61,8 @@ class AdvancedHandler:
             data_container=self.box,
             icon=self.expander_icon,
             label=self.expander_label,
-            text_shown='Hide advanced settings',
-            text_hidden='Show advanced settings'
+            text_shown=_('Hide advanced settings'),
+            text_hidden=_('Show advanced settings')
         )
 
         self.main_window: Gtk.Window = gtk_builder.get_object('main_window')

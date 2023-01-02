@@ -81,7 +81,7 @@ class VMUsageData:
 
         for volume_name, usage in vm_usage.problem_volumes.items():
             # pylint: disable=consider-using-f-string
-            label_contents.append('volume <b>{}</b> is {:.1%} full'.format(
+            label_contents.append(_('volume <b>{}</b> is {:.1%} full').format(
                 volume_name, usage))
 
         label_text = f"<b>{vm.name}</b>: " + ", ".join(label_contents)
@@ -179,9 +179,9 @@ class PoolUsageData:
                                      pool.usage_details['metadata_size']
                     if metadata_usage >= URGENT_WARN_LEVEL:
                         # pylint: disable=consider-using-f-string
-                        self.warning_message.append(
+                        self.warning_message.append(_(
                             "\nMetadata space for pool {} is running out. "
-                            "Current usage: {.1%}".format(
+                            "Current usage: {.1%}").format(
                                 pool.name, metadata_usage))
             except (exc.QubesPropertyAccessError, AttributeError):
                 pass
@@ -294,7 +294,7 @@ def emit_notification(gtk_app, title, text, vm=None):
     notification.set_icon(Gio.ThemedIcon.new('dialog-warning'))
 
     if vm:
-        notification.add_button('Open qube settings',
+        notification.add_button(_('Open qube settings'),
                                 f"app.prefs::{vm.name}")
 
     gtk_app.send_notification(None, notification)
@@ -371,10 +371,10 @@ class DiskSpace(Gtk.Application):
             self.icon.set_from_icon_name("dialog-warning")
             text = _("<b>Qubes Disk Space Monitor</b>\n\nWARNING!")
             if pool_warning:
-                text += '\nYou are running out of disk ' \
-                        'space.\n' + ''.join(pool_warning)
+                text += _('\nYou are running out of disk space.\n') + \
+                        ''.join(pool_warning)
             if vm_warning:
-                text += '\nThe following qubes are running out of space: '\
+                text += _('\nThe following qubes are running out of space: ') \
                         + ', '.join([x.vm.name for x in vm_warning])
             self.icon.set_tooltip_markup(text)
         else:
@@ -407,7 +407,7 @@ class DiskSpace(Gtk.Application):
         menu.append(grid_menu_item)
 
         if vm_data.problematic_vms:
-            menu.append(self.make_title_item('Qubes warnings'))
+            menu.append(self.make_title_item(_('Qubes warnings')))
 
             for (vm, label1, label2) in vm_data.get_vms_widgets():
                 hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)

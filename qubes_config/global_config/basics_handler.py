@@ -43,8 +43,11 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
-logger = logging.getLogger('qubes-config-manager')
+logger = logging.getLogger('qubes-global-config')
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
 
 class KernelVersion:  # pylint: disable=too-few-public-methods
     """Helper class to be used in sorting kernels. Cannot use
@@ -294,7 +297,7 @@ class MemoryHandler(AbstractTraitHolder):
         """Get human-readable description of the widget"""
         # the pylint: disable above is because pylint does not understand
         # static methods
-        return "Qube memory settings"
+        return _("Qube memory settings")
 
     def save(self):
         """Save changes: update system value and mark it as new initial value"""
@@ -373,7 +376,7 @@ class KernelHolder(AbstractTraitHolder):
         return kernels_dict
 
     def get_readable_description(self) -> str:
-        return "Default kernel"
+        return _("Default kernel")
 
     def get_current_value(self):
         return self.qapp.default_kernel
@@ -419,43 +422,45 @@ class BasicSettingsHandler(PageHandler):
         self.handlers.append(PropertyHandler(
             qapp=self.qapp, trait_holder=self.qapp, trait_name="clockvm",
             widget=self.clockvm_combo, vm_filter=self._clock_vm_filter,
-            readable_name="Clock qube", additional_options=NONE_CATEGORY))
+            readable_name=_("Clock qube"), additional_options=NONE_CATEGORY))
         self.handlers.append(PropertyHandler(
             qapp=self.qapp, trait_holder=self.qapp,
             trait_name="default_template", widget=self.deftemplate_combo,
             vm_filter=self._default_template_filter,
-            readable_name="Default template", additional_options=NONE_CATEGORY))
+            readable_name=_("Default template"),
+            additional_options=NONE_CATEGORY))
         self.handlers.append(PropertyHandler(
             qapp=self.qapp, trait_holder=self.qapp, trait_name="default_netvm",
             widget=self.defnetvm_combo, vm_filter=self._default_netvm_filter,
-            readable_name="Default net qube", additional_options=NONE_CATEGORY))
+            readable_name=_("Default net qube"),
+            additional_options=NONE_CATEGORY))
         self.handlers.append(PropertyHandler(
             qapp=self.qapp, trait_holder=self.vm, trait_name="default_dispvm",
             widget=self.defdispvm_combo, vm_filter=self._default_dispvm_filter,
-            readable_name="Default disposable qube template",
+            readable_name=_("Default disposable qube template"),
             additional_options=NONE_CATEGORY))
         self.handlers.append(FeatureHandler(
             trait_holder=self.vm, trait_name='gui-default-allow-fullscreen',
             widget=self.fullscreen_combo,
-            options={'default (disallow)': None, 'allow': True,
-                     'disallow': False},
-            readable_name="Allow fullscreen", is_bool=True))
+            options={_('default (disallow)'): None, _('allow'): True,
+                     _('disallow'): False},
+            readable_name=_("Allow fullscreen"), is_bool=True))
         self.handlers.append(FeatureHandler(
             trait_holder=self.vm, trait_name='gui-default-allow-utf8-titles',
             widget=self.utf_combo,
-            options={'default (disallow)': None, 'allow': True,
-                     'disallow': False},
-            readable_name="Allow utf8 window titles", is_bool=True))
+            options={_('default (disallow)'): None, _('allow'): True,
+                     _('disallow'): False},
+            readable_name=_("Allow utf8 window titles"), is_bool=True))
         self.handlers.append(FeatureHandler(
             trait_holder=self.vm, trait_name='gui-default-trayicon-mode',
             widget=self.tray_icon_combo,
-            options={'default (tinted icon)': None,
-             'full background': 'bg',
-             'thin border': 'border1',
-             'thick border': 'border2',
-             'tinted icon': 'tint',
-             'tinted icon with modified white': 'tint+whitehack',
-             'tinted icon with 50% saturation': 'tint+saturation50'},
+            options={_('default (tinted icon)'): None,
+             _('full background'): 'bg',
+             _('thin border'): 'border1',
+             _('thick border'): 'border2',
+             _('tinted icon'): 'tint',
+             _('tinted icon with modified white'): 'tint+whitehack',
+             _('tinted icon with 50% saturation'): 'tint+saturation50'},
             readable_name="Tray icon mode", is_bool=False))
         self.handlers.append(KernelHolder(qapp=self.qapp,
                                           widget=self.kernel_combo))

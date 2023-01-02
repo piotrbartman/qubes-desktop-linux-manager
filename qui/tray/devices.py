@@ -26,9 +26,9 @@ _ = t.gettext
 
 DEV_TYPES = ['block', 'usb', 'mic']
 DEV_TYPE_NAMES = {
-    'block': 'Data (Block) Devices',
-    'usb': 'USB Devices',
-    'mic': 'Audio Input'
+    'block': _('Data (Block) Devices'),
+    'usb': _('USB Devices'),
+    'mic': _('Audio Input')
 }
 
 
@@ -443,7 +443,7 @@ def main():
     loop = asyncio.get_event_loop()
     return_code = qui.utils.run_asyncio_and_show_errors(
         loop, [asyncio.ensure_future(dispatcher.listen_for_events())],
-    "Qubes Devices Widget")
+    _("Qubes Devices Widget"))
     del app
     return return_code
 

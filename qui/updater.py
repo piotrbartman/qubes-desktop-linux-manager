@@ -318,10 +318,10 @@ class VMListBoxRow(Gtk.ListBoxRow):
                 warn_icon = Gtk.Image.new_from_pixbuf(
                     Gtk.IconTheme.get_default().load_icon(
                         'dialog-warning', 12, 0))
-                warn_icon.set_tooltip_text(
+                warn_icon.set_tooltip_text(_(
                     'This qube may have been restored from an older version of '
                     'Qubes OS and may not be able to update itself correctly. '
-                    'Please check the documentation if problems occur.')
+                    'Please check the documentation if problems occur.'))
                 hbox.pack_start(warn_icon, False, False, 0)
         except exc.QubesDaemonCommunicationError:
             # we have no permission to access the vm's features, there's no

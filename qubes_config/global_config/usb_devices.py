@@ -45,6 +45,9 @@ import qubesadmin.exc
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
 
 class WidgetWithButtons(Gtk.Box):
     """This is a simple wrapper for editable widgets
@@ -60,11 +63,11 @@ class WidgetWithButtons(Gtk.Box):
                                            click_function=self._edit_clicked,
                                            style_classes=["flat"])
         self.confirm_button = ImageTextButton(
-            icon_name="qubes-ok", label="ACCEPT",
+            icon_name="qubes-ok", label=_("ACCEPT"),
             click_function=self._confirm_clicked,
             style_classes=["button_save", "flat_button"])
         self.cancel_button = ImageTextButton(
-            icon_name="qubes-delete", label="CANCEL",
+            icon_name="qubes-delete", label=_("CANCEL"),
             click_function=self._cancel_clicked,
             style_classes=["button_cancel", "flat_button"])
 
@@ -161,7 +164,7 @@ class USBVMHandler:
         empty string if none were found."""
         self.widget_with_buttons.close_edit()
         if self.widget_with_buttons.is_changed():
-            return "USB qube"
+            return _("USB qube")
         return ""
 
     def reset(self):
@@ -173,9 +176,9 @@ class USBVMHandler:
 class InputDeviceHandler:
     """Handler for various qubes.Input policies."""
     ACTION_CHOICES = {
-        "ask": "always ask",
-        "allow": "enable",
-        "deny": "disable"
+        "ask": _("always ask"),
+        "allow": _("enable"),
+        "deny": _("disable")
     }
     def __init__(self,
                  qapp: qubesadmin.Qubes,
@@ -250,7 +253,7 @@ qubes.InputTablet * {self.sys_usb} @adminvm deny
 
         self.policy_manager.save_rules(self.policy_file_name, rules,
                                        self.current_token)
-        _, self.current_token = self.policy_manager.get_rules_from_filename(
+        _r, self.current_token = self.policy_manager.get_rules_from_filename(
             self.policy_file_name, self.default_policy)
 
         for widget in self.action_widgets.values():
@@ -264,7 +267,7 @@ qubes.InputTablet * {self.sys_usb} @adminvm deny
             widget.close_edit()
             if widget.is_changed():
                 name = policy[len('qubes.Input'):]
-                unsaved.append(f'{name} input settings')
+                unsaved.append(_('{name} input settings').format(name=name))
         return "\n".join(unsaved)
 
     def reset(self):
@@ -376,11 +379,12 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
             rule_text = "\n".join(str(rule) for rule in self._errors)
             show_error(
                 parent=self.box.get_toplevel(),
-                title="Unknown rule found in police file",
-                text="The following rules could not be parsed:\n"
-                     f"{rule_text}\n"
+                title=_("Unknown rule found in police file"),
+                text=_("The following rules could not be parsed:\n"
+                     "{rule_text}\n"
                      "This has probably happened due to manual editing of the"
-                     "policy file. The rule will be discarded."
+                     "policy file. The rule will be discarded.").format(
+                    rule_text=rule_text)
             )
 
 
@@ -393,9 +397,9 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
         if vm in self.enable_some_handler.selected_vms:
             return True
         response = ask_question(self.enable_check,
-                                "U2F not enabled in qube",
-                                "U2F is not enabled in this qube. Do you "
-                                "want to enable it?")
+                                _("U2F not enabled in qube"),
+                                _("U2F is not enabled in this qube. Do you "
+                                "want to enable it?"))
         if response == Gtk.ResponseType.YES:
             self.enable_some_handler.add_selected_vm(vm)
             return True
@@ -483,7 +487,8 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
                 self.policy_manager.text_to_rules(self.deny_all_policy),
                 self.current_token)
 
-            _, self.current_token = self.policy_manager.get_rules_from_filename(
+            _r, self.current_token =\
+                self.policy_manager.get_rules_from_filename(
                 self.policy_filename, self.default_policy)
 
             self._initialize_data()
@@ -492,10 +497,10 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
         enabled_vms = self.enable_some_handler.selected_vms
         if not enabled_vms:
             show_error(self.box.get_toplevel(),
-                       "Incorrect configuration found",
-                       "U2F is enabled, but not qubes are selected to be "
+                       _("Incorrect configuration found"),
+                       _("U2F is enabled, but not qubes are selected to be "
                        "used with U2F. This is equivalent to disabling U2F "
-                       "and will be treated as such.")
+                       "and will be treated as such."))
 
         for vm in self.available_vms:
             value = None if vm not in enabled_vms else True
@@ -544,7 +549,7 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
 
         self.policy_manager.save_rules(self.policy_filename, rules,
                                        self.current_token)
-        _, self.current_token = self.policy_manager.get_rules_from_filename(
+        _r, self.current_token = self.policy_manager.get_rules_from_filename(
             self.policy_filename, self.default_policy)
 
         self._initialize_data()
@@ -564,30 +569,30 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
         empty string if none were found."""
         if self.initial_enable_state != self.enable_check.get_active():
             if self.enable_check.get_active():
-                return "U2F enabled"
-            return "U2F disabled"
+                return _("U2F enabled")
+            return _("U2F disabled")
         if not self.enable_check.get_active():
             return ""
 
         unsaved = []
 
         if self.enable_some_handler.selected_vms != self.initially_enabled_vms:
-            unsaved.append("List of qubes with U2F enabled changed")
+            unsaved.append(_("List of qubes with U2F enabled changed"))
 
         if self.initial_register_state != self.register_check.get_active():
-            unsaved.append("U2F key registration settings changed")
+            unsaved.append(_("U2F key registration settings changed"))
         elif self.initial_register_all_state != \
                 self.register_all_radio.get_active():
-            unsaved.append("U2F key registration settings changed")
+            unsaved.append(_("U2F key registration settings changed"))
         elif self.register_some_handler.selected_vms != \
                 self.initial_register_vms:
-            unsaved.append("U2F key registration settings changed")
+            unsaved.append(_("U2F key registration settings changed"))
 
         if self.initial_blanket_check_state != \
                 self.blanket_check.get_active() or \
                 self.blanket_handler.selected_vms != self.initial_blanket_vms:
-            unsaved.append("List of qubes with unrestricted U2F key "
-                           "access changed")
+            unsaved.append(_("List of qubes with unrestricted U2F key "
+                           "access changed"))
         return "\n".join(unsaved)
 
 

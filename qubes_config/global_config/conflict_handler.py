@@ -28,6 +28,10 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
+
 
 class ConflictFileListRow(Gtk.ListBoxRow):
     """A ListBox row representing a policy file with conflicting info."""
@@ -46,9 +50,9 @@ class ConflictFileListRow(Gtk.ListBoxRow):
         if file_name.startswith('/etc/qubes-rpc'):
             self.icon = Gtk.Image()
             self.icon.set_from_pixbuf(load_icon('qubes-question', 14, 14))
-            tooltip = 'This is a legacy file from previous Qubes versions. ' \
-                      'Custom policy contained there will no longer ' \
-                      'be supported in Qubes 4.2.'
+            tooltip = _('This is a legacy file from previous Qubes versions. '
+                        'Custom policy contained there will no longer '
+                        'be supported in Qubes 4.2.')
             self.set_tooltip_text(tooltip)
             self.box.pack_start(self.icon, False, False, 0)
 

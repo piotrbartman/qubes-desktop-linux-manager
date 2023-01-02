@@ -34,38 +34,41 @@ import qubesadmin.vm
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
 
 SOURCE_CATEGORIES = {
-    "@anyvm": "ALL QUBES",
-    "@type:AppVM": "TYPE: APP",
-    "@type:TemplateVM": "TYPE: TEMPLATES",
-    "@type:DispVM": "TYPE: DISPOSABLE",
+    "@anyvm": _("ALL QUBES"),
+    "@type:AppVM": _("TYPE: APP"),
+    "@type:TemplateVM": _("TYPE: TEMPLATES"),
+    "@type:DispVM": _("TYPE: DISPOSABLE"),
 }
 
 SOURCE_CATEGORIES_ADMIN = {
-    "@anyvm": "ALL QUBES",
-    "@type:AppVM": "TYPE: APP",
-    "@type:TemplateVM": "TYPE: TEMPLATES",
-    "@type:DispVM": "TYPE: DISPOSABLE",
-    "@adminvm": "TYPE: ADMINVM"
+    "@anyvm": _("ALL QUBES"),
+    "@type:AppVM": _("TYPE: APP"),
+    "@type:TemplateVM": _("TYPE: TEMPLATES"),
+    "@type:DispVM": _("TYPE: DISPOSABLE"),
+    "@adminvm": _("TYPE: ADMINVM")
 }
 
 TARGET_CATEGORIES = {
-    "@anyvm": "ALL QUBES",
-    "@dispvm": "Default Disposable Qube",
-    "@type:AppVM": "TYPE: APP",
-    "@type:TemplateVM": "TYPE: TEMPLATES",
-    "@type:DispVM": "TYPE: DISPOSABLE",
+    "@anyvm": _("ALL QUBES"),
+    "@dispvm": _("Default Disposable Qube"),
+    "@type:AppVM": _("TYPE: APP"),
+    "@type:TemplateVM": _("TYPE: TEMPLATES"),
+    "@type:DispVM": _("TYPE: DISPOSABLE"),
 }
 
 LIMITED_CATEGORIES = {
-    "@type:AppVM": "TYPE: APP",
-    "@type:TemplateVM": "TYPE: TEMPLATES",
-    "@type:DispVM": "TYPE: DISPOSABLE",
+    "@type:AppVM": _("TYPE: APP"),
+    "@type:TemplateVM": _("TYPE: TEMPLATES"),
+    "@type:DispVM": _("TYPE: DISPOSABLE"),
 }
 
 DISPVM_CATEGORIES = {
-    "@dispvm": "Default Disposable Template",
+    "@dispvm": _("Default Disposable Template"),
 }
 
 
@@ -155,7 +158,8 @@ class VMWidget(Gtk.Box):
         # cannot set a VM to none
         if not self.model.get_selected():
             raise ValueError(
-                f"{self.model.entry_box.get_text()} is not a valid qube name.")
+                _("{name} is not a valid qube name.").format(
+                    name=self.model.entry_box.get_text()))
         new_value = str(self.model.get_selected())
         self.selected_value = new_value
         self.name_widget.set_token(new_value)
@@ -283,9 +287,9 @@ class RuleListBoxRow(Gtk.ListBoxRow):
                  verb_description: Optional[AbstractVerbDescription] = None,
                  enable_delete: bool = True,
                  enable_vm_edit: bool = True,
-                 initial_verb: str = "will",
-                 custom_deletion_warning: str = "Are you sure you want to "
-                                                "delete this rule?",
+                 initial_verb: str = _("will"),
+                 custom_deletion_warning: str = _("Are you sure you want to "
+                                                  "delete this rule?"),
                  is_new_row: bool = False,
                  enable_adminvm: bool = False):
         """
@@ -321,7 +325,7 @@ class RuleListBoxRow(Gtk.ListBoxRow):
         self.add(self.outer_box)
 
         self.title_label = Gtk.Label()
-        self.title_label.set_text("Editing rule:")
+        self.title_label.set_text(_("Editing rule:"))
         self.title_label.set_no_show_all(True)
         self.title_label.get_style_context().add_class('small_title')
         self.title_label.set_halign(Gtk.Align.START)
@@ -342,11 +346,11 @@ class RuleListBoxRow(Gtk.ListBoxRow):
         self.additional_widget_box = Gtk.Box(
             orientation=Gtk.Orientation.HORIZONTAL)
         save_button = ImageTextButton(
-            icon_name="qubes-ok", label="ACCEPT",
+            icon_name="qubes-ok", label=_("ACCEPT"),
             click_function=self.validate_and_save,
             style_classes=["button_save", "flat_button"])
         cancel_button = ImageTextButton(
-            icon_name="qubes-delete", label="CANCEL",
+            icon_name="qubes-delete", label=_("CANCEL"),
             click_function=self.revert,
             style_classes=["button_cancel", "flat_button"])
         self.additional_widget_box.pack_end(save_button, False, False, 10)
@@ -397,7 +401,7 @@ class RuleListBoxRow(Gtk.ListBoxRow):
     def _do_delete_self(self, force: bool = False):
         """Delete self; if force=True, do not ask user if sure,"""
         if not force:
-            response = ask_question(self, "Delete rule",
+            response = ask_question(self, _("Delete rule"),
                                     self.custom_deletion_warning)
             if response == Gtk.ResponseType.NO:
                 return
@@ -467,16 +471,17 @@ class RuleListBoxRow(Gtk.ListBoxRow):
 
         error = self.rule.get_rule_errors(new_source, new_target, new_action)
         if error:
-            show_error(self.source_widget, "Invalid rule",
-                       f'This rule is not valid: {error}')
+            show_error(self.source_widget, _("Invalid rule"),
+                       _('This rule is not valid: {error}').format(
+                           error=error))
             return False
 
         error = self.parent_handler.verify_new_rule(self, new_source,
                                                     new_target, new_action)
         if error:
-            show_error(self.source_widget, "Cannot save rule",
-                       'This rule conflicts with the following existing rule:'
-                       f'\n{error}\n')
+            show_error(self.source_widget, _("Cannot save rule"),
+                       _('This rule conflicts with the following existing'
+                         ' rule:\n{error}\n').format(error=error))
             return False
 
         try:
@@ -484,7 +489,7 @@ class RuleListBoxRow(Gtk.ListBoxRow):
             self.target_widget.save()
             self.action_widget.save()
         except ValueError as ex:
-            show_error(self.source_widget, "Cannot save rule", str(ex))
+            show_error(self.source_widget, _("Cannot save rule"), str(ex))
             return False
 
         self.rule.action = new_action
@@ -508,7 +513,7 @@ class FilteredListBoxRow(RuleListBoxRow):
                  verb_description: Optional[AbstractVerbDescription] = None,
                  enable_delete: bool = True,
                  enable_vm_edit: bool = True,
-                 initial_verb: str = "uses",
+                 initial_verb: str = _("uses"),
                  filter_target: Optional[Callable] = None,
                  filter_source: Optional[Callable] = None,
                  is_new_row: bool = False,
@@ -548,7 +553,7 @@ class LimitedRuleListBoxRow(FilteredListBoxRow):
                  verb_description: Optional[AbstractVerbDescription] = None,
                  enable_delete: bool = True,
                  enable_vm_edit: bool = True,
-                 initial_verb: str = "will",
+                 initial_verb: str = _("will"),
                  filter_function: Optional[Callable] = None,
                  enable_adminvm: bool = False
                  ):
@@ -588,7 +593,8 @@ class DispvmRuleRow(FilteredListBoxRow):
                  verb_description: Optional[AbstractVerbDescription] = None,
                  is_new_row: bool = False):
         super().__init__(parent_handler=parent_handler, rule=rule, qapp=qapp,
-                         verb_description=verb_description, initial_verb="will",
+                         verb_description=verb_description,
+                         initial_verb=_("will"),
                          filter_target=self._dvm_template_filter,
                          is_new_row=is_new_row,
                          source_categories=SOURCE_CATEGORIES,

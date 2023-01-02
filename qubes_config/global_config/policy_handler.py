@@ -45,6 +45,9 @@ from ..widgets.utils import compare_rule_lists
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
 
 class PolicyHandler(PageHandler):
     """Handler for a single page with Policy settings."""
@@ -326,13 +329,13 @@ class PolicyHandler(PageHandler):
                     row.set_edit_mode(False)
                     continue
                 response = show_dialog(
-                    parent=row.get_toplevel(), title="Unsaved changes",
-                    text="A rule is currently being edited. \n"
+                    parent=row.get_toplevel(), title=_("Unsaved changes"),
+                    text=_("A rule is currently being edited. \n"
                          "Do you want to save changes to the following"
-                         f"rule?\n{str(row)}",
+                         "rule?\n") + str(row),
                     buttons={
-                        "_Save changes": Gtk.ResponseType.YES,
-                        "_Discard changes": Gtk.ResponseType.NO,
+                        _("_Save changes"): Gtk.ResponseType.YES,
+                        _("_Discard changes"): Gtk.ResponseType.NO,
                     }, icon_name="qubes-ask")
 
                 if response == Gtk.ResponseType.YES:
@@ -356,7 +359,7 @@ class PolicyHandler(PageHandler):
         rules = self.current_rules
         self.policy_manager.save_rules(self.policy_file_name,
                                        rules, self.current_token)
-        _, self.current_token = self.policy_manager.get_rules_from_filename(
+        _r, self.current_token = self.policy_manager.get_rules_from_filename(
             self.policy_file_name, self.default_policy)
 
         self.initial_rules = deepcopy(rules)
@@ -367,10 +370,10 @@ class PolicyHandler(PageHandler):
         self.close_all_edits()
         changed = []
         if self.raw_handler.get_unsaved():
-            changed.append("Raw policy text")
+            changed.append(_("Raw policy text"))
 
         if not compare_rule_lists(self.initial_rules, self.current_rules):
-            changed.append("Policy rules")
+            changed.append(_("Policy rules"))
         return "\n".join(changed)
 
     def on_switch(self, *_args):
@@ -379,11 +382,11 @@ class PolicyHandler(PageHandler):
                                   self.error_handler.get_errors())
             show_error(
                 parent=self.main_list_box.get_toplevel(),
-                title="Unknown rule found in police file",
-                text="The following rules could not be parsed:\n"
-                     f"{rule_text}\n"
-                     "This has probably happened due to manual editing of the"
-                     "policy file. The rule will be discarded."
+                title=_("Unknown rule found in police file"),
+                text=_("The following rules could not be parsed:\n") +
+                     rule_text + _("\nThis has probably happened due to "
+                                   "manual editing of the policy file. The "
+                                   "rule will be discarded.")
             )
 
 
@@ -452,9 +455,9 @@ class RawPolicyTextHandler:
             error_message = str(ex).split(':', 3)[2]
             show_error(
                 parent=self.raw_box.get_toplevel(),
-                title="Error parsing rules",
-                text="The following rules could not be parsed:\n"
-                     f"{error_message}\n"
+                title=_("Error parsing rules"),
+                text=_("The following rules could not be parsed:\n") +
+                     error_message + "\n"
             )
             return
 
@@ -559,9 +562,9 @@ class VMSubsetPolicyHandler(PolicyHandler):
             verb_description=self.main_verb_description,
             enable_delete=True,
             enable_vm_edit=False, initial_verb="",
-            custom_deletion_warning="Are you sure you want to delete this "
-                                    "rule? All related exceptions will also "
-                                    "be deleted.",
+            custom_deletion_warning=_("Are you sure you want to delete this "
+                                      "rule? All related exceptions will also "
+                                      "be deleted."),
             enable_adminvm=self.include_adminvm
         ))
 
@@ -570,7 +573,7 @@ class VMSubsetPolicyHandler(PolicyHandler):
             parent_handler=self,
             rule=self.exception_rule_class(rule),
             qapp=self.qapp,
-            initial_verb="will",
+            initial_verb=_("will"),
             verb_description=self.exception_verb_description,
             filter_target=lambda x: str(x) in self.select_qubes,
             source_categories=LIMITED_CATEGORIES
@@ -655,16 +658,17 @@ class VMSubsetPolicyHandler(PolicyHandler):
     def _add_select_confirm(self, *_args):
         new_qube = self.select_qube_model.get_selected()
         if not new_qube or not isinstance(new_qube, qubesadmin.vm.QubesVM):
-            show_error(self.main_list_box, 'Invalid selection',
-                       f'Invalid object was selected. {new_qube} is not a'
-                       'valid Qubes qube.')
+            show_error(self.main_list_box, _('Invalid selection'),
+                       _('Invalid object was selected. {new_qube} is not a '
+                         'valid Qubes qube.').format(new_qube=new_qube))
             return
         if new_qube.is_networked():
             response = ask_question(
                 self.main_list_box,
-                "Add new key qube",
-                f"Are you sure you want to add {new_qube} as a key qube? It "
-                f"has network access, which may lead to decreased security.")
+                _("Add new key qube"),
+                _("Are you sure you want to add {new_qube} as a key qube? It "
+                  "has network access, which may lead to decreased "
+                  "security.").format(new_qube=new_qube))
             if response == Gtk.ResponseType.NO:
                 self._add_select_cancel()
                 return

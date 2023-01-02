@@ -47,6 +47,10 @@ import qubesadmin.exc
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
+
 
 class RepoHandler:
     """Handler for repository settings."""
@@ -121,7 +125,7 @@ class RepoHandler:
             self.problems_repo_box.set_visible(True)
             self.problems_label.set_text(
                 self.problems_label.get_text() +
-                ' Encountered error: ' + str(ex))
+                _(' Encountered error: ') + str(ex))
 
     def _load_state(self):
         for repo_dict in self.repo_to_widget_mapping:
@@ -179,11 +183,11 @@ class RepoHandler:
                         itl_changed = True
         unsaved = []
         if dom0_changed:
-            unsaved.append("dom0 update source")
+            unsaved.append(_("dom0 update source"))
         if itl_changed:
-            unsaved.append("Official template update source")
+            unsaved.append(_("Official template update source"))
         if community_changed:
-            unsaved.append("Community template update source")
+            unsaved.append(_("Community template update source"))
 
         return "\n".join(unsaved)
 
@@ -277,12 +281,12 @@ class UpdateCheckerHandler:
     def _set_label(self):
         if self.enable_radio.get_active():
             self.exception_label.set_markup(
-                'Except the following qubes, for which checking for updates'
-                ' will be <b>disabled</b>')
+                _('Except the following qubes, for which checking for updates'
+                ' will be <b>disabled</b>'))
         else:
             self.exception_label.set_markup(
-                'Except the following qubes, for which checking for updates'
-                ' will be <b>enabled</b>')
+                _('Except the following qubes, for which checking for updates'
+                ' will be <b>enabled</b>'))
 
     def _enable_disable_toggled(self, *_args):
         self._set_label()
@@ -297,14 +301,14 @@ class UpdateCheckerHandler:
         empty string if none were found."""
         unsaved = []
         if self.initial_dom0 != self.dom0_update_check.get_active():
-            unsaved.append('dom0 "check for updates" setting')
+            unsaved.append(_('dom0 "check for updates" setting'))
         if self.initial_default != self.enable_radio.get_active():
-            unsaved.append('Default "check for updates" setting')
+            unsaved.append(_('Default "check for updates" setting'))
         if self.exceptions_check.get_active() != \
                 bool(self.initial_exceptions) or \
                 self.flowbox_handler.is_changed():
-            unsaved.append("Qubes selected for unusual 'check for updates'"
-                           " behaviors")
+            unsaved.append(_("Qubes selected for unusual 'check for updates'"
+                             " behaviors"))
         return "\n".join(unsaved)
 
     def save(self):
@@ -489,7 +493,7 @@ class UpdateProxy:
         new_source_vm = self.qapp.domains[new_source]
         if 'whonix-updatevm' in new_source_vm.tags and \
                 'anon-gateway' not in new_target_vm.tags:
-            return "Whonix qubes can only use Whonix update proxies!"
+            return _("Whonix qubes can only use Whonix update proxies!")
         return None
 
     @property
@@ -543,7 +547,7 @@ class UpdateProxy:
 
         self.policy_manager.save_rules(self.policy_file_name,
                                        raw_rules, self.current_token)
-        _, self.current_token = self.policy_manager.get_rules_from_filename(
+        _r, self.current_token = self.policy_manager.get_rules_from_filename(
             self.policy_file_name, "")
         self.rules = self.current_exception_rules
 
@@ -620,9 +624,9 @@ class UpdatesHandler(PageHandler):
                    self.update_checker.get_unsaved()]
 
         if self.dom0_updatevm_model.is_changed():
-            unsaved.append("dom0 Update Proxy")
+            unsaved.append(_("dom0 Update Proxy"))
         if self.update_proxy.is_changed():
-            unsaved.append("Update proxy settings")
+            unsaved.append(_("Update proxy settings"))
         unsaved = [x for x in unsaved if x]
         return "\n".join(unsaved)
 

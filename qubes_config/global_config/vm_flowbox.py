@@ -34,13 +34,16 @@ import qubesadmin.exc
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
 
 class PlaceholderText(Gtk.FlowBoxChild):
     """Placeholder to be shown if no qubes are selected"""
     def __init__(self):
         super().__init__()
         self.label = Gtk.Label()
-        self.label.set_text('No qubes selected')
+        self.label.set_text(_('No qubes selected'))
         self.label.get_style_context().add_class('didascalia')
         self.add(self.label)
         self.show_all()
@@ -73,8 +76,8 @@ class VMFlowBoxButton(Gtk.FlowBoxChild):
 
     def _remove_self(self, *_args):
         response = ask_question(
-            self, "Delete",
-            "Are you sure you want to remove this qube?")
+            self, _("Delete"),
+            _("Are you sure you want to remove this qube?"))
         if response == Gtk.ResponseType.NO:
             return
         parent = self.get_parent()
@@ -176,8 +179,8 @@ class VMFlowboxHandler:
             if not self.verification_callback(select_vm):
                 return
         if select_vm in self.selected_vms:
-            show_error(self.flowbox, "Cannot add qube",
-                       "This qube is already selected.")
+            show_error(self.flowbox, _("Cannot add qube"),
+                       _("This qube is already selected."))
             return
         self.flowbox.add(VMFlowBoxButton(select_vm))
         self.placeholder.set_visible(False)

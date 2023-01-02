@@ -32,8 +32,12 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, Pango
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
 
-logger = logging.getLogger('qubes-config-manager')
+
+logger = logging.getLogger('qubes-new-qube')
 WHONIX_QUBE_NAME = 'sys-whonix'
 
 class ApplicationData:
@@ -119,7 +123,7 @@ class OtherTemplateApplicationRow(Gtk.ListBoxRow):
         self.box.pack_start(self.appname_label, False, False, 0)
 
         self.middle_label = Gtk.Label()
-        self.middle_label.set_text(" found in ")
+        self.middle_label.set_text(_(" found in "))
 
         self.box.pack_start(self.middle_label, False, False, 0)
         self.end_label = QubeName(appdata.template)
@@ -157,7 +161,7 @@ class ApplicationButton(Gtk.FlowBoxChild):
         self.remove_icon = Gtk.Image()
         self.remove_icon.set_from_pixbuf(load_icon('qubes-delete', 14, 14))
         self.remove_icon.set_tooltip_text(
-            'Click to remove this application from selection')
+            _('Click to remove this application from selection'))
         self.box.pack_end(self.remove_icon, False, False, 3)
 
         self.connect('activate', self._remove_self)

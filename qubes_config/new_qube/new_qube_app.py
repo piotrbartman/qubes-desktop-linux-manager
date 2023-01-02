@@ -44,8 +44,12 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GObject
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
 
-logger = logging.getLogger('qubes-config-manager')
+
+logger = logging.getLogger('qubes-new-qube')
 WHONIX_QUBE_NAME = 'sys-whonix'
 
 
@@ -65,7 +69,7 @@ class CreateNewQube(Gtk.Application):
         self.template_selector: Optional[TemplateSelector] = None
 
         self.progress_bar_dialog = ProgressBarDialog(
-            self, "Loading available applications...")
+            self, _("Loading available applications..."))
 
     def do_activate(self, *args, **kwargs):
         """
@@ -250,8 +254,8 @@ class CreateNewQube(Gtk.Application):
             err = repr(ex)
 
         if err or not vm:
-            show_error(self.main_window, "Could not create qube",
-                       f"An error occurred: {err}")
+            show_error(self.main_window, _("Could not create qube"),
+                       _("An error occurred: {error}").format(error=err))
             return
 
         apps = self.app_box_handler.get_selected_apps()
@@ -264,9 +268,10 @@ class CreateNewQube(Gtk.Application):
                     stdin=subprocess.PIPE) as p:
                 p.communicate('\n'.join(apps).encode())
                 if p.returncode != 0:
-                    show_error(self.main_window,
-                               "Failed to select applications",
-                               f"An error occurred: {err}")
+                    show_error(
+                        self.main_window,
+                        _("Failed to select applications"),
+                        _("An error occurred: {error}").format(error=err))
                     return
         msg = Gtk.MessageDialog(
             transient_for=self.main_window,
@@ -274,7 +279,7 @@ class CreateNewQube(Gtk.Application):
             destroy_with_parent=True,
             message_type=Gtk.MessageType.INFO,
             buttons=Gtk.ButtonsType.OK,
-            text="Qube created successfully!")
+            text=_("Qube created successfully!"))
         msg.run()
 
         if self.advanced_handler.get_launch_settings():

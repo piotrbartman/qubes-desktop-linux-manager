@@ -25,6 +25,10 @@ from qrexec.policy.admin_client import PolicyClient
 from qrexec.policy.parser import StringPolicy, Rule
 from qubes_config.widgets.utils import compare_rule_lists
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
+
 
 class PolicyManager:
     """
@@ -33,11 +37,11 @@ class PolicyManager:
     """
     def __init__(self):
         self.policy_client = PolicyClient()
-        self.policy_disclaimer = """
+        self.policy_disclaimer = _("""
 # THIS IS AN AUTOMATICALLY GENERATED POLICY FILE.
 # Any changes made manually may be overwritten by Qubes Configuration Tools.
 
-"""
+""")
 
     def get_all_policy_files(self, service: str) -> List[str]:
         """Just get a straightforward list of all relevant policy files."""

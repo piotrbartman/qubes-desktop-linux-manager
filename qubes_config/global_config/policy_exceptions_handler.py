@@ -40,6 +40,10 @@ from ..widgets.utils import compare_rule_lists
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
+
 class PolicyExceptionsHandler:
     """
     Class for handling a list of policy exceptions
@@ -142,10 +146,10 @@ class PolicyExceptionsHandler:
         self.close_all_edits()
         changed = []
         if self.raw_handler and self.raw_handler.get_unsaved():
-            changed.append("Raw policy text")
+            changed.append(_("Raw policy text"))
 
         if not compare_rule_lists(self.initial_rules, self.current_rules):
-            changed.append("Policy rules")
+            changed.append(_("Policy rules"))
         return "\n".join(changed)
 
     @property
@@ -255,9 +259,9 @@ class DispvmExceptionHandler(PageHandler):
             rule=RuleDispVM(rule),
             qapp=self.qapp,
             verb_description=SimpleVerbDescription({
-                "ask": "and default to",
-                "allow": "use",
-                "deny": "open in disposable qube"
+                "ask": _("and default to"),
+                "allow": _("use"),
+                "deny": _("open in disposable qube")
             }),
             is_new_row=new,
         )
@@ -270,7 +274,7 @@ class DispvmExceptionHandler(PageHandler):
 
     def get_unsaved(self) -> str:
         if self.list_handler.get_unsaved() != "":
-            return "Exceptions for disposable templates "
+            return _("Exceptions for disposable templates ")
         return ""
 
     def reset(self):
@@ -281,7 +285,8 @@ class DispvmExceptionHandler(PageHandler):
             self.policy_file_name,
             self.list_handler.current_rules, self.current_token)
 
-        _, self.current_token = self.policy_manager.get_rules_from_filename(
-            self.policy_file_name, "")
+        _rules, self.current_token = \
+            self.policy_manager.get_rules_from_filename(
+                self.policy_file_name, "")
 
         self.initial_rules = deepcopy(self.list_handler.current_rules)

@@ -35,7 +35,7 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
 
-logger = logging.getLogger('qubes-config-manager')
+logger = logging.getLogger('qubes-new-qube')
 WHONIX_QUBE_NAME = 'sys-whonix'
 
 

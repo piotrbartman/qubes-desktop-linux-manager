@@ -29,14 +29,18 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GdkPixbuf, GLib, Gdk
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
+
 RESPONSES_OK = {
-    '_OK': Gtk.ResponseType.OK
+    _('_OK'): Gtk.ResponseType.OK
 }
 
 RESPONSES_YES_NO_CANCEL = {
-    "_Yes": Gtk.ResponseType.YES,
-    "_No": Gtk.ResponseType.NO,
-    "_Cancel": Gtk.ResponseType.CANCEL
+    _("_Yes"): Gtk.ResponseType.YES,
+    _("_No"): Gtk.ResponseType.NO,
+    _("_Cancel"): Gtk.ResponseType.CANCEL
 }
 
 APPVIEWER_LOCK = "/var/run/qubes/appviewer.lock"
@@ -52,7 +56,7 @@ def load_icon_at_gtk_size(icon_name,
     load a blank icon of specified size, provided as Gtk.IconSize.
     Returns GdkPixbuf.Pixbuf.
     """
-    _, width, height = Gtk.icon_size_lookup(icon_size)
+    _size, width, height = Gtk.icon_size_lookup(icon_size)
     return load_icon(icon_name, width, height)
 
 

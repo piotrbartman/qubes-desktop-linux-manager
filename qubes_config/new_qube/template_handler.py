@@ -27,6 +27,7 @@ import qubesadmin
 import qubesadmin.events
 import qubesadmin.vm
 from ..widgets.gtk_widgets import VMListModeler
+from ..widgets.gtk_utils import show_error
 from .application_selector import ApplicationData
 
 import gi
@@ -34,6 +35,9 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk
 
+import gettext
+t = gettext.translation("desktop-linux-manager", fallback=True)
+_ = t.gettext
 
 logger = logging.getLogger('qubes-new-qube')
 WHONIX_QUBE_NAME = 'sys-whonix'
@@ -286,6 +290,7 @@ class TemplateHandler:
         return False
 
     def _collect_application_data(self):
+        self.errors = []
         for vm in self.qapp.domains:
             command = ['qvm-appmenus', '--get-available',
                        '--i-understand-format-is-unstable', '--file-field',
@@ -297,9 +302,18 @@ class TemplateHandler:
                     command).decode().splitlines()]
             self._application_data[vm] = available_applications
             command = ['qvm-appmenus', '--get-default-whitelist', vm.name]
-            default_applications = subprocess.check_output(
-                    command).decode().splitlines()
+            try:
+                default_applications = subprocess.check_output(
+                        command).decode().splitlines()
+            except subprocess.CalledProcessError:
+                self.errors.append(vm)
+                default_applications = []
             self._default_applications[vm] = default_applications
+        if self.errors:
+            show_error(self.main_window, _('Failed to load application data'),
+                       _('Failed to load application data for the following '
+                         'qubes:\n - ') +
+                       '\n - '.join([vm.name for vm in self.errors]))
 
     def get_available_apps(self, vm: Optional[qubesadmin.vm.QubesVM] = None):
         """Get apps available for a given template."""

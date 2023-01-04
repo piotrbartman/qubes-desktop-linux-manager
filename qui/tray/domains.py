@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position,import-error
 ''' A menu listing domains '''
+import abc
 import asyncio
 import subprocess
 import sys
 import os
+import threading
 import traceback
 
 import qubesadmin
@@ -17,7 +19,7 @@ from qubesadmin import exc
 
 import gi  # isort:skip
 gi.require_version('Gtk', '3.0')  # isort:skip
-from gi.repository import Gio, Gtk, GObject  # isort:skip
+from gi.repository import Gio, Gtk, GObject, GLib  # isort:skip
 
 import gbulb
 gbulb.install()
@@ -68,24 +70,42 @@ def show_error(title, text):
     dialog.set_title(title)
     dialog.set_markup(text)
     dialog.connect("response", lambda *x: dialog.destroy())
-    dialog.show()
+    GLib.idle_add(dialog.show)
 
 
-class PauseItem(Gtk.ImageMenuItem):
-    ''' Shutdown menu Item. When activated pauses the domain. '''
-
-    def __init__(self, vm, icon_cache):
+class VMActionMenuItem(Gtk.ImageMenuItem):
+    def __init__(self, vm, icon_cache, icon_name, label):
         super().__init__()
         self.vm = vm
 
-        img = Gtk.Image.new_from_pixbuf(icon_cache.get_icon('pause'))
+        img = Gtk.Image.new_from_pixbuf(icon_cache.get_icon(icon_name))
 
         self.set_image(img)
-        self.set_label(_('Emergency pause'))
+        self.set_label(label)
 
-        self.connect('activate', self.perform_pause)
+        self.connect(
+            'activate', self.instantiate_thread_with_function)
 
-    def perform_pause(self, *_args, **_kwargs):
+    @abc.abstractmethod
+    def perform_action(self):
+        """
+        Action this item should perform.
+        """
+
+    def instantiate_thread_with_function(self, *_args, **_kwargs):
+        """Make a thread to run potentially slow processes like vm.kill in the
+        background"""
+        thread = threading.Thread(target=self.perform_action)
+        thread.start()
+
+
+class PauseItem(VMActionMenuItem):
+    ''' Shutdown menu Item. When activated pauses the domain. '''
+
+    def __init__(self, vm, icon_cache):
+        super().__init__(vm, icon_cache, 'pause', _('Emergency pause'))
+
+    def perform_action(self):
         try:
             self.vm.pause()
         except exc.QubesException as ex:
@@ -95,21 +115,12 @@ class PauseItem(Gtk.ImageMenuItem):
                            self.vm.name, str(ex)))
 
 
-class UnpauseItem(Gtk.ImageMenuItem):
+class UnpauseItem(VMActionMenuItem):
     ''' Unpause menu Item. When activated unpauses the domain. '''
-
     def __init__(self, vm, icon_cache):
-        super().__init__()
-        self.vm = vm
+        super().__init__(vm, icon_cache, 'unpause', _('Unpause'))
 
-        img = Gtk.Image.new_from_pixbuf(icon_cache.get_icon('unpause'))
-
-        self.set_image(img)
-        self.set_label(_('Unpause'))
-
-        self.connect('activate', self.perform_unpause)
-
-    def perform_unpause(self, *_args, **_kwargs):
+    def perform_action(self):
         try:
             self.vm.unpause()
         except exc.QubesException as ex:
@@ -119,22 +130,12 @@ class UnpauseItem(Gtk.ImageMenuItem):
                            self.vm.name, str(ex)))
 
 
-class ShutdownItem(Gtk.ImageMenuItem):
+class ShutdownItem(VMActionMenuItem):
     ''' Shutdown menu Item. When activated shutdowns the domain. '''
+    def __init__(self, vm, icon_cache):
+        super().__init__(vm, icon_cache, 'shutdown', _('Shutdown'))
 
-    def __init__(self, vm, app, icon_cache):
-        super().__init__()
-        self.vm = vm
-        self.app = app
-
-        img = Gtk.Image.new_from_pixbuf(icon_cache.get_icon('shutdown'))
-
-        self.set_image(img)
-        self.set_label(_('Shutdown'))
-
-        self.connect('activate', self.perform_shutdown)
-
-    def perform_shutdown(self, *_args, **_kwargs):
+    def perform_action(self):
         try:
             self.vm.shutdown()
         except exc.QubesException as ex:
@@ -148,10 +149,9 @@ class RestartItem(Gtk.ImageMenuItem):
     ''' Restart menu Item. When activated shutdowns the domain and
     then starts it again. '''
 
-    def __init__(self, vm, app, icon_cache):
+    def __init__(self, vm, icon_cache):
         super().__init__()
         self.vm = vm
-        self.app = app
 
         img = Gtk.Image.new_from_pixbuf(icon_cache.get_icon('restart'))
 
@@ -181,21 +181,12 @@ class RestartItem(Gtk.ImageMenuItem):
                            self.vm.name, str(ex)))
 
 
-class KillItem(Gtk.ImageMenuItem):
+class KillItem(VMActionMenuItem):
     ''' Kill domain menu Item. When activated kills the domain. '''
-
     def __init__(self, vm, icon_cache):
-        super().__init__()
-        self.vm = vm
+        super().__init__(vm, icon_cache, 'kill', _('Kill'))
 
-        img = Gtk.Image.new_from_pixbuf(icon_cache.get_icon('kill'))
-
-        self.set_image(img)
-        self.set_label(_('Kill'))
-
-        self.connect('activate', self.perform_kill)
-
-    def perform_kill(self, *_args, **_kwargs):
+    def perform_action(self, *_args, **_kwargs):
         try:
             self.vm.kill()
         except exc.QubesException as ex:
@@ -204,21 +195,12 @@ class KillItem(Gtk.ImageMenuItem):
                        "down qube {0}:\n{1}").format(self.vm.name, str(ex)))
 
 
-class PreferencesItem(Gtk.ImageMenuItem):
+class PreferencesItem(VMActionMenuItem):
     ''' Preferences menu Item. When activated shows preferences dialog '''
-
     def __init__(self, vm, icon_cache):
-        super().__init__()
-        self.vm = vm
+        super().__init__(vm, icon_cache, 'preferences', _('Settings'))
 
-        img = Gtk.Image.new_from_pixbuf(icon_cache.get_icon('preferences'))
-
-        self.set_image(img)
-        self.set_label(_('Settings'))
-
-        self.connect('activate', self.launch_preferences_dialog)
-
-    def launch_preferences_dialog(self, _item):
+    def perform_action(self):
         # pylint: disable=consider-using-with
         subprocess.Popen(['qubes-vm-settings', self.vm.name])
 
@@ -301,9 +283,9 @@ class StartedMenu(Gtk.Menu):
         self.add(RunTerminalItem(self.vm, icon_cache))
         self.add(PreferencesItem(self.vm, icon_cache))
         self.add(PauseItem(self.vm, icon_cache))
-        self.add(ShutdownItem(self.vm, self.app, icon_cache))
+        self.add(ShutdownItem(self.vm, icon_cache))
         if self.vm.klass != 'DispVM' or not self.vm.auto_cleanup:
-            self.add(RestartItem(self.vm, self.app, icon_cache))
+            self.add(RestartItem(self.vm, icon_cache))
 
         self.show_all()
 
@@ -553,8 +535,8 @@ class DomainTray(Gtk.Application):
 
         self.stats_dispatcher.add_handler('vm-stats', self.update_stats)
 
-    def show_menu(self, _unused, _event):
-        self.tray_menu.popup_at_pointer(None)  # None means current event
+    def show_menu(self, _unused, event):
+        self.tray_menu.popup_at_pointer(event)  # None means current event
 
     def emit_notification(self, vm, event, **kwargs):
         notification = Gio.Notification.new(_(

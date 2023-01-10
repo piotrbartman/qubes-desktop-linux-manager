@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position,import-error
 
-import re
 import time
 import threading
 import subprocess
@@ -15,6 +14,7 @@ import gi  # isort:skip
 
 from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, \
     appviewer_lock, DATA, FROM, XEVENT
+from qubes_config.global_config.vm_flowbox import VMFlowboxHandler
 
 gi.require_version('Gtk', '3.0')  # isort:skip
 from gi.repository import Gtk, Gdk, GObject, Gio, GLib, GdkPixbuf  # isort:skip
@@ -30,7 +30,7 @@ locale.textdomain('desktop-linux-manager')
 
 
 class Settings:
-    def __init__(self, builder):
+    def __init__(self, builder, qapp):
         self.builder = builder
         self.settings_window = self.builder.get_object("settings_window")
         self.settings_window.connect("delete-event", self.close_window)
@@ -40,6 +40,10 @@ class Settings:
         self.save_button = self.builder.get_object("button_settings_save")
         self.save_button.connect(
             "clicked", lambda _: self.settings_window.close())
+        self.available_vms = []
+        # self.enable_some_handler = VMFlowboxHandler(
+        #     builder, qapp, "name",
+        #     [], lambda vm: vm in self.available_vms)
 
     def show(self):
         self.settings_window.show_all()
@@ -70,7 +74,7 @@ class QubesUpdater(Gtk.Application):
             __name__, 'updater.glade'))
 
         self.main_window = self.builder.get_object("main_window")
-        self.settings = Settings(self.builder)
+        self.settings = Settings(self.builder, self.qapp)
 
         self.header_label = self.builder.get_object("header_label")
         self.button_settings = self.builder.get_object("button_settings")

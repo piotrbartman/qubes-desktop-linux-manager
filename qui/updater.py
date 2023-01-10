@@ -15,6 +15,7 @@ import gi  # isort:skip
 from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, \
     appviewer_lock, DATA, FROM, XEVENT
 from qubes_config.global_config.vm_flowbox import VMFlowboxHandler
+from qui.updater_settings import Settings
 
 gi.require_version('Gtk', '3.0')  # isort:skip
 from gi.repository import Gtk, Gdk, GObject, Gio, GLib, GdkPixbuf  # isort:skip
@@ -27,30 +28,6 @@ import locale
 from locale import gettext as _
 locale.bindtextdomain("desktop-linux-manager", "/usr/locales/")
 locale.textdomain('desktop-linux-manager')
-
-
-class Settings:
-    def __init__(self, builder, qapp):
-        self.builder = builder
-        self.settings_window = self.builder.get_object("settings_window")
-        self.settings_window.connect("delete-event", self.close_window)
-        self.cancel_button = self.builder.get_object("button_settings_cancel")
-        self.cancel_button.connect(
-            "clicked", lambda _: self.settings_window.close())
-        self.save_button = self.builder.get_object("button_settings_save")
-        self.save_button.connect(
-            "clicked", lambda _: self.settings_window.close())
-        self.available_vms = []
-        # self.enable_some_handler = VMFlowboxHandler(
-        #     builder, qapp, "name",
-        #     [], lambda vm: vm in self.available_vms)
-
-    def show(self):
-        self.settings_window.show_all()
-
-    def close_window(self, _emitter, _):
-        self.settings_window.hide()
-        return True
 
 
 class QubesUpdater(Gtk.Application):
@@ -74,9 +51,10 @@ class QubesUpdater(Gtk.Application):
             __name__, 'updater.glade'))
 
         self.main_window = self.builder.get_object("main_window")
-        self.settings = Settings(self.builder, self.qapp)
+        self.settings = Settings(self.main_window, self.qapp)
 
         self.header_label = self.builder.get_object("header_label")
+        self.button_settings = self.builder.get_object("button_settings")
         self.button_settings = self.builder.get_object("button_settings")
         self.button_settings.connect("clicked", self.open_settings_window)
         settings_pixbuf = load_icon_at_gtk_size(
@@ -391,6 +369,7 @@ class QubesUpdater(Gtk.Application):
         for vm in self.qapp.domains:
             if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM':
                 qube_info = QubeUpdateRow(vm, bool(vm.name in to_update))
+                self.settings.available_vms.append(vm)
                 self.list_store.append(qube_info.qube_row)
 
         return result

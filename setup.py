@@ -58,7 +58,7 @@ setuptools.setup(name='qui',
               'qubes-global-config = qubes_config.global_config.global_config:main'
           ]
       },
-      package_data={'qui': ["updater.glade"],
+      package_data={'qui': ["updater.glade", "updater_settings.glade"],
                     'qubes_config': ["new_qube.glade",
                                      "global_config.glade",
                                      "qubes-new-qube-base.css",

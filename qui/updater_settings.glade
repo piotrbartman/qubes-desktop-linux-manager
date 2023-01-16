@@ -40,22 +40,50 @@
                     <property name="orientation">vertical</property>
                     <property name="baseline-position">top</property>
                     <child>
-                      <object class="GtkBox" id="list_settings_page">
+                      <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="vexpand">True</property>
-                        <property name="orientation">vertical</property>
+                        <property name="halign">start</property>
+                        <property name="valign">start</property>
+                        <property name="margin-top">10</property>
+                        <property name="hexpand">True</property>
+                        <property name="use-markup">True</property>
+                        <property name="label" translatable="yes">Additional Update Check</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="wrap">True</property>
+                        <property name="xalign">0</property>
+                        <property name="margin-top">10</property>
+                        <property name="label" translatable="yes">Qubes OS automatically checks for updates only for running qubes and their templates. Updates can also become available for other qubes; therefore, the updater will attempt to update qubes after some time has passed without checking for updates.</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="vexpand">False</property>
+                        <property name="orientation">horizontal</property>
                         <property name="baseline-position">top</property>
                         <child>
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
-                            <property name="valign">start</property>
-                            <property name="margin-top">10</property>
-                            <property name="hexpand">True</property>
-                            <property name="use-markup">True</property>
-                            <property name="label" translatable="yes">Update Check</property>
+                            <property name="label" translatable="yes">Attempt to update qubes after</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -64,70 +92,18 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel">
+                          <object class="GtkSpinButton" id="days_without_update">
                             <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="wrap">True</property>
-                            <property name="xalign">0</property>
-                            <property name="margin-top">10</property>
-                            <property name="label" translatable="yes">Qubes OS checks for updates only for running qubes (in case of templates, if any qube based on that template is running). However, a template may still have updates available, even if there was no chance to check for updates.</property>
+                            <property name="can-focus">True</property>
+                            <property name="halign">start</property>
+                            <property name="margin-start">3</property>
+                            <property name="margin-end">3</property>
+                            <property name="value">7</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
-                            <property name="fill">True</property>
+                            <property name="fill">False</property>
                             <property name="position">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkBox" id="list_settings_page_header">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="vexpand">False</property>
-                            <property name="orientation">horizontal</property>
-                            <property name="baseline-position">top</property>
-                            <child>
-                              <object class="GtkLabel">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="halign">start</property>
-                                <property name="label" translatable="yes">Attempt to update qubes after</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkSpinButton" id="days_without_update">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="halign">start</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLabel">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="halign">start</property>
-                                <property name="label" translatable="yes"> days without checking for updates.</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">2</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">2</property>
                           </packing>
                         </child>
                         <child>
@@ -135,35 +111,125 @@
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
-                            <property name="valign">start</property>
-                            <property name="margin-top">10</property>
-                            <property name="hexpand">True</property>
-                            <property name="use-markup">True</property>
-                            <property name="label" translatable="yes">Restart after Update</property>
+                            <property name="label" translatable="yes"> days without checking for updates.</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">3</property>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="valign">start</property>
+                        <property name="margin-top">10</property>
+                        <property name="hexpand">True</property>
+                        <property name="use-markup">True</property>
+                        <property name="label" translatable="yes">Restart after Update</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">3</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="wrap">True</property>
+                        <property name="xalign">0</property>
+                        <property name="margin-top">10</property>
+                        <property name="label" translatable="yes">Qubes that are based on templates need to be restarted after update.</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">4</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="settings_restart_system">
+                        <property name="label" translatable="yes">Restart all _system qubes after update by default</property>
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="receives-default">False</property>
+                        <property name="use-underline">True</property>
+                        <property name="draw-indicator">True</property>
+                        <property name="margin-top">10</property>
+                        <property name="halign">start</property>
+                        <property name="valign">start</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">5</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="settings_restart_other">
+                        <property name="label" translatable="yes">Restart _other qubes after update if needed</property>
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="receives-default">False</property>
+                        <property name="use-underline">True</property>
+                        <property name="draw-indicator">True</property>
+                        <property name="margin-top">10</property>
+                        <property name="halign">start</property>
+                        <property name="valign">start</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">6</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkBox" id="restart_exceptions_page">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="vexpand">False</property>
+                        <property name="orientation">vertical</property>
+                        <property name="baseline-position">top</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="margin-top">10</property>
+                            <property name="hexpand">True</property>
+                            <property name="use-markup">True</property>
+                            <property name="label" translatable="yes">Exclude the following qubes from automatic updates:</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkBox" id="list_settings_page_restart">
-                            <property name="visible">True</property>
+                          <object class="GtkBox" id="restart_exceptions_box">
+                            <property name="visible">False</property>
                             <property name="can-focus">False</property>
-                            <property name="vexpand">False</property>
-                            <property name="orientation">horizontal</property>
-                            <property name="baseline-position">top</property>
+                            <property name="margin-start">30</property>
+                            <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkCheckButton" id="settings_restart">
+                              <object class="GtkFlowBox" id="restart_exceptions_flowbox">
                                 <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">False</property>
-                                <property name="use-underline">True</property>
-                                <property name="draw-indicator">True</property>
-                                <property name="margin-top">10</property>
-                                <property name="halign">start</property>
-                                <property name="valign">start</property>
+                                <property name="can-focus">False</property>
+                                <style>
+                                  <class name="flowbox_container"/>
+                                </style>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -172,23 +238,17 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkBox" id="list_settings_page_restart_left">
-                                <property name="visible">True</property>
+                              <object class="GtkBox" id="restart_exceptions_add_box">
                                 <property name="can-focus">False</property>
-                                <property name="vexpand">False</property>
-                                <property name="orientation">vertical</property>
-                                <property name="baseline-position">top</property>
+                                <property name="spacing">10</property>
                                 <child>
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="halign">start</property>
-                                    <property name="valign">start</property>
-                                    <property name="margin-top">10</property>
-                                    <property name="hexpand">True</property>
-                                    <property name="use-markup">True</property>
-                                    <property name="use-underline">True</property>
-                                    <property name="label" translatable="yes">Restart all _system qubes after update by default</property>
+                                    <property name="label" translatable="yes">Add exception:</property>
+                                    <attributes>
+                                      <attribute name="weight" value="bold"/>
+                                    </attributes>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -197,70 +257,102 @@
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkCheckButton" id="restart_exceptions_check">
+                                  <object class="GtkComboBox" id="restart_exceptions_qube_combo">
                                     <property name="visible">True</property>
-                                    <property name="can-focus">True</property>
-                                    <property name="receives-default">False</property>
-                                    <property name="draw-indicator">True</property>
-                                    <child>
-                                      <object class="GtkBox">
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">False</property>
-                                        <property name="orientation">vertical</property>
-                                        <child>
-                                          <object class="GtkLabel" id="restart_check_exception_label">
-                                            <property name="visible">True</property>
-                                            <property name="can-focus">False</property>
-                                            <property name="use-markup">True</property>
-                                            <property name="use-underline">True</property>
-                                            <property name="label" translatable="yes">Restart _other qubes after update if needed</property>
-                                          </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="fill">True</property>
-                                            <property name="position">0</property>
-                                          </packing>
-                                        </child>
-                                        <child>
-                                          <object class="GtkLabel">
-                                            <property name="visible">True</property>
-                                            <property name="can-focus">False</property>
-                                            <property name="halign">start</property>
-                                            <property name="margin-top">10</property>
-                                            <property name="hexpand">True</property>
-                                            <property name="use-markup">True</property>
-                                            <property name="label" translatable="yes">Exclude the following qubes from automatic updates:</property>
-                                          </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="fill">True</property>
-                                            <property name="position">1</property>
-                                          </packing>
-                                        </child>
+                                    <property name="can-focus">False</property>
+                                    <property name="has-entry">True</property>
+                                    <child internal-child="entry">
+                                      <object class="GtkEntry">
+                                        <property name="can-focus">True</property>
                                       </object>
                                     </child>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkButton" id="restart_exceptions_add_cancel">
+                                    <property name="label" translatable="yes">CANCEL</property>
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">True</property>
+                                    <property name="relief">none</property>
                                     <style>
-                                      <class name="enable_opts"/>
+                                      <class name="button_cancel"/>
+                                      <class name="flat_button"/>
+                                      <class name="flat"/>
                                     </style>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
                                     <property name="fill">True</property>
-                                    <property name="position">13</property>
+                                    <property name="position">2</property>
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkBox" id="restart_exceptions_box">
-                                    <property name="visible">False</property>
+                                  <object class="GtkButton" id="restart_exceptions_add_confirm">
+                                    <property name="label" translatable="yes">  ADD  </property>
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">True</property>
+                                    <property name="receives-default">True</property>
+                                    <property name="relief">none</property>
+                                    <style>
+                                      <class name="button_save"/>
+                                      <class name="flat_button"/>
+                                      <class name="flat"/>
+                                    </style>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">3</property>
+                                  </packing>
+                                </child>
+                                <style>
+                                  <class name="edited_row"/>
+                                </style>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkSeparator">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="valign">center</property>
+                                <property name="hexpand">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">2</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkButton" id="restart_exceptions_add_button">
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                                <property name="halign">start</property>
+                                <property name="relief">none</property>
+                                <child>
+                                  <object class="GtkBox">
+                                    <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="margin-start">30</property>
-                                    <property name="orientation">vertical</property>
+                                    <property name="tooltip-text" translatable="yes">Key qubes store your GPG keys for use with other qubes.</property>
                                     <child>
-                                      <object class="GtkFlowBox" id="restart_exceptions_flowbox">
+                                      <object class="GtkLabel">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
+                                        <property name="label" translatable="yes">+ADD</property>
                                         <style>
-                                          <class name="flowbox_container"/>
+                                          <class name="add_label"/>
                                         </style>
                                       </object>
                                       <packing>
@@ -270,81 +362,13 @@
                                       </packing>
                                     </child>
                                     <child>
-                                      <object class="GtkBox" id="restart_exceptions_add_box">
+                                      <object class="GtkLabel">
+                                        <property name="visible">True</property>
                                         <property name="can-focus">False</property>
-                                        <property name="spacing">10</property>
-                                        <child>
-                                          <object class="GtkLabel">
-                                            <property name="visible">True</property>
-                                            <property name="can-focus">False</property>
-                                            <property name="label" translatable="yes">Add exception:</property>
-                                            <attributes>
-                                              <attribute name="weight" value="bold"/>
-                                            </attributes>
-                                          </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="fill">True</property>
-                                            <property name="position">0</property>
-                                          </packing>
-                                        </child>
-                                        <child>
-                                          <object class="GtkComboBox" id="restart_exceptions_qube_combo">
-                                            <property name="visible">True</property>
-                                            <property name="can-focus">False</property>
-                                            <property name="has-entry">True</property>
-                                            <child internal-child="entry">
-                                              <object class="GtkEntry">
-                                                <property name="can-focus">True</property>
-                                              </object>
-                                            </child>
-                                          </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="fill">True</property>
-                                            <property name="position">1</property>
-                                          </packing>
-                                        </child>
-                                        <child>
-                                          <object class="GtkButton" id="restart_exceptions_add_cancel">
-                                            <property name="label" translatable="yes">CANCEL</property>
-                                            <property name="visible">True</property>
-                                            <property name="can-focus">True</property>
-                                            <property name="receives-default">True</property>
-                                            <property name="relief">none</property>
-                                            <style>
-                                              <class name="button_cancel"/>
-                                              <class name="flat_button"/>
-                                              <class name="flat"/>
-                                            </style>
-                                          </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="fill">True</property>
-                                            <property name="position">2</property>
-                                          </packing>
-                                        </child>
-                                        <child>
-                                          <object class="GtkButton" id="restart_exceptions_add_confirm">
-                                            <property name="label" translatable="yes">  ADD  </property>
-                                            <property name="visible">True</property>
-                                            <property name="can-focus">True</property>
-                                            <property name="receives-default">True</property>
-                                            <property name="relief">none</property>
-                                            <style>
-                                              <class name="button_save"/>
-                                              <class name="flat_button"/>
-                                              <class name="flat"/>
-                                            </style>
-                                          </object>
-                                          <packing>
-                                            <property name="expand">False</property>
-                                            <property name="fill">True</property>
-                                            <property name="position">3</property>
-                                          </packing>
-                                        </child>
+                                        <property name="xpad">5</property>
+                                        <property name="label" translatable="yes">exception</property>
                                         <style>
-                                          <class name="edited_row"/>
+                                          <class name="explanation_text"/>
                                         </style>
                                       </object>
                                       <packing>
@@ -353,154 +377,104 @@
                                         <property name="position">1</property>
                                       </packing>
                                     </child>
-                                    <child>
-                                      <object class="GtkSeparator">
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">False</property>
-                                        <property name="valign">center</property>
-                                        <property name="hexpand">True</property>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">2</property>
-                                      </packing>
-                                    </child>
-                                    <child>
-                                      <object class="GtkButton" id="restart_exceptions_add_button">
-                                        <property name="visible">True</property>
-                                        <property name="can-focus">True</property>
-                                        <property name="receives-default">True</property>
-                                        <property name="halign">start</property>
-                                        <property name="relief">none</property>
-                                        <child>
-                                          <object class="GtkBox">
-                                            <property name="visible">True</property>
-                                            <property name="can-focus">False</property>
-                                            <property name="tooltip-text" translatable="yes">Key qubes store your GPG keys for use with other qubes.</property>
-                                            <child>
-                                              <object class="GtkLabel">
-                                                <property name="visible">True</property>
-                                                <property name="can-focus">False</property>
-                                                <property name="label" translatable="yes">+ADD</property>
-                                                <style>
-                                                  <class name="add_label"/>
-                                                </style>
-                                              </object>
-                                              <packing>
-                                                <property name="expand">False</property>
-                                                <property name="fill">True</property>
-                                                <property name="position">0</property>
-                                              </packing>
-                                            </child>
-                                            <child>
-                                              <object class="GtkLabel">
-                                                <property name="visible">True</property>
-                                                <property name="can-focus">False</property>
-                                                <property name="xpad">5</property>
-                                                <property name="label" translatable="yes">exception</property>
-                                                <style>
-                                                  <class name="explanation_text"/>
-                                                </style>
-                                              </object>
-                                              <packing>
-                                                <property name="expand">False</property>
-                                                <property name="fill">True</property>
-                                                <property name="position">1</property>
-                                              </packing>
-                                            </child>
-                                          </object>
-                                        </child>
-                                        <style>
-                                          <class name="flat"/>
-                                        </style>
-                                      </object>
-                                      <packing>
-                                        <property name="expand">False</property>
-                                        <property name="fill">True</property>
-                                        <property name="position">3</property>
-                                      </packing>
-                                    </child>
                                   </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">14</property>
-                                  </packing>
                                 </child>
+                                <style>
+                                  <class name="flat"/>
+                                </style>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
                                 <property name="fill">True</property>
-                                <property name="position">1</property>
+                                <property name="position">3</property>
                               </packing>
                             </child>
                           </object>
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">4</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="halign">start</property>
-                            <property name="valign">start</property>
-                            <property name="margin-top">10</property>
-                            <property name="hexpand">True</property>
-                            <property name="use-markup">True</property>
-                            <property name="label" translatable="yes">Simultaneous Updates</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">5</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkBox" id="list_settings_page_limit">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="vexpand">False</property>
-                            <property name="orientation">horizontal</property>
-                            <property name="baseline-position">top</property>
-                            <child>
-                              <object class="GtkCheckButton" id="settings_limit">
-                                <property name="label" translatable="yes">_Limit how many qubes can update at the same time</property>
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="receives-default">False</property>
-                                <property name="use-underline">True</property>
-                                <property name="draw-indicator">True</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkSpinButton" id="max_concurrency">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="halign">start</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">6</property>
+                            <property name="position">2</property>
                           </packing>
                         </child>
                       </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">7</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="valign">start</property>
+                        <property name="margin-top">10</property>
+                        <property name="hexpand">True</property>
+                        <property name="use-markup">True</property>
+                        <property name="label" translatable="yes">Simultaneous Updates</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">8</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="wrap">True</property>
+                        <property name="xalign">0</property>
+                        <property name="margin-top">10</property>
+                        <property name="label" translatable="yes">By default, all qubes update at the same time. If this is too demanding for your system or internet connection, you can limit the number of simultaneous updates.</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">9</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkBox" id="list_settings_page_limit">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="vexpand">False</property>
+                        <property name="orientation">horizontal</property>
+                        <property name="baseline-position">top</property>
+                        <child>
+                          <object class="GtkCheckButton" id="settings_limit">
+                            <property name="label" translatable="yes">_Limit how many qubes can update at the same time</property>
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                            <property name="receives-default">False</property>
+                            <property name="use-underline">True</property>
+                            <property name="draw-indicator">True</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkSpinButton" id="max_concurrency">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">10</property>
+                      </packing>
                     </child>
                   </object>
                 </child>

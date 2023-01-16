@@ -560,3 +560,12 @@ msgstr "Aktualizacja zakończona"
 
 msgid "Details for"
 msgstr "Szczegóły dla"
+
+msgid "updated successfully."
+msgstr "zaktualizowano pomyślnie."
+
+msgid "attempted to update but found no updates."
+msgstr "próbowano zaktualizować, ale nie znaleziono aktualizacji."
+
+msgid "failed to update."
+msgstr "nie udało się zaktualizować."

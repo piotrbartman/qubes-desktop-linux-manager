@@ -27,6 +27,14 @@
       <column type="GObject"/>
       <!-- column-name gint -->
       <column type="gint"/>
+      <!-- column-name gchararray -->
+      <column type="PyObject"/>
+    </columns>
+  </object>
+  <object class="GtkListStore" id="progress_store">
+    <columns>
+      <!-- column-name gint -->
+      <column type="gint"/>
     </columns>
   </object>
   <object class="GtkCheckButton" id="restart_checkbox_header">
@@ -259,12 +267,24 @@ CAUTION: this may cause data loss if you are currently running programs in those
                 <property name="vexpand">True</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkProgressBar" id="progressbar">
+                  <object class="GtkTreeView" id="progressbar">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="hexpand">True</property>
                     <property name="vexpand">False</property>
-                    <property name="show-text">True</property>
+                    <property name="sensitive">False</property>
+                    <property name="model">progress_store</property>
+                    <property name="headers-visible">False</property>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="progressbar_internal">
+                        <child>
+                          <object class="GtkCellRendererProgress" id="progressbar_renderer"/>
+                          <attributes>
+                            <attribute name="value">0</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -477,9 +497,6 @@ CAUTION: this may cause data loss if you are currently running programs in those
                     <property name="valign">start</property>
                     <property name="margin-top">10</property>
                     <property name="margin-bottom">10</property>
-                    <property name="label" translatable="yes">first line
-second line
-third line</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -531,12 +548,9 @@ third line</property>
                           <object class="GtkTreeViewColumn" id="summary_status_column">
                             <property name="title">Status</property>
                             <property name="expand">True</property>
-                            <property name="sort-column-id">2</property>
+                            <property name="sort-column-id">8</property>
                             <child>
-                              <object class="GtkCellRendererText" id="restart_status_renderer"/>
-                              <attributes>
-                                <attribute name="text">2</attribute>
-                              </attributes>
+                              <object class="GtkCellRendererText" id="summary_status_renderer"/>
                             </child>
                           </object>
                         </child>

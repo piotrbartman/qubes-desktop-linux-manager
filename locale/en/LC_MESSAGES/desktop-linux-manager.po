@@ -536,3 +536,12 @@ msgstr ""
 
 msgid "Details for"
 msgstr ""
+
+msgid "updated successfully."
+msgstr ""
+
+msgid "attempted to update but found no updates."
+msgstr ""
+
+msgid "failed to update."
+msgstr ""

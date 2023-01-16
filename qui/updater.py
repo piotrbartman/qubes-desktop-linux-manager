@@ -26,6 +26,7 @@ from qubesadmin import exc
 # in most cases gettext is better, but it cannot handle Gtk.Builder/glade files
 import locale
 from locale import gettext as _
+
 locale.bindtextdomain("desktop-linux-manager", "/usr/locales/")
 locale.textdomain('desktop-linux-manager')
 
@@ -107,8 +108,8 @@ class QubesUpdater(Gtk.Application):
         restart_toggle_renderer.connect(
             "toggled", self.on_restart_checkbox_toggled)
 
-        headers = [(3, "available"),
-                   (4, "check"), (5, "update")]
+        headers = [(3, "available"), (4, "check"), (5, "update"),
+                   (8, "summary_status")]
 
         def cell_data_func(_column, cell, model, it, data):
             # Get the object from the model
@@ -120,7 +121,8 @@ class QubesUpdater(Gtk.Application):
             renderer = self.builder.get_object(name + "_renderer")
             column = self.builder.get_object(name + "_column")
             column.set_cell_data_func(renderer, cell_data_func, col)
-            renderer.props.xalign = 0.5
+            if name != "summary_status":
+                renderer.props.xalign = 0.5
 
         progress_list = self.builder.get_object("progress_list")
         progress_list.connect("row-activated", self.row_selected)
@@ -129,6 +131,7 @@ class QubesUpdater(Gtk.Application):
         renderer = CellRendererProgressWithResult()
         progress_column.pack_start(renderer, True)
         progress_column.add_attribute(renderer, "value", 7)
+        progress_column.add_attribute(renderer, "status", 8)
         self.qube_details = self.builder.get_object("qube_details")
         self.details_label = self.builder.get_object("details_label")
         self.qube_icon = self.builder.get_object("qube_icon")
@@ -157,7 +160,9 @@ class QubesUpdater(Gtk.Application):
         self.progress_scrolled_window = self.builder.get_object(
             "progress_textview")
         self.progressbar = self.builder.get_object("progressbar")
-        self.progressbar.set_fraction(0)
+        progress_store = self.progressbar.get_model()
+        progress_store.append([0])
+        self.total_progress = progress_store[-1]
 
         self.load_css()
 
@@ -170,12 +175,13 @@ class QubesUpdater(Gtk.Application):
         self.block = True
         if path is not None:
             it = self.list_store.get_iter(path)
-            self.list_store[it][0] = not self.list_store[it][0]
+            self.list_store[it][6].selected = \
+                not self.list_store[it][6].selected
             selected = 0
-            for vm_row in self.list_store:
-                if vm_row[0]:
+            for vm_row in self.list_store_wrapped:
+                if vm_row.selected:
                     selected += 1
-            if selected == len(self.list_store):
+            if selected == len(self.list_store_wrapped):
                 self.checkbox_column_header = Select.ALL
                 self.checkbox_column_button.set_inconsistent(False)
                 self.checkbox_column_button.set_active(True)
@@ -214,11 +220,11 @@ class QubesUpdater(Gtk.Application):
             self.checkbox_column_button.set_active(False)
             self.next_button.set_sensitive(False)
             allowed = ()
-        for row in self.list_store:
-            if row[3].value in allowed:
-                row[0] = True
+        for row in self.list_store_wrapped:
+            if row.updates_available.value in allowed:
+                row.selected = True
             else:
-                row[0] = False
+                row.selected = False
         self.block = False
 
     def on_restart_checkbox_toggled(self, _emitter, path):
@@ -243,7 +249,8 @@ class QubesUpdater(Gtk.Application):
             else:
                 self.restart_checkbox_column_header = Select.SELECTED
                 self.retart_checkbox_column_button.set_inconsistent(True)
-                self.next_button.set_label("Finish and restart some qubes")  # TODO
+                self.next_button.set_label(
+                    "Finish and restart some qubes")  # TODO
         self.block = False
 
     def on_restart_header_toggled(self, _emitter):
@@ -324,6 +331,7 @@ class QubesUpdater(Gtk.Application):
     def populate_vm_list(self):
         result = False  # whether at least one VM has updates available
         self.list_store = self.vm_list.get_model()
+        self.list_store_wrapped = []
 
         def sort_func(model, iter1, iter2, data):
             # Get the values at the two iter indices
@@ -337,10 +345,12 @@ class QubesUpdater(Gtk.Application):
                 return 0
             else:
                 return 1
+
         self.list_store.set_sort_func(3, sort_func, 3)
         self.list_store.set_sort_func(4, sort_func, 4)
         self.list_store.set_sort_func(5, sort_func, 5)
         self.list_store.set_sort_func(6, sort_func, 6)
+        self.list_store.set_sort_func(8, sort_func, 8)
         for vm in self.qapp.domains:
             if vm.klass == 'AdminVM':
                 try:
@@ -348,16 +358,16 @@ class QubesUpdater(Gtk.Application):
                 except exc.QubesDaemonCommunicationError:
                     state = False
                 result = result or state
-                qube_info = QubeUpdateRow(vm, state)
-                self.list_store.append(qube_info.qube_row)
+                qube_row = QubeUpdateRow(self.list_store, vm, state)
+                self.list_store_wrapped.append(qube_row)
 
                 # TODO
                 devel_deb = self.qapp.domains['devel-debian']
-                qube_info = QubeUpdateRow(devel_deb, True)
-                self.list_store.append(qube_info.qube_row)
+                qube_row = QubeUpdateRow(self.list_store, devel_deb, True)
+                self.list_store_wrapped.append(qube_row)
                 devel_fed = self.qapp.domains['devel-fedora']
-                qube_info = QubeUpdateRow(devel_fed, True)
-                self.list_store.append(qube_info.qube_row)
+                qube_row = QubeUpdateRow(self.list_store, devel_fed, True)
+                self.list_store_wrapped.append(qube_row)
                 # END TODO
 
         output = subprocess.check_output(
@@ -368,9 +378,10 @@ class QubesUpdater(Gtk.Application):
 
         for vm in self.qapp.domains:
             if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM':
-                qube_info = QubeUpdateRow(vm, bool(vm.name in to_update))
+                qube_row = QubeUpdateRow(
+                    self.list_store, vm, bool(vm.name in to_update))
                 self.settings.available_vms.append(vm)
-                self.list_store.append(qube_info.qube_row)
+                self.list_store_wrapped.append(qube_row)
 
         return result
 
@@ -382,9 +393,13 @@ class QubesUpdater(Gtk.Application):
             self.progress_scrolled_window.hide()
             self.stack.set_visible_child(self.progress_page)
 
-            for row in self.list_store:
-                if not row[0]:
-                    self.list_store.remove(row.iter)
+            selected_rows = [row for row in self.list_store_wrapped
+                             if row.selected]
+            to_remove = [row for row in self.list_store_wrapped
+                         if not row.selected]
+            for elem in to_remove:
+                elem.delete()
+            self.list_store_wrapped = selected_rows
 
             self.next_button.set_sensitive(False)
             self.next_button.set_label(_("_Next"))
@@ -393,10 +408,18 @@ class QubesUpdater(Gtk.Application):
             self.header_label.set_halign(Gtk.Align.CENTER)
 
             # pylint: disable=attribute-defined-outside-init
+            # TODO
             self.update_thread = threading.Thread(target=self.perform_update)
             self.update_thread.start()
 
         elif self.stack.get_visible_child() == self.progress_page:
+            # summary = f"{qube_updated_num} qube{qube_updated_plural} " + \
+            #           _("updated successfully.") + \
+            #           f"{qube_no_updates_num} qube{qube_no_updates_plural} " + \
+            #           _("attempted to update but found no updates.") + \
+            #           f"{qube_failed_num} qube{qube_failed_plural} " + \
+            #           _("failed to update.")
+            # self.label_summary.set_label(summary)
             self.stack.set_visible_child(self.restart_page)
             self.next_button.set_label(_("_Finish"))
         elif self.stack.get_visible_child() == self.restart_page:
@@ -405,9 +428,9 @@ class QubesUpdater(Gtk.Application):
 
     def row_selected(self, _view, path, _col):
         self.details_label.set_text(_("Details for") + "  ")
-        self.active_row = self.list_store[path][6]
-        self.qube_label.set_text(" " + self.active_row.qube.name)
-        self.qube_icon.set_from_pixbuf(self.list_store[path][1])
+        self.active_row = self.list_store_wrapped[path.get_indices()[0]]
+        self.qube_label.set_text(" " + self.active_row.name)
+        self.qube_icon.set_from_pixbuf(self.active_row.icon)
         self.update_buffer()
         self.qube_icon.set_visible(True)
         self.qube_label.set_visible(True)
@@ -424,10 +447,10 @@ class QubesUpdater(Gtk.Application):
             buffer_.set_text(self.active_row.buffer)
 
     def perform_update(self):
-        admin = [row for row in self.list_store
-                 if row[0] and row[6].qube.klass == 'AdminVM']
-        templs = [row for row in self.list_store
-                  if row[0] and row[6].qube.klass != 'AdminVM']
+        admin = [row for row in self.list_store_wrapped
+                 if row.selected and row.qube.klass == 'AdminVM']
+        templs = [row for row in self.list_store_wrapped
+                  if row.selected and row.qube.klass != 'AdminVM']
 
         # if admin:
         #     if self.exit_triggered:
@@ -456,22 +479,21 @@ class QubesUpdater(Gtk.Application):
         if templs:
             if self.exit_triggered:
                 for row in templs:
-                    pass # TODO X
-                    # GObject.idle_add(row.set_status, 'failure')
-                    # GObject.idle_add(
-                    #     self.append_text_view,
-                    #     _("Canceled update for {}\n").format(row.vm.name))
+                    GObject.idle_add(row.set_status, "Cancelled")
+                    GObject.idle_add(
+                        row.append_text_view,
+                        _("Canceled update for {}\n").format(row.vm.name))
 
             for row in templs:
                 GObject.idle_add(
-                    row[6].append_text_view,
-                    _("Updating {}\n").format(row[6].qube.name))
-                # GObject.idle_add(row.set_status, 'in-progress')
+                    row.append_text_view,
+                    _("Updating {}\n").format(row.name))
+                GObject.idle_add(row.set_status, "In progress")
             self.update_buffer()
 
             try:
-                targets = ",".join((row[6].qube.name for row in templs))
-                rows = {row[6].qube.name: row for row in templs}
+                targets = ",".join((row.name for row in templs))
+                rows = {row.name: row for row in templs}
                 proc = subprocess.Popen(
                     ['sudo', 'qubes-vm-update', '--show-output',
                      '--just-print-progress', '--targets', targets],
@@ -486,19 +508,26 @@ class QubesUpdater(Gtk.Application):
                         except ValueError:
                             continue
 
-                        # if progress == 100.:
-                        #     GObject.idle_add(rows[name].set_status, 'success')
-
-                        GObject.idle_add(update, rows[name], progress)
-                        total_progress = sum(
-                            row[7] for row in rows.values())/len(rows)
+                        if progress == 100.:
+                            GObject.idle_add(rows[name].set_status, 0)
 
                         GObject.idle_add(
-                            self.progressbar.set_fraction, total_progress/100)
+                            rows[name].set_update_progress, progress)
+                        total_progress = sum(
+                            row.get_update_progress()
+                            for row in rows.values()) / len(rows)
+
+                        GObject.idle_add(
+                            self.set_total_progress, total_progress)
                     else:
                         break
                 proc.stderr.close()
-                GObject.idle_add(self.progressbar.set_fraction, 1)
+
+                for row in rows.values():
+                    if row.get_update_progress() != 100.:
+                        GObject.idle_add(row.set_status, 1)
+
+                GObject.idle_add(self.set_total_progress, 100)
 
                 name = ""
                 for untrusted_line in iter(proc.stdout.readline, ''):
@@ -508,7 +537,7 @@ class QubesUpdater(Gtk.Application):
                         if maybe_name[:-1] in rows.keys():
                             name = maybe_name[:-1]
                         GObject.idle_add(
-                            rows[name][6].append_text_view, text)
+                            rows[name].append_text_view, text)
                     else:
                         break
                 self.update_buffer()
@@ -519,10 +548,10 @@ class QubesUpdater(Gtk.Application):
             except subprocess.CalledProcessError as ex:
                 for row in templs:
                     GObject.idle_add(
-                        row[6].append_text_view,
+                        row.append_text_view,
                         _("Error on updating {}: {}\n{}").format(
-                            row[6].qube.name, str(ex), ex.output.decode()))
-                    # GObject.idle_add(row.set_status, 'failure')
+                            row.name, str(ex), ex.output.decode()))
+                    GObject.idle_add(row.set_status, 1)
                 self.update_buffer()
 
         GObject.idle_add(self.next_button.set_sensitive, True)
@@ -560,14 +589,47 @@ class QubesUpdater(Gtk.Application):
         if self.primary:
             self.release()
 
+    def set_total_progress(self, progress):
+        self.total_progress[0] = progress
 
-def update(row, progress):
-    row[7] = progress
+
+class UpdateStatus(GObject.GObject):
+    def __init__(self, code: Optional[Union[int, str]] = None):
+        super().__init__()
+
+        if code == 0 or code == "Updated successfully":
+            self.value = "Updated successfully"
+            self.order = 0
+        elif code == -1 or code == "No updates found":
+            self.value = "No updates found"
+            self.order = 1
+        elif code == -2 or code == "Cancelled":
+            self.value = "Cancelled"
+            self.order = 2
+        elif code == -3 or code == "In progress":
+            self.value = "In progress"
+            self.order = 4
+        elif code is not None and isinstance(code, int) or code == "Error":
+            self.value = "Error"
+            self.order = 3
+        else:
+            self.value = "Undefined"
+            self.order = 5
+
+    def __str__(self):
+        return self.value
+
+    def __eq__(self, other):
+        return self.order == other.order
+
+    def __lt__(self, other):
+        return self.order < other.order
 
 
 class QubeUpdateRow(GObject.GObject):
-    def __init__(self, qube, to_update: bool):
+    def __init__(self, list_store, qube, to_update: bool):
         super().__init__()
+        self.list_store = list_store
         self.qube = qube
         updates_available = bool(qube.features.get('updates-available', False))
         if to_update and not updates_available:
@@ -575,8 +637,8 @@ class QubeUpdateRow(GObject.GObject):
         selected = updates_available is True
         last_updates_check = qube.features.get('last-updates-check', None)
         last_update = qube.features.get('last-update', None)
-        self.buffer = ""
-        self.qube_row = [
+        self.buffer: str = ""
+        qube_row = [
             selected,
             get_domain_icon(qube),
             qube.name,
@@ -584,11 +646,52 @@ class QubeUpdateRow(GObject.GObject):
             Date(last_updates_check),
             Date(last_update),
             self,
-            0
+            0,
+            UpdateStatus(),
         ]
+        self.list_store.append(qube_row)
+        self.qube_row = self.list_store[-1]
 
     def append_text_view(self, text):
         self.buffer += text
+
+    @property
+    def selected(self):
+        return self.qube_row[0]
+
+    @selected.setter
+    def selected(self, value):
+        self.qube_row[0] = value
+
+    @property
+    def icon(self):
+        return self.qube_row[1]
+
+    @property
+    def name(self):
+        return self.qube_row[2]
+
+    @property
+    def updates_available(self):
+        return self.qube_row[3]
+
+    @property
+    def last_updates_check(self):
+        return self.qube_row[4]
+
+    @property
+    def last_update(self):
+        return self.qube_row[5]
+
+    def get_update_progress(self):
+        return self.qube_row[7]
+
+    @property
+    def status(self):
+        return self.qube_row[8]
+
+    def set_status(self, status_code: int):
+        self.qube_row[8] = UpdateStatus(status_code)
 
     def __eq__(self, other):
         self_class = QubeClass[self.qube.klass]
@@ -607,6 +710,12 @@ class QubeUpdateRow(GObject.GObject):
             other_label = QubeLabel[other.qube.label.name]
             return self_label.value < other_label.value
         return self_class.value < other_class.value
+
+    def set_update_progress(self, progress):
+        self.qube_row[7] = progress
+
+    def delete(self):
+        self.list_store.remove(self.qube_row.iter)
 
 
 class QubeClass(Enum):
@@ -650,6 +759,7 @@ class SelectToRestart(Enum):
     def next(self):
         new_value = (self.value + 1) % 4
         return Select(new_value)
+
 
 class Date(GObject.GObject):
     def __init__(self, *args, **kwargs):
@@ -725,25 +835,44 @@ class UpdatesAvailable(GObject.GObject):
 class CellRendererProgressWithResult(
     Gtk.CellRendererProgress
 ):
-    def do_set_property(self, pspec, value):
-        setattr(self, pspec.name, value)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._status = None
 
-    def do_get_property(self, pspec):
-        return getattr(self, pspec.name)
+    @GObject.Property
+    def status(self):
+        return self._status
+
+    @status.setter
+    def status(self, value):
+        self._status = value
 
     def do_render(self, context, widget, background_area, cell_area, flags):
-        value = self.get_property('value')
-        if value == 100:
+        status = self.get_property('status')
+        if status.value == "Updated successfully":
             pixbuf = load_icon_at_gtk_size(
                 'qubes-ok', Gtk.IconSize.SMALL_TOOLBAR)
             Gdk.cairo_set_source_pixbuf(
                 context, pixbuf, cell_area.x, cell_area.y)
             context.paint()
-            context.move_to(cell_area.x + pixbuf.get_width() + 5, cell_area.y)
-            context.show_text("text")
+        elif status.value == "No updates found":
+            pixbuf = load_icon_at_gtk_size(
+                'qubes-ok', Gtk.IconSize.SMALL_TOOLBAR)
+            Gdk.cairo_set_source_pixbuf(
+                context, pixbuf, cell_area.x, cell_area.y)
+            context.paint()
+        elif status.value in ("Error", "Cancelled"):
+            pixbuf = load_icon_at_gtk_size(
+                'qubes-delete', Gtk.IconSize.SMALL_TOOLBAR)
+            Gdk.cairo_set_source_pixbuf(
+                context, pixbuf, cell_area.x, cell_area.y)
+            context.paint()
         else:
             Gtk.CellRendererProgress.do_render(
                 self, context, widget, background_area, cell_area, flags)
+
+
+GObject.type_register(CellRendererProgressWithResult)
 
 
 def get_domain_icon(vm):
@@ -857,7 +986,7 @@ class ProgressListBoxRow(Gtk.ListBoxRow):
 
     def update(self, progress):
         if self.prog is not None:
-            self.prog.set_fraction(progress/100)
+            self.prog.set_fraction(progress / 100)
 
 
 def main():

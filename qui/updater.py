@@ -14,7 +14,6 @@ import gi  # isort:skip
 
 from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, \
     appviewer_lock, DATA, FROM, XEVENT, load_theme
-from qubes_config.global_config.vm_flowbox import VMFlowboxHandler
 from qui.updater_settings import Settings
 
 gi.require_version('Gtk', '3.0')  # isort:skip
@@ -155,7 +154,7 @@ class QubesUpdater(Gtk.Application):
         self.next_button.connect("clicked", self.next_clicked)
 
         self.cancel_button = self.builder.get_object("button_cancel")
-        self.cancel_button.connect("clicked", self.cancel_updates)
+        self.cancel_button.connect("clicked", self.cancel_clicked)
         self.main_window.connect("delete-event", self.window_close)
         self.main_window.connect("key-press-event", self.check_escape)
 
@@ -172,6 +171,10 @@ class QubesUpdater(Gtk.Application):
         self.total_progress = progress_store[-1]
 
         self.label_summary = self.builder.get_object("label_summary")
+        self.info_how_it_works = self.builder.get_object("info_how_it_works")
+        self.info_how_it_works.set_label(
+            self.info_how_it_works.get_label().format(
+                MAYBE='<span foreground="Orange"><b>MAYBE</b></span>'))
 
         self.load_css()
 
@@ -290,6 +293,24 @@ class QubesUpdater(Gtk.Application):
         #         row[0] = False
         self.block = False
 
+    def populate_restart_list(self):
+        updated_tmpls = [row for row in self.list_store_wrapped
+                         if row.status.success
+                         and QubeClass[row.qube.klass] == QubeClass.TemplateVM]
+        possibly_changed_vms = {appvm for template in updated_tmpls
+                                 for appvm in template.qube.appvms
+                                }
+
+        for qube in possibly_changed_vms:
+            if qube.is_running():
+                label = QubeLabel[qube.label.name]
+                self.restart_list_store.append(
+                    [str(qube.name).startswith("sys-"),
+                     get_domain_icon(qube),
+                     f'<span foreground="{label.name}"><b>'
+                     + qube.name + '</b></span>',
+                     ""])
+
     def open_settings_window(self, _emitter):
         self.settings.show()
 
@@ -396,12 +417,6 @@ class QubesUpdater(Gtk.Application):
 
     def next_clicked(self, _emitter):
         if self.stack.get_visible_child() == self.list_page:
-            self.colon.hide()
-            self.progress_textview.hide()
-            self.copy_button.hide()
-            self.progress_scrolled_window.hide()
-            self.stack.set_visible_child(self.progress_page)
-
             selected_rows = [row for row in self.list_store_wrapped
                              if row.selected]
             to_remove = [row for row in self.list_store_wrapped
@@ -409,6 +424,12 @@ class QubesUpdater(Gtk.Application):
             for elem in to_remove:
                 elem.delete()
             self.list_store_wrapped = selected_rows
+
+            self.colon.hide()
+            self.progress_textview.hide()
+            self.copy_button.hide()
+            self.progress_scrolled_window.hide()
+            self.stack.set_visible_child(self.progress_page)
 
             self.next_button.set_sensitive(False)
             self.next_button.set_label(_("_Next"))
@@ -422,29 +443,59 @@ class QubesUpdater(Gtk.Application):
             self.update_thread.start()
 
         elif self.stack.get_visible_child() == self.progress_page:
-            qube_updated_num = 0  # TODO
-            qube_updated_plural = qube_updated_num != 1
-            qube_no_updates_num = 0  # TODO
-            qube_no_updates_plural = qube_no_updates_num != 1
-            qube_failed_num = 0  # TODO
-            qube_failed_plural = qube_failed_num != 1
+            qube_updated_num = len(
+                [row for row in self.list_store_wrapped
+                 if row.status.value == "Updated successfully"])
+            qube_updated_plural = "s" if qube_updated_num != 1 else ""
+            qube_no_updates_num = len(
+                [row for row in self.list_store_wrapped
+                 if row.status.value == "No updates found"])
+            qube_no_updates_plural = "s" if qube_no_updates_num != 1 else ""
+            qube_failed_num = len(
+                [row for row in self.list_store_wrapped
+                 if row.status.value in ("Error", "Cancelled")])
+            qube_failed_plural = "s" if qube_failed_num != 1 else ""
             summary = f"{qube_updated_num} qube{qube_updated_plural} " + \
                       _("updated successfully.") + "\n" \
-                      f"{qube_no_updates_num} qube{qube_no_updates_plural} " + \
+                                                   f"{qube_no_updates_num} qube{qube_no_updates_plural} " + \
                       _("attempted to update but found no updates.") + "\n" \
-                      f"{qube_failed_num} qube{qube_failed_plural} " + \
+                                                                       f"{qube_failed_num} qube{qube_failed_plural} " + \
                       _("failed to update.")
             self.label_summary.set_label(summary)
+            self.populate_restart_list()
             self.stack.set_visible_child(self.restart_page)
+            self.cancel_button.set_label(_("_Back"))
+            self.cancel_button.show()
             self.next_button.set_label(_("_Finish"))
         elif self.stack.get_visible_child() == self.restart_page:
             self.cancel_updates()
-            return
+            self.perform_restart()
+
+    def cancel_clicked(self, _emitter):
+        if self.stack.get_visible_child() == self.restart_page:
+            self.back_to_progress()
+        else:
+            self.cancel_updates()
+
+    def back_to_progress(self):
+        self.colon.hide()
+        self.progress_textview.hide()
+        self.copy_button.hide()
+        self.progress_scrolled_window.hide()
+        self.stack.set_visible_child(self.progress_page)
+
+        self.next_button.set_label(_("_Next"))
+        self.cancel_button.hide()
+
+    def perform_restart(self):
+        to_restart = {}
+        to_shutdown = {}
+
 
     def row_selected(self, _view, path, _col):
         self.details_label.set_text(_("Details for") + "  ")
         self.active_row = self.list_store_wrapped[path.get_indices()[0]]
-        self.qube_label.set_text(" " + self.active_row.color_name)
+        self.qube_label.set_markup(" " + self.active_row.color_name)
         self.qube_icon.set_from_pixbuf(self.active_row.icon)
         self.update_buffer()
         self.qube_icon.set_visible(True)
@@ -612,27 +663,37 @@ class UpdateStatus(GObject.GObject):
     def __init__(self, code: Optional[Union[int, str]] = None):
         super().__init__()
 
+        self.success = False
+
         if code == 0 or code == "Updated successfully":
             self.value = "Updated successfully"
             self.order = 0
+            self.color = "green"
+            self.success = True
         elif code == -1 or code == "No updates found":
             self.value = "No updates found"
             self.order = 1
+            self.color = "orange"
+            self.success = True  # TODO for tests
         elif code == -2 or code == "Cancelled":
             self.value = "Cancelled"
             self.order = 2
+            self.color = "red"
         elif code == -3 or code == "In progress":
             self.value = "In progress"
             self.order = 4
+            self.color = "red"
         elif code is not None and isinstance(code, int) or code == "Error":
             self.value = "Error"
             self.order = 3
+            self.color = "red"
         else:
             self.value = "Undefined"
             self.order = 5
+            self.color = "red"
 
     def __str__(self):
-        return self.value
+        return f'<span foreground="{self.color}">' + self.value + '</span>'
 
     def __eq__(self, other):
         return self.order == other.order
@@ -958,58 +1019,6 @@ class VMListBoxRow(Gtk.ListBoxRow):
             self.label.set_markup(f"<b>{self.label_text}</b>")
         else:
             self.label.set_markup(self.label_text)
-
-
-class ProgressListBoxRow(Gtk.ListBoxRow):
-    def __init__(self, vm):
-        super().__init__()
-
-        self.vm = vm
-
-        hbox = Gtk.HBox(orientation=Gtk.Orientation.HORIZONTAL)
-
-        self.icon = Gtk.Image.new_from_pixbuf(
-            get_domain_icon(self.vm))
-        self.icon.set_margin_right(10)
-
-        self.label = Gtk.Label(vm.name)
-        self.label.set_margin_right(10)
-
-        self.progress_box = Gtk.HBox(orientation=Gtk.Orientation.HORIZONTAL)
-        self.prog = None
-
-        hbox.pack_start(self.icon, False, False, 0)
-        hbox.pack_start(self.label, False, False, 0)
-        hbox.pack_start(self.progress_box, False, False, 0)
-
-        self.set_status('not-started')
-        self.add(hbox)
-
-    def set_status(self, status):
-
-        if status == 'not-started':
-            widget = Gtk.ProgressBar()
-            self.prog = widget
-        elif status == 'in-progress':
-            self.prog.set_fraction(0)
-            widget = self.prog
-        elif status == 'success':
-            widget = Gtk.Image.new_from_icon_name("gtk-apply",
-                                                  Gtk.IconSize.BUTTON)
-        elif status == 'failure':
-            widget = Gtk.Image.new_from_icon_name("gtk-cancel",
-                                                  Gtk.IconSize.BUTTON)
-        else:
-            raise ValueError(_("Unknown status {}").format(status))
-
-        for child in self.progress_box.get_children():
-            self.progress_box.remove(child)
-        self.progress_box.pack_start(widget, False, False, 0)
-        widget.show()
-
-    def update(self, progress):
-        if self.prog is not None:
-            self.prog.set_fraction(progress / 100)
 
 
 def main():

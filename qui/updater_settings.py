@@ -46,6 +46,13 @@ class Settings:
         self.save_button = self.builder.get_object("button_settings_save")
         self.save_button.connect(
             "clicked", lambda _: self.settings_window.close())
+
+        self.settings_restart_system = self.builder.get_object(
+            "settings_restart_system")
+
+        self.settings_restart_other = self.builder.get_object(
+            "settings_restart_other")
+
         self.available_vms = []
         self.enable_some_handler = VMFlowboxHandler(
             self.builder, qapp, "restart_exceptions",
@@ -53,16 +60,36 @@ class Settings:
         self.restart_exceptions_page = self.builder.get_object(
             "restart_exceptions_page")
 
-        self.settings_restart_system = self.builder.get_object(
-            "settings_restart_system")
-        self.settings_restart_other = self.builder.get_object(
-            "settings_restart_other")
-        self.settings_limit = self.builder.get_object(
-            "settings_limit")
+        self.settings_restart_other.connect(
+            "toggled", self.show_restart_exceptions)
+
+        self.settings_limit = self.builder.get_object("settings_limit")
+        self.settings_limit.connect("toggled", self.limit_toggled)
+
+        self.days_without_update = self.builder.get_object(
+            "days_without_update")
+        adj = Gtk.Adjustment(7, 1, 99, 1, 1, 1)
+        self.days_without_update.configure(adj, 1, 0)
+
+        self.max_concurrency = self.builder.get_object("max_concurrency")
+        adj = Gtk.Adjustment(4, 1, 16, 1, 1, 1)
+        self.max_concurrency.configure(adj, 1, 0)
+
+    def show_restart_exceptions(self, _emitter=None):
+        if self.settings_restart_other.get_active():
+            self.restart_exceptions_page.show_all()
+        else:
+            self.restart_exceptions_page.hide()
+
+    def limit_toggled(self, _emitter=None):
+        self.max_concurrency.set_sensitive(
+            self.settings_restart_other.get_active()
+        )
 
     def show(self):
         self.settings_window.show_all()
-        self.restart_exceptions_page.hide()
+        self.show_restart_exceptions()
+        self.limit_toggled()
 
     def close_window(self, _emitter, _):
         self.settings_window.hide()

@@ -106,6 +106,12 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 %{python3_sitelib}/qui/utils.py
 %{python3_sitelib}/qui/updater.glade
 %{python3_sitelib}/qui/updater_settings.glade
+%{python3_sitelib}/qui/qubes-colors-dark.css
+%{python3_sitelib}/qui/qubes-colors-light.css
+%{python3_sitelib}/qui/qubes-updater-base.css
+%{python3_sitelib}/qui/qubes-updater-light.css
+%{python3_sitelib}/qui/qubes-updater-dark.css
+%{python3_sitelib}/qui/qubes-widgets-base.css
 
 %dir %{python3_sitelib}/qui/tray/
 %dir %{python3_sitelib}/qui/tray/__pycache__

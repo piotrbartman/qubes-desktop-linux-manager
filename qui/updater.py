@@ -13,7 +13,7 @@ import pkg_resources
 import gi  # isort:skip
 
 from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, \
-    appviewer_lock, DATA, FROM, XEVENT
+    appviewer_lock, DATA, FROM, XEVENT, load_theme
 from qubes_config.global_config.vm_flowbox import VMFlowboxHandler
 from qui.updater_settings import Settings
 
@@ -52,6 +52,13 @@ class QubesUpdater(Gtk.Application):
             __name__, 'updater.glade'))
 
         self.main_window = self.builder.get_object("main_window")
+
+        load_theme(widget=self.main_window,
+                   light_theme_path=pkg_resources.resource_filename(
+                       'qui', 'qubes-updater-light.css'),
+                   dark_theme_path=pkg_resources.resource_filename(
+                       'qui', 'qubes-updater-light.css'))
+
         self.settings = Settings(self.main_window, self.qapp)
 
         self.header_label = self.builder.get_object("header_label")
@@ -115,7 +122,7 @@ class QubesUpdater(Gtk.Application):
             # Get the object from the model
             obj = model.get_value(it, data)
             # Set the cell value to the name of the object
-            cell.set_property("text", str(obj))
+            cell.set_property("markup", str(obj))
 
         for col, name in headers:
             renderer = self.builder.get_object(name + "_renderer")
@@ -163,6 +170,8 @@ class QubesUpdater(Gtk.Application):
         progress_store = self.progressbar.get_model()
         progress_store.append([0])
         self.total_progress = progress_store[-1]
+
+        self.label_summary = self.builder.get_object("label_summary")
 
         self.load_css()
 
@@ -413,13 +422,19 @@ class QubesUpdater(Gtk.Application):
             self.update_thread.start()
 
         elif self.stack.get_visible_child() == self.progress_page:
-            # summary = f"{qube_updated_num} qube{qube_updated_plural} " + \
-            #           _("updated successfully.") + \
-            #           f"{qube_no_updates_num} qube{qube_no_updates_plural} " + \
-            #           _("attempted to update but found no updates.") + \
-            #           f"{qube_failed_num} qube{qube_failed_plural} " + \
-            #           _("failed to update.")
-            # self.label_summary.set_label(summary)
+            qube_updated_num = 0  # TODO
+            qube_updated_plural = qube_updated_num != 1
+            qube_no_updates_num = 0  # TODO
+            qube_no_updates_plural = qube_no_updates_num != 1
+            qube_failed_num = 0  # TODO
+            qube_failed_plural = qube_failed_num != 1
+            summary = f"{qube_updated_num} qube{qube_updated_plural} " + \
+                      _("updated successfully.") + "\n" \
+                      f"{qube_no_updates_num} qube{qube_no_updates_plural} " + \
+                      _("attempted to update but found no updates.") + "\n" \
+                      f"{qube_failed_num} qube{qube_failed_plural} " + \
+                      _("failed to update.")
+            self.label_summary.set_label(summary)
             self.stack.set_visible_child(self.restart_page)
             self.next_button.set_label(_("_Finish"))
         elif self.stack.get_visible_child() == self.restart_page:
@@ -429,7 +444,7 @@ class QubesUpdater(Gtk.Application):
     def row_selected(self, _view, path, _col):
         self.details_label.set_text(_("Details for") + "  ")
         self.active_row = self.list_store_wrapped[path.get_indices()[0]]
-        self.qube_label.set_text(" " + self.active_row.name)
+        self.qube_label.set_text(" " + self.active_row.color_name)
         self.qube_icon.set_from_pixbuf(self.active_row.icon)
         self.update_buffer()
         self.qube_icon.set_visible(True)
@@ -638,10 +653,11 @@ class QubeUpdateRow(GObject.GObject):
         last_updates_check = qube.features.get('last-updates-check', None)
         last_update = qube.features.get('last-update', None)
         self.buffer: str = ""
+        label = QubeLabel[self.qube.label.name]
         qube_row = [
             selected,
             get_domain_icon(qube),
-            qube.name,
+            f'<span foreground="{label.name}"><b>' + qube.name + '</b></span>',
             UpdatesAvailable(updates_available),
             Date(last_updates_check),
             Date(last_update),
@@ -669,6 +685,10 @@ class QubeUpdateRow(GObject.GObject):
 
     @property
     def name(self):
+        return self.qube.name
+
+    @property
+    def color_name(self):
         return self.qube_row[2]
 
     @property
@@ -815,15 +835,18 @@ class UpdatesAvailable(GObject.GObject):
         if value is None:
             self.value = "MAYBE"
             self.order = 1
+            self.color = "Orange"
         elif value:
             self.value = "YES"
             self.order = 0
+            self.color = "Green"
         else:
             self.value = "NO"
             self.order = 2
+            self.color = "Black"
 
     def __str__(self):
-        return self.value
+        return f'<span foreground="{self.color}"><b>' + self.value + '</b></span>'
 
     def __eq__(self, other):
         return self.order == other.order

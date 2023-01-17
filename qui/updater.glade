@@ -2,6 +2,7 @@
 <!-- Generated with glade 3.40.0 -->
 <interface domain="desktop-linux-manager">
   <requires lib="gtk+" version="3.20"/>
+  <!-- interface-css-provider-path qubes-updater-light.css -->
   <object class="GtkCheckButton" id="checkbox_header">
     <property name="visible">True</property>
     <property name="can-focus">True</property>
@@ -62,20 +63,19 @@
     <property name="vexpand">False</property>
     <property name="title" translatable="yes">Qubes OS Update</property>
     <property name="default-width">580</property>
-    <property name="default-height">627</property>
+    <property name="default-height">727</property>
     <child>
       <!-- n-columns=4 n-rows=3 -->
       <object class="GtkGrid">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="margin-start">20</property>
-        <property name="margin-end">20</property>
-        <property name="margin-top">10</property>
-        <property name="margin-bottom">10</property>
         <property name="hexpand">True</property>
         <property name="row-spacing">10</property>
         <property name="column-spacing">20</property>
         <property name="column-homogeneous">True</property>
+        <style>
+          <class name="content_main_box"/>
+        </style>
         <child>
           <object class="GtkOverlay" id="header">
             <property name="visible">True</property>
@@ -87,10 +87,13 @@
                 <property name="can-focus">False</property>
                 <property name="halign">start</property>
                 <property name="valign">start</property>
-                <property name="margin-top">10</property>
+                <property name="margin-top">5</property>
                 <property name="margin-bottom">10</property>
                 <property name="hexpand">True</property>
                 <property name="label" translatable="yes">Select qubes to update:</property>
+                <style>
+                  <class name="explanation_text"/>
+                </style>
               </object>
               <packing>
                 <property name="index">-1</property>
@@ -104,6 +107,9 @@
                 <property name="halign">end</property>
                 <property name="valign">end</property>
                 <property name="use-underline">True</property>
+                <style>
+                  <class name="button"/>
+                </style>
               </object>
             </child>
           </object>
@@ -134,7 +140,11 @@
                     <child>
                       <object class="GtkTreeView" id="vm_list">
                         <property name="can-focus">False</property>
+                        <property name="rules-hint">True</property>
                         <property name="model">list_store</property>
+                        <style>
+                          <class name="treeview"/>
+                        </style>
                         <child internal-child="selection">
                           <object class="GtkTreeSelection"/>
                         </child>
@@ -168,7 +178,7 @@
                             <child>
                               <object class="GtkCellRendererText" id="name_renderer"/>
                               <attributes>
-                                <attribute name="text">2</attribute>
+                                <attribute name="markup">2</attribute>
                               </attributes>
                             </child>
                           </object>
@@ -203,9 +213,6 @@
                             </child>
                           </object>
                         </child>
-                        <style>
-                          <class name="black-border"/>
-                        </style>
                       </object>
                     </child>
                   </object>
@@ -221,8 +228,12 @@
                     <property name="can-focus">False</property>
                     <property name="halign">start</property>
                     <property name="margin-top">20</property>
-                    <property name="label" translatable="yes">Qubes OS checks for updates for running and networked qubes and their templates. Updates may also be available in other qubes, marked as MAYBE above.</property>
+                    <property name="use-markup">True</property>
                     <property name="wrap">True</property>
+                    <property name="label" translatable="yes">Qubes OS checks for updates for running and networked qubes and their templates. Updates may also be available in other qubes, marked as MAYBE above.</property>
+                    <style>
+                      <class name="explanation_text"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -248,6 +259,9 @@
                         <property name="label" translatable="yes">_Restart updated qubes after install
 CAUTION: this may cause data loss if you are currently running programs in those qubes</property>
                         <property name="use-underline">True</property>
+                        <style>
+                          <class name="explanation_text"/>
+                        </style>
                       </object>
                     </child>
                   </object>
@@ -268,6 +282,7 @@ CAUTION: this may cause data loss if you are currently running programs in those
                 <property name="orientation">vertical</property>
                 <child>
                   <object class="GtkTreeView" id="progressbar">
+                    <property name="margin-bottom">24</property>
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
                     <property name="hexpand">True</property>
@@ -326,7 +341,7 @@ CAUTION: this may cause data loss if you are currently running programs in those
                             <child>
                               <object class="GtkCellRendererText" id="progress_name_renderer"/>
                               <attributes>
-                                <attribute name="text">2</attribute>
+                                <attribute name="markup">2</attribute>
                               </attributes>
                             </child>
                           </object>
@@ -372,6 +387,9 @@ CAUTION: this may cause data loss if you are currently running programs in those
                             <property name="margin-top">10</property>
                             <property name="margin-bottom">10</property>
                             <property name="label" translatable="yes">Select a qube to see details.</property>
+                            <style>
+                              <class name="explanation_text"/>
+                            </style>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -458,11 +476,15 @@ CAUTION: this may cause data loss if you are currently running programs in those
                     </child>
                     <child>
                       <object class="GtkButton" id="copy_button">
-                        <property name="label" translatable="yes">Copy details to global clipboard.</property>
+                        <property name="label" translatable="yes">Copy details to global clipboard</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">False</property>
+                        <property name="margin-top">13</property>
                         <property name="halign">start</property>
                         <property name="hexpand">False</property>
+                        <style>
+                          <class name="button"/>
+                        </style>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -497,6 +519,10 @@ CAUTION: this may cause data loss if you are currently running programs in those
                     <property name="valign">start</property>
                     <property name="margin-top">10</property>
                     <property name="margin-bottom">10</property>
+                    <style>
+                      <class name="explanation_text"/>
+                      <class name="action_text"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -539,7 +565,7 @@ CAUTION: this may cause data loss if you are currently running programs in those
                             <child>
                               <object class="GtkCellRendererText" id="summary_name_renderer"/>
                               <attributes>
-                                <attribute name="text">2</attribute>
+                                <attribute name="markup">2</attribute>
                               </attributes>
                             </child>
                           </object>
@@ -591,6 +617,7 @@ CAUTION: this may cause data loss if you are currently running programs in those
                         <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
                         <property name="vexpand">True</property>
+                        <property name="shadow-type">in</property>
                         <child>
                           <object class="GtkTreeView" id="restart_list">
                             <property name="visible">True</property>
@@ -631,7 +658,7 @@ CAUTION: this may cause data loss if you are currently running programs in those
                                 <child>
                                   <object class="GtkCellRendererText" id="restart_name_renderer"/>
                                   <attributes>
-                                    <attribute name="text">2</attribute>
+                                    <attribute name="markup">2</attribute>
                                   </attributes>
                                 </child>
                               </object>
@@ -644,7 +671,7 @@ CAUTION: this may cause data loss if you are currently running programs in those
                                 <child>
                                   <object class="GtkCellRendererText" id="restart_info_renderer"/>
                                   <attributes>
-                                    <attribute name="text">2</attribute>
+                                    <attribute name="markup">2</attribute>
                                   </attributes>
                                 </child>
                               </object>
@@ -685,6 +712,10 @@ CAUTION: this may cause data loss if you are currently running programs in those
             <property name="receives-default">True</property>
             <property name="valign">end</property>
             <property name="use-underline">True</property>
+            <style>
+              <class name="ok_button"/>
+              <class name="bottom_button"/>
+            </style>
           </object>
           <packing>
             <property name="left-attach">3</property>
@@ -699,6 +730,10 @@ CAUTION: this may cause data loss if you are currently running programs in those
             <property name="receives-default">True</property>
             <property name="valign">end</property>
             <property name="use-underline">True</property>
+            <style>
+              <class name="button"/>
+              <class name="bottom_button"/>
+            </style>
           </object>
           <packing>
             <property name="left-attach">2</property>

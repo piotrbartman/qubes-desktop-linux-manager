@@ -6,7 +6,7 @@
     <property name="can-focus">False</property>
     <property name="hexpand">True</property>
     <property name="vexpand">False</property>
-    <property name="default-height">471</property>
+    <property name="default-height">571</property>
     <property name="default-width">458</property>
     <property name="title" translatable="yes">Qubes OS Updater Settings</property>
     <child>
@@ -14,14 +14,13 @@
       <object class="GtkGrid">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="margin-start">10</property>
-        <property name="margin-end">10</property>
-        <property name="margin-top">10</property>
-        <property name="margin-bottom">10</property>
         <property name="hexpand">True</property>
-        <property name="row-spacing">20</property>
-        <property name="column-spacing">20</property>
+        <property name="row-spacing">40</property>
+        <property name="column-spacing">19</property>
         <property name="column-homogeneous">True</property>
+        <style>
+          <class name="content_box"/>
+        </style>
         <child>
           <object class="GtkScrolledWindow" id="settings_scroll">
             <property name="visible">True</property>
@@ -49,6 +48,9 @@
                         <property name="hexpand">True</property>
                         <property name="use-markup">True</property>
                         <property name="label" translatable="yes">Additional Update Check</property>
+                        <style>
+                          <class name="section_title"/>
+                        </style>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -63,7 +65,11 @@
                         <property name="wrap">True</property>
                         <property name="xalign">0</property>
                         <property name="margin-top">10</property>
+                        <property name="margin-end">28</property>
                         <property name="label" translatable="yes">Qubes OS automatically checks for updates only for running qubes and their templates. Updates can also become available for other qubes; therefore, the updater will attempt to update qubes after some time has passed without checking for updates.</property>
+                        <style>
+                          <class name="explanation_text"/>
+                        </style>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -84,6 +90,9 @@
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
                             <property name="label" translatable="yes">Attempt to update qubes after</property>
+                            <style>
+                              <class name="explanation_text"/>
+                            </style>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -112,6 +121,9 @@
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
                             <property name="label" translatable="yes"> days without checking for updates.</property>
+                            <style>
+                              <class name="explanation_text"/>
+                            </style>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -132,10 +144,13 @@
                         <property name="can-focus">False</property>
                         <property name="halign">start</property>
                         <property name="valign">start</property>
-                        <property name="margin-top">10</property>
+                        <property name="margin-top">18</property>
                         <property name="hexpand">True</property>
                         <property name="use-markup">True</property>
-                        <property name="label" translatable="yes">Restart after Update</property>
+                        <property name="label" translatable="yes">Restart After Update</property>
+                        <style>
+                          <class name="section_title"/>
+                        </style>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -149,8 +164,11 @@
                         <property name="can-focus">False</property>
                         <property name="wrap">True</property>
                         <property name="xalign">0</property>
-                        <property name="margin-top">10</property>
+                        <property name="margin-top">5</property>
                         <property name="label" translatable="yes">Qubes that are based on templates need to be restarted after update.</property>
+                        <style>
+                          <class name="explanation_text"/>
+                        </style>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -166,9 +184,12 @@
                         <property name="receives-default">False</property>
                         <property name="use-underline">True</property>
                         <property name="draw-indicator">True</property>
-                        <property name="margin-top">10</property>
+                        <property name="margin-top">5</property>
                         <property name="halign">start</property>
                         <property name="valign">start</property>
+                        <style>
+                          <class name="explanation_text"/>
+                        </style>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -184,9 +205,12 @@
                         <property name="receives-default">False</property>
                         <property name="use-underline">True</property>
                         <property name="draw-indicator">True</property>
-                        <property name="margin-top">10</property>
+                        <property name="margin-top">5</property>
                         <property name="halign">start</property>
                         <property name="valign">start</property>
+                        <style>
+                          <class name="explanation_text"/>
+                        </style>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -206,10 +230,14 @@
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
-                            <property name="margin-top">10</property>
+                            <property name="margin-top">5</property>
+                            <property name="margin-start">20</property>
                             <property name="hexpand">True</property>
                             <property name="use-markup">True</property>
                             <property name="label" translatable="yes">Exclude the following qubes from automatic updates:</property>
+                            <style>
+                              <class name="explanation_text"/>
+                            </style>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -409,10 +437,13 @@
                         <property name="can-focus">False</property>
                         <property name="halign">start</property>
                         <property name="valign">start</property>
-                        <property name="margin-top">10</property>
+                        <property name="margin-top">18</property>
                         <property name="hexpand">True</property>
                         <property name="use-markup">True</property>
                         <property name="label" translatable="yes">Simultaneous Updates</property>
+                        <style>
+                          <class name="section_title"/>
+                        </style>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -427,7 +458,11 @@
                         <property name="wrap">True</property>
                         <property name="xalign">0</property>
                         <property name="margin-top">10</property>
+                        <property name="margin-end">28</property>
                         <property name="label" translatable="yes">By default, all qubes update at the same time. If this is too demanding for your system or internet connection, you can limit the number of simultaneous updates.</property>
+                        <style>
+                          <class name="explanation_text"/>
+                        </style>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -450,6 +485,9 @@
                             <property name="receives-default">False</property>
                             <property name="use-underline">True</property>
                             <property name="draw-indicator">True</property>
+                            <style>
+                              <class name="explanation_text"/>
+                            </style>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -495,6 +533,10 @@
             <property name="receives-default">True</property>
             <property name="valign">end</property>
             <property name="use-underline">True</property>
+            <style>
+              <class name="ok_button"/>
+              <class name="settings_bottom_button"/>
+            </style>
           </object>
           <packing>
             <property name="left-attach">2</property>
@@ -509,6 +551,10 @@
             <property name="receives-default">True</property>
             <property name="valign">end</property>
             <property name="use-underline">True</property>
+            <style>
+              <class name="button"/>
+              <class name="settings_bottom_button"/>
+            </style>
           </object>
           <packing>
             <property name="left-attach">1</property>

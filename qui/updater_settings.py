@@ -50,9 +50,19 @@ class Settings:
         self.enable_some_handler = VMFlowboxHandler(
             self.builder, qapp, "restart_exceptions",
             [], lambda vm: vm in self.available_vms)
+        self.restart_exceptions_page = self.builder.get_object(
+            "restart_exceptions_page")
+
+        self.settings_restart_system = self.builder.get_object(
+            "settings_restart_system")
+        self.settings_restart_other = self.builder.get_object(
+            "settings_restart_other")
+        self.settings_limit = self.builder.get_object(
+            "settings_limit")
 
     def show(self):
         self.settings_window.show_all()
+        self.restart_exceptions_page.hide()
 
     def close_window(self, _emitter, _):
         self.settings_window.hide()

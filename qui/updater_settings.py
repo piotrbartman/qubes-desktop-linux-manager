@@ -83,7 +83,7 @@ class Settings:
 
     def limit_toggled(self, _emitter=None):
         self.max_concurrency.set_sensitive(
-            self.settings_restart_other.get_active()
+            self.settings_limit.get_active()
         )
 
     def show(self):

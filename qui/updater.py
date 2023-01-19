@@ -114,7 +114,7 @@ class QubesUpdater(Gtk.Application):
         restart_toggle_renderer.connect(
             "toggled", self.on_restart_checkbox_toggled)
 
-        headers = [(3, "available"), (4, "check"), (5, "update"),
+        headers = [(4, "available"), (5, "check"), (6, "update"),
                    (8, "summary_status")]
 
         def cell_data_func(_column, cell, model, it, data):
@@ -187,8 +187,8 @@ class QubesUpdater(Gtk.Application):
         self.block = True
         if path is not None:
             it = self.list_store.get_iter(path)
-            self.list_store[it][6].selected = \
-                not self.list_store[it][6].selected
+            self.list_store[it][0].selected = \
+                not self.list_store[it][0].selected
             selected = 0
             for vm_row in self.list_store_wrapped:
                 if vm_row.selected:
@@ -243,10 +243,10 @@ class QubesUpdater(Gtk.Application):
         self.block = True
         if path is not None:
             it = self.restart_list_store.get_iter(path)
-            self.restart_list_store[it][0] = not self.restart_list_store[it][0]
+            self.restart_list_store[it][1] = not self.restart_list_store[it][1]
             selected = 0
             for vm_row in self.restart_list_store:
-                if vm_row[0]:
+                if vm_row[1]:
                     selected += 1
             if selected == len(self.restart_list_store):
                 self.restart_checkbox_column_header = Select.ALL
@@ -286,11 +286,6 @@ class QubesUpdater(Gtk.Application):
             self.retart_checkbox_column_button.set_inconsistent(False)
             self.retart_checkbox_column_button.set_active(False)
             self.next_button.set_label("Finish")
-        # for row in self.list_store:
-        #     if row[3].value in allowed:
-        #         row[0] = True
-        #     else:
-        #         row[0] = False
         self.block = False
 
     def populate_restart_list(self):
@@ -376,10 +371,10 @@ class QubesUpdater(Gtk.Application):
             else:
                 return 1
 
-        self.list_store.set_sort_func(3, sort_func, 3)
-        self.list_store.set_sort_func(4, sort_func, 4)
+        # self.list_store.set_sort_func(4, sort_func, 4)
         self.list_store.set_sort_func(5, sort_func, 5)
         self.list_store.set_sort_func(6, sort_func, 6)
+        self.list_store.set_sort_func(0, sort_func, 0)
         self.list_store.set_sort_func(8, sort_func, 8)
         for vm in self.qapp.domains:
             if vm.klass == 'AdminVM':
@@ -388,15 +383,15 @@ class QubesUpdater(Gtk.Application):
                 except exc.QubesDaemonCommunicationError:
                     state = False
                 result = result or state
-                qube_row = QubeUpdateRow(self.list_store, vm, state)
+                qube_row = UpdateRowWrapper(self.list_store, vm, state)
                 self.list_store_wrapped.append(qube_row)
 
                 # TODO
                 devel_deb = self.qapp.domains['devel-debian']
-                qube_row = QubeUpdateRow(self.list_store, devel_deb, True)
+                qube_row = UpdateRowWrapper(self.list_store, devel_deb, True)
                 self.list_store_wrapped.append(qube_row)
                 devel_fed = self.qapp.domains['devel-fedora']
-                qube_row = QubeUpdateRow(self.list_store, devel_fed, True)
+                qube_row = UpdateRowWrapper(self.list_store, devel_fed, True)
                 self.list_store_wrapped.append(qube_row)
                 # END TODO
 
@@ -408,7 +403,7 @@ class QubesUpdater(Gtk.Application):
 
         for vm in self.qapp.domains:
             if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM':
-                qube_row = QubeUpdateRow(
+                qube_row = UpdateRowWrapper(
                     self.list_store, vm, bool(vm.name in to_update))
                 self.settings.available_vms.append(vm)
                 self.list_store_wrapped.append(qube_row)
@@ -425,15 +420,12 @@ class QubesUpdater(Gtk.Application):
                 elem.delete()
             self.list_store_wrapped = selected_rows
 
-            self.colon.hide()
-            self.progress_textview.hide()
-            self.copy_button.hide()
-            self.progress_scrolled_window.hide()
-            self.stack.set_visible_child(self.progress_page)
+            self.back_to_progress()
 
             self.next_button.set_sensitive(False)
-            self.next_button.set_label(_("_Next"))
+
             self.cancel_button.set_label(_("_Cancel updates"))
+            self.cancel_button.show()
             self.header_label.set_text(_("Update in progress..."))
             self.header_label.set_halign(Gtk.Align.CENTER)
 
@@ -490,7 +482,6 @@ class QubesUpdater(Gtk.Application):
     def perform_restart(self):
         to_restart = {}
         to_shutdown = {}
-
 
     def row_selected(self, _view, path, _col):
         self.details_label.set_text(_("Details for") + "  ")
@@ -702,7 +693,7 @@ class UpdateStatus(GObject.GObject):
         return self.order < other.order
 
 
-class QubeUpdateRow(GObject.GObject):
+class UpdateRowWrapper(GObject.GObject):
     def __init__(self, list_store, qube, to_update: bool):
         super().__init__()
         self.list_store = list_store
@@ -716,13 +707,13 @@ class QubeUpdateRow(GObject.GObject):
         self.buffer: str = ""
         label = QubeLabel[self.qube.label.name]
         qube_row = [
+            self,
             selected,
             get_domain_icon(qube),
             f'<span foreground="{label.name}"><b>' + qube.name + '</b></span>',
             UpdatesAvailable(updates_available),
             Date(last_updates_check),
             Date(last_update),
-            self,
             0,
             UpdateStatus(),
         ]
@@ -734,15 +725,15 @@ class QubeUpdateRow(GObject.GObject):
 
     @property
     def selected(self):
-        return self.qube_row[0]
+        return self.qube_row[1]
 
     @selected.setter
     def selected(self, value):
-        self.qube_row[0] = value
+        self.qube_row[1] = value
 
     @property
     def icon(self):
-        return self.qube_row[1]
+        return self.qube_row[2]
 
     @property
     def name(self):
@@ -750,19 +741,19 @@ class QubeUpdateRow(GObject.GObject):
 
     @property
     def color_name(self):
-        return self.qube_row[2]
-
-    @property
-    def updates_available(self):
         return self.qube_row[3]
 
     @property
-    def last_updates_check(self):
+    def updates_available(self):
         return self.qube_row[4]
 
     @property
-    def last_update(self):
+    def last_updates_check(self):
         return self.qube_row[5]
+
+    @property
+    def last_update(self):
+        return self.qube_row[6]
 
     def get_update_progress(self):
         return self.qube_row[7]
@@ -882,7 +873,7 @@ class Date(GObject.GObject):
         return self.datetime < other.datetime
 
 
-class UpdatesAvailable(GObject.GObject):
+class UpdatesAvailable:
     def __init__(self, value: Union[Optional[bool], str]):
         super().__init__()
         if isinstance(value, str):
@@ -912,8 +903,20 @@ class UpdatesAvailable(GObject.GObject):
     def __eq__(self, other):
         return self.order == other.order
 
+    def __ne__(self, other):
+        return self.order != other.order
+
     def __lt__(self, other):
         return self.order < other.order
+
+    def __gt__(self, other):
+        return self.order > other.order
+
+    def __le__(self, other):
+        return self.order <= other.order
+
+    def __ge__(self, other):
+        return self.order >= other.order
 
 
 class CellRendererProgressWithResult(
@@ -962,63 +965,6 @@ GObject.type_register(CellRendererProgressWithResult)
 def get_domain_icon(vm):
     icon_vm = Gtk.IconTheme.get_default().load_icon(vm.label.icon, 16, 0)
     return icon_vm
-
-
-class VMListBoxRow(Gtk.ListBoxRow):
-    def __init__(self, vm, updates_available, **properties):
-        super().__init__(**properties)
-        self.vm = vm
-
-        hbox = Gtk.HBox(orientation=Gtk.Orientation.HORIZONTAL)
-
-        self.label_text = vm.name
-        self.updates_available = updates_available
-        if self.updates_available:
-            self.label_text = _("{vm} (updates available)").format(
-                vm=self.label_text)
-        self.label = Gtk.Label()
-        self.icon = Gtk.Image.new_from_pixbuf(
-            get_domain_icon(self.vm))
-
-        self.checkbox = Gtk.CheckButton()
-        self.checkbox.set_active(self.updates_available)
-        self.checkbox.set_margin_right(10)
-
-        self.checkbox.connect("clicked", self.set_label_text)
-        self.set_sensitive(self.updates_available)
-
-        self.set_label_text()
-
-        hbox.pack_start(self.checkbox, False, False, 0)
-        hbox.pack_start(self.icon, False, False, 0)
-        hbox.pack_start(self.label, False, False, 0)
-
-        # check for VMs that may be restored from older Qubes versions
-        # and not support updating; this is a heuristic and may not always work
-        try:
-            if vm.features.get('qrexec', False) and \
-                    vm.features.get('gui', False) and \
-                    not vm.features.get('os', False):
-                warn_icon = Gtk.Image.new_from_pixbuf(
-                    Gtk.IconTheme.get_default().load_icon(
-                        'dialog-warning', 12, 0))
-                warn_icon.set_tooltip_text(_(
-                    'This qube may have been restored from an older version of '
-                    'Qubes OS and may not be able to update itself correctly. '
-                    'Please check the documentation if problems occur.'))
-                hbox.pack_start(warn_icon, False, False, 0)
-        except exc.QubesDaemonCommunicationError:
-            # we have no permission to access the vm's features, there's no
-            # point in guessing original Qubes version
-            pass
-
-        self.add(hbox)
-
-    def set_label_text(self, _=None):
-        if self.checkbox.get_active():
-            self.label.set_markup(f"<b>{self.label_text}</b>")
-        else:
-            self.label.set_markup(self.label_text)
 
 
 def main():

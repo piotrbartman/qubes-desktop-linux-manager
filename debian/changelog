@@ -1,3 +1,13 @@
+qubes-desktop-linux-manager (4.2.2-1) unstable; urgency=medium
+
+  [ Marta Marczykowska-Górecka ]
+  * Compatibility/security report
+  * Fix usage of format/f-strings for gettext
+  * Cope gracefully with errors of qvm-appmenus
+  * Perform all VM operations as threads in qui-domains
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 20 Jan 2023 04:25:12 +0100
+
 qubes-desktop-linux-manager (4.2.1-1) unstable; urgency=medium
 
   * Do not require qubes-mgmt-salt-dom0-update directly

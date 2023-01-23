@@ -47,6 +47,8 @@
   </object>
   <object class="GtkListStore" id="restart_list_store">
     <columns>
+      <!-- column-name gobject -->
+      <column type="PyObject"/>
       <!-- column-name gboolean -->
       <column type="gboolean"/>
       <!-- column-name gdkpixbuf -->
@@ -380,13 +382,13 @@ CAUTION: this may cause data loss if you are currently running programs in those
                         <property name="hexpand">False</property>
                         <property name="vexpand">False</property>
                         <property name="margin-top">20</property>
+                        <property name="margin-bottom">20</property>
                         <child>
                           <object class="GtkLabel" id="details_label">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
                             <property name="valign">start</property>
-                            <property name="margin-bottom">10</property>
                             <property name="use-markup">True</property>
                             <property name="label" translatable="yes">Select a qube to see details.</property>
                             <style>
@@ -404,8 +406,6 @@ CAUTION: this may cause data loss if you are currently running programs in those
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
                             <property name="valign">start</property>
-                            <property name="margin-top">10</property>
-                            <property name="margin-bottom">10</property>
                           </object>
                           <packing>
                             <property name="expand">False</property>
@@ -418,8 +418,6 @@ CAUTION: this may cause data loss if you are currently running programs in those
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
                             <property name="valign">start</property>
-                            <property name="margin-top">10</property>
-                            <property name="margin-bottom">10</property>
                             <property name="use-markup">True</property>
                           </object>
                           <packing>
@@ -433,8 +431,6 @@ CAUTION: this may cause data loss if you are currently running programs in those
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
                             <property name="valign">start</property>
-                            <property name="margin-top">10</property>
-                            <property name="margin-bottom">10</property>
                             <property name="label" translatable="yes">:</property>
                           </object>
                           <packing>
@@ -639,13 +635,14 @@ CAUTION: this may cause data loss if you are currently running programs in those
                                 <child>
                                   <object class="GtkCellRendererToggle" id="restart_toggle_renderer"/>
                                   <attributes>
-                                    <attribute name="active">0</attribute>
+                                    <attribute name="active">1</attribute>
                                   </attributes>
                                 </child>
                               </object>
                             </child>
                             <child>
                               <object class="GtkTreeViewColumn" id="restart_icon_column">
+                                <property name="sort-column-id">0</property>
                                 <child>
                                   <object class="GtkCellRendererPixbuf" id="restart_pixbuf_renderer"/>
                                   <attributes>
@@ -670,11 +667,10 @@ CAUTION: this may cause data loss if you are currently running programs in those
                               <object class="GtkTreeViewColumn" id="additional_info_column">
                                 <property name="title">Additional information</property>
                                 <property name="expand">True</property>
-                                <property name="sort-column-id">3</property>
                                 <child>
                                   <object class="GtkCellRendererText" id="restart_info_renderer"/>
                                   <attributes>
-                                    <attribute name="markup">3</attribute>
+                                    <attribute name="markup">4</attribute>
                                   </attributes>
                                 </child>
                               </object>

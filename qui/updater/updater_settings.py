@@ -36,7 +36,7 @@ class Settings:
         self.builder = Gtk.Builder()
         self.builder.set_translation_domain("desktop-linux-manager")
         self.builder.add_from_file(pkg_resources.resource_filename(
-            __name__, 'updater_settings.glade'))
+            'qui', 'updater_settings.glade'))
         self.settings_window = self.builder.get_object("main_window")
         self.settings_window.set_transient_for(main_window)
         self.settings_window.connect("delete-event", self.close_window)

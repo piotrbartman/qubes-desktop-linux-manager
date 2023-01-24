@@ -96,6 +96,10 @@ textview {
     padding-bottom: 16px;
 }
 
+.background_container {
+    background: @top-background;
+}
+
 textview text {
     font-family: 'Source Sans Pro';
     font-style: normal;
@@ -132,6 +136,3 @@ treeview.view button
 
   color: @text-color;
 }
-
-treeview.view row:nth-child(even) { background-color: @top-background; }
-treeview.view row:nth-child(odd) { background-color: @top-background-2; }

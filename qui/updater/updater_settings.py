@@ -33,7 +33,9 @@ class Settings:
                            Gtk.FlowBox,
                            GObject.SignalFlags.RUN_LAST, GObject.TYPE_PYOBJECT,
                            (GObject.TYPE_PYOBJECT,))
+        self.qapp = qapp
         self.builder = Gtk.Builder()
+
         self.builder.set_translation_domain("desktop-linux-manager")
         self.builder.add_from_file(pkg_resources.resource_filename(
             'qui', 'updater_settings.glade'))
@@ -53,9 +55,12 @@ class Settings:
         self.settings_restart_other = self.builder.get_object(
             "settings_restart_other")
 
-        self.available_vms = []
+        self.available_vms = [
+            vm for vm in self.qapp.domains
+            if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM']
+        self.available_vms.append(self.qapp.domains['devel-debian'])
         self.enable_some_handler = VMFlowboxHandler(
-            self.builder, qapp, "restart_exceptions",
+            self.builder, self.qapp, "restart_exceptions",
             [], lambda vm: vm in self.available_vms)
         self.restart_exceptions_page = self.builder.get_object(
             "restart_exceptions_page")
@@ -68,11 +73,11 @@ class Settings:
 
         self.days_without_update = self.builder.get_object(
             "days_without_update")
-        adj = Gtk.Adjustment(7, 1, 99, 1, 1, 1)
+        adj = Gtk.Adjustment(7, 1, 100, 1, 1, 1)
         self.days_without_update.configure(adj, 1, 0)
 
         self.max_concurrency = self.builder.get_object("max_concurrency")
-        adj = Gtk.Adjustment(4, 1, 16, 1, 1, 1)
+        adj = Gtk.Adjustment(4, 1, 17, 1, 1, 1)
         self.max_concurrency.configure(adj, 1, 0)
 
     def show_restart_exceptions(self, _emitter=None):

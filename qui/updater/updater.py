@@ -6,6 +6,7 @@ import re
 import time
 import threading
 import subprocess
+import functools
 from datetime import datetime, timedelta
 from enum import Enum
 from typing import Optional, Union
@@ -33,6 +34,18 @@ locale.bindtextdomain("desktop-linux-manager", "/usr/locales/")
 locale.textdomain('desktop-linux-manager')
 
 
+def disable_checkboxes(func):
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if self.disable_checkboxes:
+            return
+        self.disable_checkboxes = True
+        func(self, *args, **kwargs)
+        self.disable_checkboxes = False
+
+    return wrapper
+
+
 class QubesUpdater(Gtk.Application):
     # pylint: disable=too-many-instance-attributes
 
@@ -45,6 +58,8 @@ class QubesUpdater(Gtk.Application):
 
         self.primary = False
         self.connect("activate", self.do_activate)
+
+        self.disable_checkboxes = False
 
     def perform_setup(self, *_args, **_kwargs):
         # pylint: disable=attribute-defined-outside-init
@@ -63,7 +78,7 @@ class QubesUpdater(Gtk.Application):
                    light_theme_path=pkg_resources.resource_filename(
                        'qui', 'qubes-updater-light.css'),
                    dark_theme_path=pkg_resources.resource_filename(
-                       'qui', 'qubes-updater-light.css'))
+                       'qui', 'qubes-updater-dark.css'))
 
         self.settings = Settings(self.main_window, self.qapp)
 
@@ -89,7 +104,6 @@ class QubesUpdater(Gtk.Application):
 
         header_button.connect('realize', pass_through_event_window)
 
-        self.block = False
         self.checkbox_column_header = Select.WITH_UPDATES
         self.checkbox_column_button = self.builder.get_object("checkbox_header")
         self.checkbox_column_button.set_inconsistent(True)
@@ -140,7 +154,7 @@ class QubesUpdater(Gtk.Application):
         self.active_row = None
         progress_column = self.builder.get_object("progress_column")
         renderer = CellRendererProgressWithResult()
-        renderer.set_padding(0, 10)
+        renderer.props.ypad = 10
         progress_column.pack_start(renderer, True)
         progress_column.add_attribute(renderer, "pulse", 7)
         progress_column.add_attribute(renderer, "value", 7)
@@ -190,8 +204,8 @@ class QubesUpdater(Gtk.Application):
         self.update_thread = None
         self.exit_triggered = False
 
+    @disable_checkboxes
     def on_checkbox_toggled(self, _emitter, path):
-        self.block = True
         if path is not None:
             it = self.list_store.get_iter(path)
             self.list_store[it][0].selected = \
@@ -214,12 +228,9 @@ class QubesUpdater(Gtk.Application):
                 self.checkbox_column_header = Select.SELECTED
                 self.checkbox_column_button.set_inconsistent(True)
                 self.next_button.set_sensitive(True)
-        self.block = False
 
+    @disable_checkboxes
     def on_header_toggled(self, _emitter):
-        if self.block:
-            return
-        self.block = True
         self.checkbox_column_header = self.checkbox_column_header.next()
         if self.checkbox_column_header == Select.ALL:
             self.checkbox_column_button.set_inconsistent(False)
@@ -244,10 +255,9 @@ class QubesUpdater(Gtk.Application):
                 row.selected = True
             else:
                 row.selected = False
-        self.block = False
 
+    @disable_checkboxes
     def on_restart_checkbox_toggled(self, _emitter, path):
-        self.block = True
         if path is not None:
             it = self.restart_list_store.get_iter(path)
             self.restart_list_store[it][1] = not self.restart_list_store[it][1]
@@ -270,12 +280,9 @@ class QubesUpdater(Gtk.Application):
                 self.retart_checkbox_column_button.set_inconsistent(True)
                 self.next_button.set_label(
                     "Finish and restart some qubes")  # TODO
-        self.block = False
 
+    @disable_checkboxes
     def on_restart_header_toggled(self, _emitter):
-        if self.block:
-            return
-        self.block = True
         self.restart_checkbox_column_header = self.restart_checkbox_column_header.next()
         if self.restart_checkbox_column_header == SelectToRestart.ALL:
             self.retart_checkbox_column_button.set_inconsistent(False)
@@ -293,7 +300,6 @@ class QubesUpdater(Gtk.Application):
             self.retart_checkbox_column_button.set_inconsistent(False)
             self.retart_checkbox_column_button.set_active(False)
             self.next_button.set_label("Finish")
-        self.block = False
 
     def populate_restart_list(self):
         if hasattr(self, "restart_list_store_wrapped"):
@@ -311,7 +317,8 @@ class QubesUpdater(Gtk.Application):
         self.restart_list_store_wrapped = []
 
         for qube in possibly_changed_vms:
-            if qube.is_running():
+            if qube.is_running() \
+                    and qube.klass != 'DispVM' or not qube.auto_cleanup:
                 to_restart = str(qube.name).startswith("sys-")
                 row = RestartRowWrapper(
                     self.restart_list_store, qube, to_restart)
@@ -1035,8 +1042,8 @@ class CellRendererProgressWithResult(
         Gdk.cairo_set_source_pixbuf(
             context,
             pixbuf,
-            cell_area.x + self.props.xalign,
-            cell_area.y + 10
+            cell_area.x + self.props.xpad,
+            cell_area.y + self.props.ypad
         )
         context.paint()
 

@@ -88,6 +88,28 @@ checkbutton check {
     padding-bottom: 16px;
 }
 
+.flowbox_container {
+    margin: 10px 30px 10px 30px;
+    background: @top-background;
+    padding: 10px;
+    border: 1px;
+    border-style: solid;
+    border-radius: 5px;
+    border-color: @separator-color;
+}
+
+.flowbox_title {
+    color: @soft-text-color;
+    font-weight: 700;
+    padding: 0;
+    margin: 0;
+}
+
+.flowbox_flowbox {
+    background: @top-background;
+    padding: 10px;
+}
+
 textview {
     background: @top-background;
     padding-left: 18px;
@@ -135,4 +157,9 @@ treeview.view button
   background: linear-gradient(180deg, #F4F1F1 0%, #DBDBDB 78.32%, #CCCBCB 100%);
 
   color: @text-color;
+}
+
+.add_label {
+    color: @qubes-blue;
+    font-weight: bold;
 }

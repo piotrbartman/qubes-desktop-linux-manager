@@ -233,10 +233,10 @@
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
                             <property name="margin-top">5</property>
-                            <property name="margin-start">20</property>
+                            <property name="margin-start">28</property>
                             <property name="hexpand">True</property>
                             <property name="use-markup">True</property>
-                            <property name="label" translatable="yes">Exclude the following qubes from automatic updates:</property>
+                            <property name="label" translatable="yes">Exclude the following qubes from automatic restart:</property>
                             <style>
                               <class name="explanation_text"/>
                             </style>
@@ -252,6 +252,7 @@
                             <property name="visible">False</property>
                             <property name="can-focus">False</property>
                             <property name="margin-start">30</property>
+                            <property name="margin-top">10</property>
                             <property name="orientation">vertical</property>
                             <child>
                               <object class="GtkFlowBox" id="restart_exceptions_flowbox">
@@ -272,21 +273,6 @@
                                 <property name="can-focus">False</property>
                                 <property name="spacing">10</property>
                                 <child>
-                                  <object class="GtkLabel">
-                                    <property name="visible">True</property>
-                                    <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Add exception:</property>
-                                    <attributes>
-                                      <attribute name="weight" value="bold"/>
-                                    </attributes>
-                                  </object>
-                                  <packing>
-                                    <property name="expand">False</property>
-                                    <property name="fill">True</property>
-                                    <property name="position">0</property>
-                                  </packing>
-                                </child>
-                                <child>
                                   <object class="GtkComboBox" id="restart_exceptions_qube_combo">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
@@ -305,7 +291,7 @@
                                 </child>
                                 <child>
                                   <object class="GtkButton" id="restart_exceptions_add_cancel">
-                                    <property name="label" translatable="yes">CANCEL</property>
+                                    <property name="label" translatable="yes">Cancel</property>
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
                                     <property name="receives-default">False</property>
@@ -396,7 +382,7 @@
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
                                         <property name="xpad">5</property>
-                                        <property name="label" translatable="yes">exception</property>
+                                        <property name="label" translatable="yes">qube</property>
                                         <style>
                                           <class name="explanation_text"/>
                                         </style>

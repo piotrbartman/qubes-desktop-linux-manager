@@ -588,9 +588,16 @@ class QubesUpdater(Gtk.Application):
                 targets = ",".join((row.name for row in templs))
                 rows = {row.name: row for row in templs}
 
+                args = ['--update-if-stale', self.settings.update_if_stale]
+                if self.settings.max_concurrency is not None:
+                    args.extend(
+                        ('--max-concurrency', self.settings.max_concurrency))
                 proc = subprocess.Popen(
-                    ['sudo', 'qubes-vm-update', '--show-output',
-                     '--just-print-progress', '--targets', targets],
+                    ['qubes-vm-update',
+                     '--show-output',
+                     '--just-print-progress',
+                     *args,
+                     '--targets', targets],
                     stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
                 for untrusted_line in iter(proc.stderr.readline, ''):

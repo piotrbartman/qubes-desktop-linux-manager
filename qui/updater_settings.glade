@@ -178,7 +178,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkCheckButton" id="settings_restart_system">
+                      <object class="GtkCheckButton" id="restart_system">
                         <property name="label" translatable="yes">Restart all _system qubes after update by default</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
@@ -200,7 +200,7 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkCheckButton" id="settings_restart_other">
+                      <object class="GtkCheckButton" id="restart_other">
                         <property name="label" translatable="yes">Restart _other qubes after update if needed</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
@@ -251,7 +251,6 @@
                           <object class="GtkBox" id="restart_exceptions_box">
                             <property name="visible">False</property>
                             <property name="can-focus">False</property>
-                            <property name="margin-start">30</property>
                             <property name="margin-top">10</property>
                             <property name="orientation">vertical</property>
                             <child>
@@ -466,7 +465,7 @@
                         <property name="orientation">horizontal</property>
                         <property name="baseline-position">top</property>
                         <child>
-                          <object class="GtkCheckButton" id="settings_limit">
+                          <object class="GtkCheckButton" id="limit_concurrency">
                             <property name="label" translatable="yes">_Limit how many qubes can update at the same time</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>

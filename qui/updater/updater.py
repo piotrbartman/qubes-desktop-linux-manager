@@ -9,13 +9,14 @@ import subprocess
 import functools
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Optional, Union
+from typing import Optional, Union, Callable
 
 import pkg_resources
 import gi  # isort:skip
 
 from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, \
     appviewer_lock, DATA, FROM, XEVENT, load_theme
+from qubes_config.widgets.utils import get_boolean_feature
 from qui.updater.updater_settings import Settings
 
 gi.require_version('Gtk', '3.0')  # isort:skip
@@ -80,7 +81,11 @@ class QubesUpdater(Gtk.Application):
                    dark_theme_path=pkg_resources.resource_filename(
                        'qui', 'qubes-updater-dark.css'))
 
-        self.settings = Settings(self.main_window, self.qapp)
+        self.settings = Settings(
+            self.main_window,
+            self.qapp,
+            refresh_callback=self.refresh_update_list
+        )
 
         self.header_label = self.builder.get_object("header_label")
         self.button_settings = self.builder.get_object("button_settings")
@@ -104,10 +109,16 @@ class QubesUpdater(Gtk.Application):
 
         header_button.connect('realize', pass_through_event_window)
 
-        self.checkbox_column_header = Select.WITH_UPDATES
         self.checkbox_column_button = self.builder.get_object("checkbox_header")
         self.checkbox_column_button.set_inconsistent(True)
         self.checkbox_column_button.connect("toggled", self.on_header_toggled)
+        self.update_checkbox_header = HeaderCheckbox(
+            self.checkbox_column_button,
+            allowed=("YES", "MAYBE", "NO"),
+            callback_all=lambda _: self.next_button.set_sensitive(True),
+            callback_some=lambda _: self.next_button.set_sensitive(True),
+            callback_none=lambda _: self.next_button.set_sensitive(False),
+        )
 
         # Connect the cell renderer's "toggled" signal to a callback function
         toggle_renderer = self.builder.get_object("toggle_renderer")
@@ -122,7 +133,6 @@ class QubesUpdater(Gtk.Application):
         restart_header_button = restart_checkbox_column.get_button()
         restart_header_button.connect('realize', pass_through_event_window)
 
-        self.restart_checkbox_column_header = SelectToRestart.DEFAULT
         self.retart_checkbox_column_button = self.builder.get_object(
             "restart_checkbox_header")
         self.retart_checkbox_column_button.set_inconsistent(True)
@@ -132,6 +142,15 @@ class QubesUpdater(Gtk.Application):
             "restart_toggle_renderer")
         restart_toggle_renderer.connect(
             "toggled", self.on_restart_checkbox_toggled)
+        self.restart_checkbox_header = HeaderCheckbox(
+            self.retart_checkbox_column_button,
+            allowed=("SYS", "OTHER", "EXCLUDED"),
+            callback_all=lambda plural, num: self.next_button.set_label(
+                f"Finish and restart {num} qube{plural}"),
+            callback_some=lambda plural, num: self.next_button.set_label(
+                f"Finish and restart {num} qube{plural}"),
+            callback_none=lambda _, __: self.next_button.set_label("Finish"),
+        )
 
         headers = [(4, "available"), (5, "check"), (6, "update"),
                    (8, "summary_status")]
@@ -210,96 +229,57 @@ class QubesUpdater(Gtk.Application):
             it = self.list_store.get_iter(path)
             self.list_store[it][0].selected = \
                 not self.list_store[it][0].selected
-            selected = 0
+            selected_num = 0
             for vm_row in self.list_store_wrapped:
                 if vm_row.selected:
-                    selected += 1
-            if selected == len(self.list_store_wrapped):
-                self.checkbox_column_header = Select.ALL
-                self.checkbox_column_button.set_inconsistent(False)
-                self.checkbox_column_button.set_active(True)
-                self.next_button.set_sensitive(True)
-            elif selected == 0:
-                self.checkbox_column_header = Select.NONE
-                self.checkbox_column_button.set_inconsistent(False)
-                self.checkbox_column_button.set_active(False)
-                self.next_button.set_sensitive(False)
+                    selected_num += 1
+            if selected_num == len(self.list_store_wrapped):
+                self.update_checkbox_header.state = HeaderCheckbox.ALL
+            elif selected_num == 0:
+                self.update_checkbox_header.state = HeaderCheckbox.NONE
             else:
-                self.checkbox_column_header = Select.SELECTED
-                self.checkbox_column_button.set_inconsistent(True)
-                self.next_button.set_sensitive(True)
+                self.update_checkbox_header.state = HeaderCheckbox.SELECTED
+            self.update_checkbox_header.set_buttons()
 
     @disable_checkboxes
     def on_header_toggled(self, _emitter):
-        self.checkbox_column_header = self.checkbox_column_header.next()
-        if self.checkbox_column_header == Select.ALL:
-            self.checkbox_column_button.set_inconsistent(False)
-            self.checkbox_column_button.set_active(True)
-            self.next_button.set_sensitive(True)
-            allowed = ("YES", "MAYBE", "NO")
-        elif self.checkbox_column_header == Select.WITH_MAYBE_UPDATES:
-            self.checkbox_column_button.set_inconsistent(True)
-            self.next_button.set_sensitive(True)
-            allowed = ("YES", "MAYBE")
-        elif self.checkbox_column_header == Select.WITH_UPDATES:
-            self.checkbox_column_button.set_inconsistent(True)
-            self.next_button.set_sensitive(True)
-            allowed = ("YES",)
-        else:
-            self.checkbox_column_button.set_inconsistent(False)
-            self.checkbox_column_button.set_active(False)
-            self.next_button.set_sensitive(False)
-            allowed = ()
+        self.update_checkbox_header.next_state()
+        self.update_checkbox_header.set_buttons()
         for row in self.list_store_wrapped:
-            if row.updates_available.value in allowed:
-                row.selected = True
-            else:
-                row.selected = False
+            row.selected = row.updates_available.value \
+                           in self.update_checkbox_header.allowed
 
     @disable_checkboxes
     def on_restart_checkbox_toggled(self, _emitter, path):
         if path is not None:
             it = self.restart_list_store.get_iter(path)
-            self.restart_list_store[it][1] = not self.restart_list_store[it][1]
-            selected = 0
+            self.restart_list_store[it][1] = \
+                not self.restart_list_store[it][1]
+            selected_num = 0
             for vm_row in self.restart_list_store:
-                if vm_row[1]:
-                    selected += 1
-            if selected == len(self.restart_list_store):
-                self.restart_checkbox_column_header = Select.ALL
-                self.retart_checkbox_column_button.set_inconsistent(False)
-                self.retart_checkbox_column_button.set_active(True)
-                self.next_button.set_label("Finish and restart all qubes")
-            elif selected == 0:
-                self.restart_checkbox_column_header = Select.NONE
-                self.retart_checkbox_column_button.set_inconsistent(False)
-                self.retart_checkbox_column_button.set_active(False)
-                self.next_button.set_label("Finish")
+                if vm_row.selected:
+                    selected_num += 1
+            if selected_num == len(self.restart_list_store):
+                self.restart_checkbox_header.state = HeaderCheckbox.ALL
+            elif selected_num == 0:
+                self.restart_checkbox_header.state = HeaderCheckbox.NONE
             else:
-                self.restart_checkbox_column_header = Select.SELECTED
-                self.retart_checkbox_column_button.set_inconsistent(True)
-                self.next_button.set_label(
-                    "Finish and restart some qubes")  # TODO
+                self.restart_checkbox_header.state = HeaderCheckbox.SELECTED
+            plural = "s" if selected_num > 1 else ""
+            self.update_checkbox_header.set_buttons(selected_num, plural)
 
     @disable_checkboxes
     def on_restart_header_toggled(self, _emitter):
-        self.restart_checkbox_column_header = self.restart_checkbox_column_header.next()
-        if self.restart_checkbox_column_header == SelectToRestart.ALL:
-            self.retart_checkbox_column_button.set_inconsistent(False)
-            self.retart_checkbox_column_button.set_active(True)
-            self.next_button.set_sensitive(True)
-            self.next_button.set_label("Finish and restart all qubes")
-        elif self.restart_checkbox_column_header == SelectToRestart.DEFAULT:
-            self.retart_checkbox_column_button.set_inconsistent(True)
-            self.next_button.set_label("Finish and restart some qubes")  # TODO
-        elif self.restart_checkbox_column_header == SelectToRestart.SAVE_TO_RESTART:
-            self.retart_checkbox_column_button.set_inconsistent(True)
-            self.next_button.set_sensitive(True)
-            self.next_button.set_label("Finish and restart some qubes")  # TODO
-        else:
-            self.retart_checkbox_column_button.set_inconsistent(False)
-            self.retart_checkbox_column_button.set_active(False)
-            self.next_button.set_label("Finish")
+        self.restart_checkbox_header.next_state()
+        for row in self.restart_list_store_wrapped:
+            row.selected = (
+                row.is_sys_qube and "SYS"
+                in self.restart_checkbox_header.allowed
+                or not row.is_excluded and "OTHER"
+                in self.restart_checkbox_header.allowed
+                or row.is_excluded and "EXCLUDED"
+                in self.restart_checkbox_header.allowed
+            )
 
     def populate_restart_list(self):
         if hasattr(self, "restart_list_store_wrapped"):
@@ -401,7 +381,8 @@ class QubesUpdater(Gtk.Application):
                 # END TODO
 
         output = subprocess.check_output(
-            ['qubes-vm-update', '--dry-run', '--update-if-stale', f'{7}'])
+            ['qubes-vm-update', '--dry-run',
+             '--update-if-stale', str(self.settings.update_if_stale)])
 
         to_update = [vm_name.strip() for vm_name
                      in output.decode().split("\n")[0].split(":")[1].split(",")]
@@ -414,6 +395,17 @@ class QubesUpdater(Gtk.Application):
                 self.list_store_wrapped.append(qube_row)
 
         return result
+
+    def refresh_update_list(self):
+        output = subprocess.check_output(
+            ['qubes-vm-update', '--dry-run',
+             '--update-if-stale', str(self.settings.update_if_stale)])
+
+        to_update = [vm_name.strip() for vm_name
+                     in output.decode().split("\n")[0].split(":")[1].split(",")]
+
+        for row in self.list_store_wrapped:
+            row.updates_available = bool(row.qube.name in to_update)
 
     def next_clicked(self, _emitter):
         if self.stack.get_visible_child() == self.list_page:
@@ -588,10 +580,11 @@ class QubesUpdater(Gtk.Application):
                 targets = ",".join((row.name for row in templs))
                 rows = {row.name: row for row in templs}
 
-                args = ['--update-if-stale', self.settings.update_if_stale]
+                args = []
                 if self.settings.max_concurrency is not None:
                     args.extend(
-                        ('--max-concurrency', self.settings.max_concurrency))
+                        ('--max-concurrency',
+                         str(self.settings.max_concurrency)))
                 proc = subprocess.Popen(
                     ['qubes-vm-update',
                      '--show-output',
@@ -787,6 +780,14 @@ class UpdateRowWrapper(GObject.GObject):
     def updates_available(self):
         return self.qube_row[4]
 
+    @updates_available.setter
+    def updates_available(self, value):
+        updates_available = bool(
+            self.qube.features.get('updates-available', False))
+        if value and not updates_available:
+            updates_available = None
+        self.qube_row[4] = UpdatesAvailable(updates_available)
+
     @property
     def last_updates_check(self):
         return self.qube_row[5]
@@ -872,7 +873,11 @@ class RestartRowWrapper(GObject.GObject):
 
     @property
     def is_sys_qube(self):
-        return str(self.qube.name).startswith("sys-")  # TODO
+        return str(self.qube.name).startswith("sys-")
+
+    @property
+    def is_excluded(self):
+        return not get_boolean_feature(self.qube, 'automatic-restart', True)
 
     def __eq__(self, other):
         self_class = QubeClass[self.qube.klass]
@@ -915,28 +920,55 @@ class QubeLabel(Enum):
     red = 7
 
 
-class Select(Enum):
+class HeaderCheckbox:
     NONE = 0
-    WITH_UPDATES = 1
-    WITH_MAYBE_UPDATES = 2
+    SAVE = 1
+    EXTENDED = 2
     ALL = 3
     SELECTED = 4
 
-    def next(self):
-        new_value = (self.value + 1) % 4
-        return Select(new_value)
+    def __init__(
+            self,
+            header_button,
+            allowed: tuple,
+            callback_all: Callable,
+            callback_some: Callable,
+            callback_none: Callable
+    ):
+        self.header_button = header_button
+        self.state = HeaderCheckbox.SAVE
+        self._allowed = allowed
+        self.callback_all = callback_all
+        self.callback_some = callback_some
+        self.callback_none = callback_none
 
+    @property
+    def allowed(self):
+        if self.state == HeaderCheckbox.ALL:
+            return self._allowed[:]
+        if self.state == HeaderCheckbox.SAVE:
+            return self._allowed[:2]
+        if self.state == HeaderCheckbox.EXTENDED:
+            return self._allowed[:1]
+        if self.state == HeaderCheckbox.NONE:
+            return ()
 
-class SelectToRestart(Enum):
-    NONE = 0
-    ALL = 1
-    DEFAULT = 2
-    SAVE_TO_RESTART = 3
-    SELECTED = 4
+    def set_buttons(self, *args):
+        if self.state == HeaderCheckbox.ALL:
+            self.header_button.set_inconsistent(False)
+            self.header_button.set_active(True)
+            self.callback_all(*args)
+        elif self.state in (HeaderCheckbox.EXTENDED,
+                            HeaderCheckbox.SAVE):
+            self.header_button.set_inconsistent(True)
+            self.callback_some(*args)
+        else:
+            self.header_button.set_inconsistent(False)
+            self.header_button.set_active(False)
+            self.callback_none(*args)
 
-    def next(self):
-        new_value = (self.value + 1) % 4
-        return Select(new_value)
+    def next_state(self):
+        self.state = (self.state + 1) % 4  # SELECTED is skipped
 
 
 class Date(GObject.GObject):

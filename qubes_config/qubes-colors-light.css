@@ -1,6 +1,10 @@
 @define-color qubes-blue #4180c9;
 @define-color dark-blue #4488df;
 
+@define-color gradient-0 #f4f1f1
+@define-color gradient-1 #dbdbdb
+@define-color gradient-2 #cccbcb
+
 @define-color dark-gray-2 #858585;
 @define-color dark-gray #cdcdcd;
 @define-color medium-gray #979797;

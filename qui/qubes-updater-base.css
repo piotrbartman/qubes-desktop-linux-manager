@@ -13,6 +13,9 @@
 .bottom_button {
     border: 0.4px solid #828282;
     border-radius: 3px;
+    min-height: 35px;
+    padding-left: 35px;
+    padding-right: 35px;
 }
 
 
@@ -26,7 +29,7 @@
 
 .button {
     /* button */
-    background: linear-gradient(180deg, #F4F1F1 0%, #DBDBDB 78.32%, #CCCBCB 100%);
+    background: linear-gradient(180deg, @gradient-0 0%, @gradient-1 78.32%, @gradient-2 100%);
 
     /* text */
     font-family: 'Source Sans Pro';
@@ -38,6 +41,10 @@
     border-radius: 3px;
 
     color: #323232;
+}
+
+.copy_button {
+    font-size: 13px;
 }
 
 .section_title {
@@ -110,26 +117,23 @@ checkbutton check {
     padding: 10px;
 }
 
-textview {
+.text_container {
     background: @top-background;
     padding-left: 18px;
     padding-right: 18px;
     padding-top: 18px;
     padding-bottom: 16px;
-}
+    border: 3px;
+    border-style: solid;
+    border-radius: 5px;
+    border-color: @top-background;
 
-.background_container {
-    background: @top-background;
-}
-
-textview text {
     font-family: 'Source Sans Pro';
     font-style: normal;
     font-weight: 400;
     font-size: 12px;
 
     color: @text-color;
-    background: @top-background;
 }
 
 .content_main_box {
@@ -142,7 +146,6 @@ textview text {
 
 treeview.view
 {
-  background-color: @top-background;
   font-family: 'Source Sans Pro';
   font-style: normal;
   font-weight: 400;
@@ -153,8 +156,8 @@ treeview.view
 
 treeview.view button
 {
-  background-color: #ffffff;
-  background: linear-gradient(180deg, #F4F1F1 0%, #DBDBDB 78.32%, #CCCBCB 100%);
+  /*background-color: #ffffff;*/
+  background: linear-gradient(180deg, @gradient-0 0%, @gradient-1 78.32%, @gradient-2 100%);
 
   color: @text-color;
 }

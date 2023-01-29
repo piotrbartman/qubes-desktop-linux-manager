@@ -19,7 +19,7 @@
       <!-- column-name gdkpixbuf -->
       <column type="GdkPixbuf"/>
       <!-- column-name gchararray -->
-      <column type="gchararray"/>
+      <column type="PyObject"/>
       <!-- column-name gobject1 -->
       <column type="PyObject"/>
       <!-- column-name gobject2 -->
@@ -54,7 +54,7 @@
       <!-- column-name gdkpixbuf -->
       <column type="GdkPixbuf"/>
       <!-- column-name gchararray -->
-      <column type="gchararray"/>
+      <column type="PyObject"/>
       <!-- column-name gchararray1 -->
       <column type="gchararray"/>
     </columns>
@@ -144,6 +144,7 @@
                         <property name="can-focus">False</property>
                         <property name="rules-hint">True</property>
                         <property name="model">list_store</property>
+                        <property name="activate-on-single-click">True</property>
                         <style>
                           <class name="treeview"/>
                         </style>
@@ -179,9 +180,6 @@
                             <property name="sort-column-id">3</property>
                             <child>
                               <object class="GtkCellRendererText" id="name_renderer"/>
-                              <attributes>
-                                <attribute name="markup">3</attribute>
-                              </attributes>
                             </child>
                           </object>
                         </child>
@@ -343,9 +341,6 @@ CAUTION: this may cause data loss if you are currently running programs in those
                           <object class="GtkTreeViewColumn" id="progress_name_column">
                             <child>
                               <object class="GtkCellRendererText" id="progress_name_renderer"/>
-                              <attributes>
-                                <attribute name="markup">3</attribute>
-                              </attributes>
                             </child>
                           </object>
                         </child>
@@ -376,13 +371,13 @@ CAUTION: this may cause data loss if you are currently running programs in those
                     <property name="vexpand">True</property>
                     <property name="orientation">vertical</property>
                     <child>
-                      <object class="GtkBox" id="qube_details_header">
+                      <object class="GtkBox" id="qube_details_box">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="hexpand">False</property>
                         <property name="vexpand">False</property>
-                        <property name="margin-top">20</property>
-                        <property name="margin-bottom">20</property>
+                        <property name="margin-top">30</property>
+                        <property name="margin-bottom">5</property>
                         <child>
                           <object class="GtkLabel" id="details_label">
                             <property name="visible">True</property>
@@ -390,7 +385,6 @@ CAUTION: this may cause data loss if you are currently running programs in those
                             <property name="halign">start</property>
                             <property name="valign">start</property>
                             <property name="use-markup">True</property>
-                            <property name="label" translatable="yes">Select a qube to see details.</property>
                             <style>
                               <class name="explanation_text"/>
                             </style>
@@ -450,12 +444,12 @@ CAUTION: this may cause data loss if you are currently running programs in those
                       <object class="GtkScrolledWindow" id="progress_scrolled_window">
                         <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
-                        <property name="vexpand">True</property>
+                        <property name="vexpand">False</property>
                         <child>
                           <object class="GtkTextView" id="progress_textview">
                             <property name="can-focus">True</property>
                             <property name="hexpand">True</property>
-                            <property name="vexpand">True</property>
+                            <property name="vexpand">False</property>
                             <property name="hscroll-policy">natural</property>
                             <property name="vscroll-policy">natural</property>
                             <property name="editable">False</property>
@@ -464,6 +458,9 @@ CAUTION: this may cause data loss if you are currently running programs in those
                             <property name="cursor-visible">False</property>
                             <property name="accepts-tab">False</property>
                             <property name="monospace">True</property>
+                            <style>
+                              <class name="text_container"/>
+                            </style>
                           </object>
                         </child>
                       </object>
@@ -539,7 +536,7 @@ CAUTION: this may cause data loss if you are currently running programs in those
                     <child>
                       <object class="GtkTreeView" id="summary_list">
                         <property name="visible">True</property>
-                        <property name="can-focus">False</property>
+                        <property name="can-focus">True</property>
                         <property name="hexpand">True</property>
                         <property name="vexpand">True</property>
                         <property name="model">list_store</property>
@@ -563,9 +560,6 @@ CAUTION: this may cause data loss if you are currently running programs in those
                             <property name="sort-column-id">3</property>
                             <child>
                               <object class="GtkCellRendererText" id="summary_name_renderer"/>
-                              <attributes>
-                                <attribute name="markup">3</attribute>
-                              </attributes>
                             </child>
                           </object>
                         </child>
@@ -657,9 +651,6 @@ CAUTION: this may cause data loss if you are currently running programs in those
                                 <property name="sort-column-id">3</property>
                                 <child>
                                   <object class="GtkCellRendererText" id="restart_name_renderer"/>
-                                  <attributes>
-                                    <attribute name="markup">3</attribute>
-                                  </attributes>
                                 </child>
                               </object>
                             </child>

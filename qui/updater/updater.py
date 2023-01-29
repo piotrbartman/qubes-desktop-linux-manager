@@ -15,7 +15,8 @@ import pkg_resources
 import gi  # isort:skip
 
 from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, \
-    appviewer_lock, DATA, FROM, XEVENT, load_theme
+    appviewer_lock, DATA, FROM, XEVENT, load_theme, is_theme_light, \
+    copy_to_global_clipboard
 from qubes_config.widgets.utils import get_boolean_feature
 from qui.updater.updater_settings import Settings
 
@@ -73,13 +74,13 @@ class QubesUpdater(Gtk.Application):
 
         self.vm_list = self.builder.get_object("vm_list")
 
-        self.vm_list.set_rules_hint(True)
-
         load_theme(widget=self.main_window,
                    light_theme_path=pkg_resources.resource_filename(
                        'qui', 'qubes-updater-light.css'),
                    dark_theme_path=pkg_resources.resource_filename(
                        'qui', 'qubes-updater-dark.css'))
+        self.theme = Theme.LIGHT if is_theme_light(self.main_window) \
+            else Theme.DARK
 
         self.settings = Settings(
             self.main_window,
@@ -115,16 +116,16 @@ class QubesUpdater(Gtk.Application):
         self.update_checkbox_header = HeaderCheckbox(
             self.checkbox_column_button,
             allowed=("YES", "MAYBE", "NO"),
-            callback_all=lambda _: self.next_button.set_sensitive(True),
-            callback_some=lambda _: self.next_button.set_sensitive(True),
-            callback_none=lambda _: self.next_button.set_sensitive(False),
+            callback_all=lambda: self.next_button.set_sensitive(True),
+            callback_some=lambda: self.next_button.set_sensitive(True),
+            callback_none=lambda: self.next_button.set_sensitive(False),
         )
 
-        # Connect the cell renderer's "toggled" signal to a callback function
-        toggle_renderer = self.builder.get_object("toggle_renderer")
-        toggle_renderer.connect("toggled", self.on_checkbox_toggled)
+        self.vm_list.connect("row-activated", self.on_checkbox_toggled)
         ###
 
+        self.restart_list = self.builder.get_object("restart_list")
+        self.restart_list.connect("row-activated", self.on_restart_checkbox_toggled)
         self.restart_list_store = self.builder.get_object("restart_list_store")
         restart_checkbox_column = self.builder.get_object(
             "restart_checkbox_column")
@@ -138,22 +139,19 @@ class QubesUpdater(Gtk.Application):
         self.retart_checkbox_column_button.set_inconsistent(True)
         self.retart_checkbox_column_button.connect(
             "toggled", self.on_restart_header_toggled)
-        restart_toggle_renderer = self.builder.get_object(
-            "restart_toggle_renderer")
-        restart_toggle_renderer.connect(
-            "toggled", self.on_restart_checkbox_toggled)
         self.restart_checkbox_header = HeaderCheckbox(
             self.retart_checkbox_column_button,
             allowed=("SYS", "OTHER", "EXCLUDED"),
             callback_all=lambda plural, num: self.next_button.set_label(
-                f"Finish and restart {num} qube{plural}"),
+                f"_Finish and restart {num} qube{plural}"),
             callback_some=lambda plural, num: self.next_button.set_label(
-                f"Finish and restart {num} qube{plural}"),
-            callback_none=lambda _, __: self.next_button.set_label("Finish"),
+                f"_Finish and restart {num} qube{plural}"),
+            callback_none=lambda _, __: self.next_button.set_label("_Finish"),
         )
 
-        headers = [(4, "available"), (5, "check"), (6, "update"),
-                   (8, "summary_status")]
+        headers = [(3, "name"), (3, "progress_name"), (3, "summary_name"),
+                   (3, "restart_name"), (4, "available"), (5, "check"),
+                   (6, "update"), (8, "summary_status")]
 
         def cell_data_func(_column, cell, model, it, data):
             # Get the object from the model
@@ -165,12 +163,13 @@ class QubesUpdater(Gtk.Application):
             renderer = self.builder.get_object(name + "_renderer")
             column = self.builder.get_object(name + "_column")
             column.set_cell_data_func(renderer, cell_data_func, col)
-            if name != "summary_status":
+            renderer.props.ypad = 10
+            if not name.endswith("name") and name != "summary_status":
+                # center
                 renderer.props.xalign = 0.5
 
         progress_list = self.builder.get_object("progress_list")
         progress_list.connect("row-activated", self.row_selected)
-        self.active_row = None
         progress_column = self.builder.get_object("progress_column")
         renderer = CellRendererProgressWithResult()
         renderer.props.ypad = 10
@@ -178,13 +177,8 @@ class QubesUpdater(Gtk.Application):
         progress_column.add_attribute(renderer, "pulse", 7)
         progress_column.add_attribute(renderer, "value", 7)
         progress_column.add_attribute(renderer, "status", 8)
-        self.qube_details = self.builder.get_object("qube_details")
-        self.details_label = self.builder.get_object("details_label")
-        self.qube_icon = self.builder.get_object("qube_icon")
-        self.qube_label = self.builder.get_object("qube_label")
-        self.colon = self.builder.get_object("colon")
-        self.copy_button = self.builder.get_object("copy_button")
-        self.copy_button.connect("clicked", self.copy_content)
+
+        self.update_details = QubeUpdateDetails(self.builder)
 
         self.populate_vm_list()
 
@@ -198,17 +192,20 @@ class QubesUpdater(Gtk.Application):
         self.main_window.connect("delete-event", self.window_close)
         self.main_window.connect("key-press-event", self.check_escape)
 
+        self.summary_list = self.builder.get_object("summary_list")
+        self.summary_list.connect("row-activated", self.back_by_row_selection)
+
         self.stack = self.builder.get_object("main_stack")
         self.list_page = self.builder.get_object("list_page")
         self.progress_page = self.builder.get_object("progress_page")
         self.restart_page = self.builder.get_object("restart_page")
-        self.progress_textview = self.builder.get_object("progress_textview")
-        self.progress_scrolled_window = self.builder.get_object(
-            "progress_textview")
         self.progressbar = self.builder.get_object("progressbar")
         progress_store = self.progressbar.get_model()
         progress_store.append([0])
         self.total_progress = progress_store[-1]
+        self.progressbar_renderer = self.builder.get_object(
+            "progressbar_renderer")
+        self.progressbar_renderer.set_fixed_size(-1, 26)
 
         self.label_summary = self.builder.get_object("label_summary")
         self.info_how_it_works = self.builder.get_object("info_how_it_works")
@@ -224,62 +221,82 @@ class QubesUpdater(Gtk.Application):
         self.exit_triggered = False
 
     @disable_checkboxes
-    def on_checkbox_toggled(self, _emitter, path):
-        if path is not None:
-            it = self.list_store.get_iter(path)
-            self.list_store[it][0].selected = \
-                not self.list_store[it][0].selected
-            selected_num = 0
-            for vm_row in self.list_store_wrapped:
-                if vm_row.selected:
-                    selected_num += 1
-            if selected_num == len(self.list_store_wrapped):
-                self.update_checkbox_header.state = HeaderCheckbox.ALL
-            elif selected_num == 0:
-                self.update_checkbox_header.state = HeaderCheckbox.NONE
-            else:
-                self.update_checkbox_header.state = HeaderCheckbox.SELECTED
-            self.update_checkbox_header.set_buttons()
+    def on_checkbox_toggled(self, _emitter, path, *_args):
+        if path is None:
+            return
+
+        it = self.list_store.get_iter(path)
+        self.list_store[it][0].selected = \
+            not self.list_store[it][0].selected
+        selected_num = sum(row.selected for row in self.list_store_wrapped)
+        if selected_num == len(self.list_store_wrapped):
+            self.update_checkbox_header.state = HeaderCheckbox.ALL
+        elif selected_num == 0:
+            self.update_checkbox_header.state = HeaderCheckbox.NONE
+        else:
+            self.update_checkbox_header.state = HeaderCheckbox.SELECTED
+        self.update_checkbox_header.set_buttons()
 
     @disable_checkboxes
     def on_header_toggled(self, _emitter):
-        self.update_checkbox_header.next_state()
+        if len(self.list_store_wrapped) == 0:  # to avoid infinite loop
+            return
+
+        selected_num = selected_num_old = sum(
+            row.selected for row in self.list_store_wrapped)
+        while selected_num == selected_num_old:
+            self.update_checkbox_header.next_state()
+            for row in self.list_store_wrapped:
+                row.selected = row.updates_available.value \
+                               in self.update_checkbox_header.allowed
+            selected_num = sum(row.selected for row in self.list_store_wrapped)
+
         self.update_checkbox_header.set_buttons()
-        for row in self.list_store_wrapped:
-            row.selected = row.updates_available.value \
-                           in self.update_checkbox_header.allowed
 
     @disable_checkboxes
-    def on_restart_checkbox_toggled(self, _emitter, path):
-        if path is not None:
-            it = self.restart_list_store.get_iter(path)
-            self.restart_list_store[it][1] = \
-                not self.restart_list_store[it][1]
-            selected_num = 0
-            for vm_row in self.restart_list_store:
-                if vm_row.selected:
-                    selected_num += 1
-            if selected_num == len(self.restart_list_store):
-                self.restart_checkbox_header.state = HeaderCheckbox.ALL
-            elif selected_num == 0:
-                self.restart_checkbox_header.state = HeaderCheckbox.NONE
-            else:
-                self.restart_checkbox_header.state = HeaderCheckbox.SELECTED
-            plural = "s" if selected_num > 1 else ""
-            self.update_checkbox_header.set_buttons(selected_num, plural)
+    def on_restart_checkbox_toggled(self, _emitter, path, *_args):
+        if path is None:
+            return
+
+        it = self.restart_list_store.get_iter(path)
+        self.restart_list_store[it][1] = \
+            not self.restart_list_store[it][1]
+        self.refresh_buttons()
+
+    def refresh_buttons(self):
+        selected_num = sum(
+            row.selected for row in self.restart_list_store_wrapped)
+        if selected_num == len(self.restart_list_store):
+            self.restart_checkbox_header.state = HeaderCheckbox.ALL
+        elif selected_num == 0:
+            self.restart_checkbox_header.state = HeaderCheckbox.NONE
+        else:
+            self.restart_checkbox_header.state = HeaderCheckbox.SELECTED
+        plural = "s" if selected_num > 1 else ""
+        self.restart_checkbox_header.set_buttons(plural, selected_num)
 
     @disable_checkboxes
     def on_restart_header_toggled(self, _emitter):
-        self.restart_checkbox_header.next_state()
-        for row in self.restart_list_store_wrapped:
-            row.selected = (
-                row.is_sys_qube and "SYS"
-                in self.restart_checkbox_header.allowed
-                or not row.is_excluded and "OTHER"
-                in self.restart_checkbox_header.allowed
-                or row.is_excluded and "EXCLUDED"
-                in self.restart_checkbox_header.allowed
-            )
+        if len(self.restart_list_store_wrapped) == 0:  # to avoid infinite loop
+            return
+
+        selected_num = selected_num_old = sum(
+            row.selected for row in self.restart_list_store_wrapped)
+        while selected_num == selected_num_old:
+            self.restart_checkbox_header.next_state()
+            for row in self.restart_list_store_wrapped:
+                row.selected = (
+                    row.is_sys_qube and "SYS"
+                    in self.restart_checkbox_header.allowed
+                    or not row.is_excluded and "OTHER"
+                    in self.restart_checkbox_header.allowed
+                    or row.is_excluded and "EXCLUDED"
+                    in self.restart_checkbox_header.allowed
+                )
+            selected_num = sum(
+                row.selected for row in self.restart_list_store_wrapped)
+        plural = "s" if selected_num > 1 else ""
+        self.restart_checkbox_header.set_buttons(plural, selected_num)
 
     def populate_restart_list(self):
         if hasattr(self, "restart_list_store_wrapped"):
@@ -293,38 +310,21 @@ class QubesUpdater(Gtk.Application):
                                  for appvm in template.qube.appvms
                                 }
         self.restart_list_store.set_sort_func(0, sort_func, 0)
+        self.restart_list_store.set_sort_func(3, sort_func, 3)
 
         self.restart_list_store_wrapped = []
 
         for qube in possibly_changed_vms:
             if qube.is_running() \
-                    and qube.klass != 'DispVM' or not qube.auto_cleanup:
-                to_restart = str(qube.name).startswith("sys-")
+                    and (qube.klass != 'DispVM' or not qube.auto_cleanup):
+                to_restart = str(qube.name).startswith("sys-") \
+                             and self.restart_button.get_active()
                 row = RestartRowWrapper(
-                    self.restart_list_store, qube, to_restart)
+                    self.restart_list_store, qube, to_restart, self.theme)
                 self.restart_list_store_wrapped.append(row)
 
     def open_settings_window(self, _emitter):
         self.settings.show()
-
-    def copy_content(self, _emitter):
-        if self.active_row is None:
-            return
-
-        text = self.active_row.buffer
-        if not text:
-            return
-
-        try:
-            with appviewer_lock():
-                with open(DATA, "w", encoding='utf-8') as contents:
-                    contents.write(text)
-                with open(FROM, "w", encoding='ascii') as source:
-                    source.write("dom0")
-                with open(XEVENT, "w", encoding='ascii') as timestamp:
-                    timestamp.write(str(Gtk.get_current_event_time()))
-        except Exception:  # pylint: disable=broad-except
-            pass
 
     def do_activate(self, *_args, **_kwargs):
         if not self.primary:
@@ -357,6 +357,7 @@ class QubesUpdater(Gtk.Application):
         self.list_store_wrapped = []
 
         self.list_store.set_sort_func(0, sort_func, 0)
+        self.list_store.set_sort_func(3, sort_func, 3)
         self.list_store.set_sort_func(4, sort_func, 4)
         self.list_store.set_sort_func(5, sort_func, 5)
         self.list_store.set_sort_func(6, sort_func, 6)
@@ -368,31 +369,29 @@ class QubesUpdater(Gtk.Application):
                 except exc.QubesDaemonCommunicationError:
                     state = False
                 result = result or state
-                qube_row = UpdateRowWrapper(self.list_store, vm, state)
+                qube_row = UpdateRowWrapper(
+                    self.list_store, vm, state, self.theme)
                 self.list_store_wrapped.append(qube_row)
 
                 # TODO
                 devel_deb = self.qapp.domains['devel-debian']
-                qube_row = UpdateRowWrapper(self.list_store, devel_deb, True)
+                qube_row = UpdateRowWrapper(
+                    self.list_store, devel_deb, True, self.theme)
                 self.list_store_wrapped.append(qube_row)
                 devel_fed = self.qapp.domains['devel-fedora']
-                qube_row = UpdateRowWrapper(self.list_store, devel_fed, True)
+                qube_row = UpdateRowWrapper(
+                    self.list_store, devel_fed, True, self.theme)
                 self.list_store_wrapped.append(qube_row)
                 # END TODO
-
-        output = subprocess.check_output(
-            ['qubes-vm-update', '--dry-run',
-             '--update-if-stale', str(self.settings.update_if_stale)])
-
-        to_update = [vm_name.strip() for vm_name
-                     in output.decode().split("\n")[0].split(":")[1].split(",")]
 
         for vm in self.qapp.domains:
             if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM':
                 qube_row = UpdateRowWrapper(
-                    self.list_store, vm, bool(vm.name in to_update))
+                    self.list_store, vm, False, self.theme)
                 self.settings.available_vms.append(vm)
                 self.list_store_wrapped.append(qube_row)
+
+        self.refresh_update_list()
 
         return result
 
@@ -417,12 +416,11 @@ class QubesUpdater(Gtk.Application):
                 elem.delete()
             self.list_store_wrapped = selected_rows
 
-            self.back_to_progress()
-
+            self.show_progress_page()
             self.next_button.set_sensitive(False)
-
             self.cancel_button.set_label(_("_Cancel updates"))
             self.cancel_button.show()
+
             self.header_label.set_text(_("Update in progress..."))
             self.header_label.set_halign(Gtk.Align.CENTER)
 
@@ -455,22 +453,23 @@ class QubesUpdater(Gtk.Application):
             self.stack.set_visible_child(self.restart_page)
             self.cancel_button.set_label(_("_Back"))
             self.cancel_button.show()
-            self.next_button.set_label(_("_Finish"))
+            self.refresh_buttons()
         elif self.stack.get_visible_child() == self.restart_page:
             self.cancel_updates()
             self.perform_restart()
 
     def cancel_clicked(self, _emitter):
         if self.stack.get_visible_child() == self.restart_page:
-            self.back_to_progress()
+            self.show_progress_page()
         else:
             self.cancel_updates()
 
-    def back_to_progress(self):
-        self.colon.hide()
-        self.progress_textview.set_visible(False)
-        self.copy_button.set_visible(False)
-        self.progress_scrolled_window.set_visible(False)
+    def back_by_row_selection(self, _emitter, path, *args):
+        self.show_progress_page()
+        self.row_selected(_emitter, path, *args)
+
+    def show_progress_page(self):
+        self.update_details.set_active_row(None)
         self.stack.set_visible_child(self.progress_page)
 
         self.next_button.set_label(_("_Next"))
@@ -493,25 +492,9 @@ class QubesUpdater(Gtk.Application):
         restart_vms(to_restart)
         shutdown_domains(to_shutdown)
 
-    def row_selected(self, _view, path, _col):
-        self.details_label.set_text(_("Details for") + "  ")
-        self.active_row = self.list_store_wrapped[path.get_indices()[0]]
-        self.qube_label.set_markup(" " + self.active_row.color_name)
-        self.qube_icon.set_from_pixbuf(self.active_row.icon)
-        self.update_buffer()
-        self.qube_icon.set_visible(True)
-        self.qube_label.set_visible(True)
-        self.colon.set_visible(True)
-        self.progress_textview.set_visible(True)
-
-        self.copy_button.set_visible(True)
-        self.progress_textview.set_visible(True)
-        self.progress_scrolled_window.set_visible(True)
-
-    def update_buffer(self):
-        if self.active_row is not None:
-            buffer_ = self.progress_textview.get_buffer()
-            buffer_.set_text(self.active_row.buffer)
+    def row_selected(self, _emitter, path, _col):
+        self.update_details.set_active_row(
+            self.list_store_wrapped[path.get_indices()[0]])
 
     def perform_update(self):
         admins = [row for row in self.list_store_wrapped
@@ -533,33 +516,29 @@ class QubesUpdater(Gtk.Application):
             GObject.idle_add(admin.set_status, UpdateStatus.ProgressUnknown)
             time.sleep(1)
 
-            self.update_buffer()
+            self.update_details.update_buffer()
 
             self.ticker_done = False
             thread = threading.Thread(target=self.ticker, args=(admin,))
             thread.start()
 
             try:
-                # output = subprocess.check_output(
-                #     ['sudo', 'qubesctl', '--dom0-only', '--no-color',
-                #      'pkg.upgrade', 'refresh=True'],
-                #     stderr=subprocess.STDOUT).decode()
-                output = "Some output"
-                time.sleep(10)
+                output = subprocess.check_output(
+                    ['sudo', 'qubesctl', '--dom0-only', '--no-color',
+                     'pkg.upgrade', 'refresh=True'],
+                    stderr=subprocess.STDOUT).decode()
                 ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
                 output = ansi_escape.sub('', output)
-                self.ticker_done = True
 
                 GObject.idle_add(admin.append_text_view, output)
                 GObject.idle_add(admin.set_status, UpdateStatus.Success)
             except subprocess.CalledProcessError as ex:
-                self.ticker_done = True
-
                 GObject.idle_add(
                     admin.append_text_view,
                     _("Error on updating {}: {}\n{}").format(
                         admin.vm.name, str(ex), ex.output.decode()))
                 GObject.idle_add(admin.set_status, UpdateStatus.Error)
+            self.ticker_done = True
 
         if templs:
             if self.exit_triggered:
@@ -574,7 +553,7 @@ class QubesUpdater(Gtk.Application):
                     row.append_text_view,
                     _("Updating {}\n").format(row.name))
                 GObject.idle_add(row.set_status, UpdateStatus.InProgress)
-            self.update_buffer()
+            self.update_details.update_buffer()
 
             try:
                 targets = ",".join((row.name for row in templs))
@@ -635,7 +614,7 @@ class QubesUpdater(Gtk.Application):
                             rows[name].append_text_view, text)
                     else:
                         break
-                self.update_buffer()
+                self.update_details.update_buffer()
                 proc.stdout.close()
 
                 proc.wait()
@@ -647,7 +626,7 @@ class QubesUpdater(Gtk.Application):
                         _("Error on updating {}: {}\n{}").format(
                             row.name, str(ex), ex.output.decode()))
                     GObject.idle_add(row.set_status, UpdateStatus.Error)
-                self.update_buffer()
+                self.update_details.update_buffer()
 
         GObject.idle_add(self.next_button.set_sensitive, True)
         GObject.idle_add(self.header_label.set_text, _("Update finished"))
@@ -694,6 +673,57 @@ class QubesUpdater(Gtk.Application):
         self.total_progress[0] = progress
 
 
+class QubeUpdateDetails:
+
+    def __init__(self, builder):
+        self.active_row = None
+
+        self.builder = builder
+        self.qube_details = self.builder.get_object("qube_details")
+        self.details_label = self.builder.get_object("details_label")
+        self.qube_icon = self.builder.get_object("qube_icon")
+        self.qube_label = self.builder.get_object("qube_label")
+        self.colon = self.builder.get_object("colon")
+        self.copy_button = self.builder.get_object("copy_button")
+        self.copy_button.connect("clicked", self.copy_content)
+        self.progress_textview = self.builder.get_object("progress_textview")
+        self.progress_scrolled_window = self.builder.get_object(
+            "progress_textview")
+
+    def copy_content(self, _emitter):
+        if self.active_row is None:
+            return
+
+        text = self.active_row.buffer
+        if not text:
+            return
+
+        copy_to_global_clipboard(text)
+
+    def set_active_row(self, row):
+        self.active_row = row
+        row_activated = self.active_row is not None
+        if not row_activated:
+            self.details_label.set_text(_("Select a qube to see details."))
+        else:
+            self.details_label.set_text(_("Details for") + "  ")
+            self.qube_icon.set_from_pixbuf(self.active_row.icon)
+            self.qube_label.set_markup(" " + str(self.active_row.color_name))
+        self.update_buffer()
+
+        self.qube_icon.set_visible(row_activated)
+        self.qube_label.set_visible(row_activated)
+        self.colon.set_visible(row_activated)
+        self.progress_scrolled_window.set_visible(row_activated)
+        self.progress_textview.set_visible(row_activated)
+        self.copy_button.set_visible(row_activated)
+
+    def update_buffer(self):
+        if self.active_row is not None:
+            buffer_ = self.progress_textview.get_buffer()
+            buffer_.set_text(self.active_row.buffer)
+
+
 class UpdateStatus(Enum):
     Success = 0
     NoUpdatesFound = 1
@@ -726,8 +756,30 @@ class UpdateStatus(Enum):
         return self.value < other.value
 
 
+class Theme(Enum):
+    LIGHT = 0
+    DARK = 1
+
+
+class QubeName:
+    def __init__(self, name, color, theme):
+        self.name = name
+        self.color = color
+        self.theme = theme
+
+    def __str__(self):
+        return f'<span foreground="{label_color_theme(self.theme, self.color)}'\
+               '"><b>' + self.name + '</b></span>'
+
+    def __eq__(self, other):
+        return self.name == other.name
+
+    def __lt__(self, other):
+        return self.name < other.name
+
+
 class UpdateRowWrapper(GObject.GObject):
-    def __init__(self, list_store, qube, to_update: bool):
+    def __init__(self, list_store, qube, to_update: bool, theme: Theme):
         super().__init__()
         self.list_store = list_store
         self.qube = qube
@@ -739,12 +791,13 @@ class UpdateRowWrapper(GObject.GObject):
         last_update = qube.features.get('last-update', None)
         self.buffer: str = ""
         label = QubeLabel[self.qube.label.name]
+        self.theme = theme
         qube_row = [
             self,
             selected,
             get_domain_icon(qube),
-            f'<span foreground="{label.name}"><b>' + qube.name + '</b></span>',
-            UpdatesAvailable(updates_available),
+            QubeName(qube.name, label.name, theme),
+            UpdatesAvailable(updates_available, theme),
             Date(last_updates_check),
             Date(last_update),
             0,
@@ -770,7 +823,7 @@ class UpdateRowWrapper(GObject.GObject):
 
     @property
     def name(self):
-        return self.qube.name
+        return self.qube_row[3].name
 
     @property
     def color_name(self):
@@ -786,7 +839,7 @@ class UpdateRowWrapper(GObject.GObject):
             self.qube.features.get('updates-available', False))
         if value and not updates_available:
             updates_available = None
-        self.qube_row[4] = UpdatesAvailable(updates_available)
+        self.qube_row[4] = UpdatesAvailable(updates_available, self.theme)
 
     @property
     def last_updates_check(self):
@@ -832,16 +885,17 @@ class UpdateRowWrapper(GObject.GObject):
 
 
 class RestartRowWrapper(GObject.GObject):
-    def __init__(self, list_store, qube, to_restart: bool):
+    def __init__(self, list_store, qube, to_restart: bool, theme: Theme):
         super().__init__()
         self.list_store = list_store
         self.qube = qube
+        self.theme = theme
         label = QubeLabel[self.qube.label.name]
         qube_row = [
             self,
             to_restart,
             get_domain_icon(qube),
-            f'<span foreground="{label.name}"><b>' + qube.name + '</b></span>',
+            QubeName(qube.name, label.name, theme),
             '',
         ]
         self.list_store.append(qube_row)
@@ -922,7 +976,7 @@ class QubeLabel(Enum):
 
 class HeaderCheckbox:
     NONE = 0
-    SAVE = 1
+    SAFE = 1
     EXTENDED = 2
     ALL = 3
     SELECTED = 4
@@ -936,7 +990,7 @@ class HeaderCheckbox:
             callback_none: Callable
     ):
         self.header_button = header_button
-        self.state = HeaderCheckbox.SAVE
+        self.state = HeaderCheckbox.SAFE
         self._allowed = allowed
         self.callback_all = callback_all
         self.callback_some = callback_some
@@ -946,10 +1000,10 @@ class HeaderCheckbox:
     def allowed(self):
         if self.state == HeaderCheckbox.ALL:
             return self._allowed[:]
-        if self.state == HeaderCheckbox.SAVE:
-            return self._allowed[:2]
-        if self.state == HeaderCheckbox.EXTENDED:
+        if self.state == HeaderCheckbox.SAFE:
             return self._allowed[:1]
+        if self.state == HeaderCheckbox.EXTENDED:
+            return self._allowed[:2]
         if self.state == HeaderCheckbox.NONE:
             return ()
 
@@ -958,14 +1012,13 @@ class HeaderCheckbox:
             self.header_button.set_inconsistent(False)
             self.header_button.set_active(True)
             self.callback_all(*args)
-        elif self.state in (HeaderCheckbox.EXTENDED,
-                            HeaderCheckbox.SAVE):
-            self.header_button.set_inconsistent(True)
-            self.callback_some(*args)
-        else:
+        elif self.state == HeaderCheckbox.NONE:
             self.header_button.set_inconsistent(False)
             self.header_button.set_active(False)
             self.callback_none(*args)
+        else:
+            self.header_button.set_inconsistent(True)
+            self.callback_some(*args)
 
     def next_state(self):
         self.state = (self.state + 1) % 4  # SELECTED is skipped
@@ -1010,9 +1063,13 @@ class Date(GObject.GObject):
     def __lt__(self, other):
         return self.datetime < other.datetime
 
+def label_color_theme(theme: Theme, color: str) -> str:
+    if theme == Theme.DARK and color.lower() == "black":
+        return "white"
+    return color
 
 class UpdatesAvailable:
-    def __init__(self, value: Union[Optional[bool], str]):
+    def __init__(self, value: Union[Optional[bool], str], theme: Theme):
         super().__init__()
         if isinstance(value, str):
             if value.upper() == "NO":
@@ -1025,15 +1082,15 @@ class UpdatesAvailable:
         if value is None:
             self.value = "MAYBE"
             self.order = 1
-            self.color = "Orange"
+            self.color = "orange"
         elif value:
             self.value = "YES"
             self.order = 0
-            self.color = "Green"
+            self.color = "green"
         else:
             self.value = "NO"
             self.order = 2
-            self.color = "Black"
+            self.color = label_color_theme(theme, "black")
 
     def __str__(self):
         return f'<span foreground="{self.color}"><b>' + self.value + '</b></span>'
@@ -1066,6 +1123,11 @@ class CellRendererProgressWithResult(
             self.draw_icon('qubes-check-yes', context, cell_area)
         elif status == UpdateStatus.NoUpdatesFound:
             self.draw_icon('qubes-check-maybe', context, cell_area)
+            self.set_property('text', "    (no updates found)")
+            self.set_property("pulse", -1)
+            self.set_property("value", 0)
+            Gtk.CellRendererProgress.do_render(
+                self, context, widget, background_area, cell_area, flags)
         elif status in (UpdateStatus.Error, UpdateStatus.Cancelled):
             self.draw_icon('qubes-delete-x', context, cell_area)
         elif status == UpdateStatus.ProgressUnknown:

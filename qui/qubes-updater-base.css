@@ -1,46 +1,74 @@
 .ok_button {
-    background: linear-gradient(180deg, #72A9F3 0%, #2C7EED 83.02%, #1059BC 100%);
-
-    /* text */
     font-family: 'Source Sans Pro';
     font-style: normal;
     font-weight: 700;
     font-size: 16px;
 
-    color: #F2F2F2;
+    color: @light-gray;
 }
 
 .bottom_button {
-    border: 0.4px solid #828282;
+    border: 0.4px solid @light-gray;
     border-radius: 3px;
     min-height: 35px;
     padding-left: 35px;
     padding-right: 35px;
 }
 
-
 .settings_bottom_button {
     min-width: 134px;
     min-height: 39px;
 
-    border: 0.4px solid #828282;
+    border: 0.4px solid @dark-gray-2;
     border-radius: 3px;
 }
 
-.button {
-    /* button */
-    background: linear-gradient(180deg, @gradient-0 0%, @gradient-1 78.32%, @gradient-2 100%);
+.button_common {
+  background: linear-gradient(180deg, @gradient-0 0%, @gradient-1 78.32%, @gradient-2 100%);
+}
 
-    /* text */
+.button_highlighted {
+    background: linear-gradient(180deg, #72A9F3 0%, #2C7EED 83.02%, #1059BC 100%);
+}
+
+.button_text {
     font-family: 'Source Sans Pro';
     font-style: normal;
     font-weight: 400;
     font-size: 16px;
 
-    border: 0.4px solid #828282;
+    border: 0.4px solid @dark-gray-2;
     border-radius: 3px;
 
-    color: #323232;
+    color: @text-color;
+}
+
+.button_save {
+    background: linear-gradient(180deg, #72A9F3 0%, #2C7EED 83.02%, #1059BC 100%);
+
+    font-family: 'Source Sans Pro';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 13px;
+
+    border: 0.4px solid @dark-gray-2;
+    border-radius: 3px;
+
+    color: @light-gray;
+}
+
+.button_cancel {
+    background: background: linear-gradient(180deg, @gradient-0 0%, @gradient-1 78.32%, @gradient-2 100%);
+
+    font-family: 'Source Sans Pro';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 16px;
+
+    border: 0.4px solid @dark-gray-2;
+    border-radius: 3px;
+
+    color: @text-color;
 }
 
 .copy_button {
@@ -84,7 +112,7 @@ checkbutton check {
     min-height: 16px;
     margin-right: 5px;
     color: @text-color;
-    background: @top-background;
+    /*background: @top-background;*/
 }
 
 .content_box {
@@ -118,15 +146,15 @@ checkbutton check {
 }
 
 .text_container {
-    background: @top-background;
+    /*background: @top-background;*/
     padding-left: 18px;
-    padding-right: 18px;
+    /*padding-right: 18px;*/
     padding-top: 18px;
     padding-bottom: 16px;
-    border: 3px;
-    border-style: solid;
-    border-radius: 5px;
-    border-color: @top-background;
+    /*border: 3px;*/
+    /*border-style: solid;*/
+    /*border-radius: 5px;*/
+    /*border-color: @top-background;*/
 
     font-family: 'Source Sans Pro';
     font-style: normal;
@@ -156,9 +184,7 @@ treeview.view
 
 treeview.view button
 {
-  /*background-color: #ffffff;*/
   background: linear-gradient(180deg, @gradient-0 0%, @gradient-1 78.32%, @gradient-2 100%);
-
   color: @text-color;
 }
 

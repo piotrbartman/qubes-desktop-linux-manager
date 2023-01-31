@@ -271,6 +271,7 @@
                               <object class="GtkBox" id="restart_exceptions_add_box">
                                 <property name="can-focus">False</property>
                                 <property name="spacing">10</property>
+                                <property name="margin-start">28</property>
                                 <child>
                                   <object class="GtkComboBox" id="restart_exceptions_qube_combo">
                                     <property name="visible">True</property>
@@ -296,9 +297,8 @@
                                     <property name="receives-default">False</property>
                                     <property name="relief">none</property>
                                     <style>
-                                      <class name="button_cancel"/>
-                                      <class name="flat_button"/>
-                                      <class name="flat"/>
+                                      <class name="button_text"/>
+                                      <class name="button_common"/>
                                     </style>
                                   </object>
                                   <packing>
@@ -315,9 +315,8 @@
                                     <property name="receives-default">True</property>
                                     <property name="relief">none</property>
                                     <style>
-                                      <class name="button_save"/>
-                                      <class name="flat_button"/>
-                                      <class name="flat"/>
+                                      <class name="button_text"/>
+                                      <class name="button_common"/>
                                     </style>
                                   </object>
                                   <packing>
@@ -360,7 +359,7 @@
                                   <object class="GtkBox">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">Key qubes store your GPG keys for use with other qubes.</property>
+                                    <property name="margin-start">28</property>
                                     <child>
                                       <object class="GtkLabel">
                                         <property name="visible">True</property>
@@ -522,6 +521,7 @@
             <property name="use-underline">True</property>
             <style>
               <class name="ok_button"/>
+              <class name="button_highlighted"/>
               <class name="settings_bottom_button"/>
             </style>
           </object>
@@ -539,7 +539,8 @@
             <property name="valign">end</property>
             <property name="use-underline">True</property>
             <style>
-              <class name="button"/>
+              <class name="button_text"/>
+              <class name="button_common"/>
               <class name="settings_bottom_button"/>
             </style>
           </object>

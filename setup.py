@@ -64,8 +64,8 @@ setuptools.setup(
                           "qubes-updater-base.css",
                           "qubes-updater-light.css",
                           "qubes-updater-dark.css",
-                          "qubes-colors-dark.css",
-                          "qubes-colors-light.css",
+                          "qubes-colors-dark-updater.css",
+                          "qubes-colors-light-updater.css",
                           "qubes-widgets-base.css"
                           ],
                   'qubes_config': ["new_qube.glade",

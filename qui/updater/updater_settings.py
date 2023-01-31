@@ -70,7 +70,8 @@ class Settings:
 
         self.available_vms = [
             vm for vm in self.qapp.domains
-            if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM']
+            if vm.klass == 'DispVM' and not vm.auto_cleanup
+            or vm.klass == 'AppVM']
         self.excluded_vms = [
             vm for vm in self.available_vms
             if not get_boolean_feature(vm, 'automatic-restart', True)]

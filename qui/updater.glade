@@ -110,7 +110,8 @@
                 <property name="valign">end</property>
                 <property name="use-underline">True</property>
                 <style>
-                  <class name="button"/>
+                  <class name="button_text"/>
+                  <class name="button_common"/>
                 </style>
               </object>
             </child>
@@ -346,7 +347,7 @@ CAUTION: this may cause data loss if you are currently running programs in those
                         </child>
                         <child>
                           <object class="GtkTreeViewColumn" id="progress_column">
-                            <property name="fixed-width">100</property>
+                            <property name="fixed-width">150</property>
                           </object>
                         </child>
                         <child>
@@ -472,14 +473,16 @@ CAUTION: this may cause data loss if you are currently running programs in those
                     </child>
                     <child>
                       <object class="GtkButton" id="copy_button">
-                        <property name="label" translatable="yes">Copy details to global clipboard</property>
+                        <property name="label" translatable="yes">  Copy details to global clipboard  </property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">False</property>
                         <property name="margin-top">13</property>
+                        <property name="margin-bottom">16</property>
                         <property name="halign">start</property>
                         <property name="hexpand">False</property>
                         <style>
-                          <class name="button"/>
+                          <class name="button_text"/>
+                          <class name="button_common"/>
                         </style>
                       </object>
                       <packing>
@@ -595,8 +598,8 @@ CAUTION: this may cause data loss if you are currently running programs in those
                         <property name="can-focus">False</property>
                         <property name="halign">start</property>
                         <property name="valign">start</property>
-                        <property name="margin-top">10</property>
-                        <property name="margin-bottom">10</property>
+                        <property name="margin-top">30</property>
+                        <property name="margin-bottom">5</property>
                         <property name="label" translatable="yes">The following qubes need to be restarted to use an updated template:</property>
                       </object>
                       <packing>
@@ -611,6 +614,7 @@ CAUTION: this may cause data loss if you are currently running programs in those
                         <property name="hexpand">True</property>
                         <property name="vexpand">True</property>
                         <property name="shadow-type">in</property>
+                        <property name="margin-bottom">16</property>
                         <child>
                           <object class="GtkTreeView" id="restart_list">
                             <property name="visible">True</property>
@@ -714,6 +718,7 @@ CAUTION: this may cause data loss if you are currently running programs in those
                 <property name="use-underline">True</property>
                 <style>
                   <class name="ok_button"/>
+                  <class name="button_highlighted"/>
                   <class name="bottom_button"/>
                 </style>
               </object>
@@ -731,7 +736,8 @@ CAUTION: this may cause data loss if you are currently running programs in those
                 <property name="valign">end</property>
                 <property name="use-underline">True</property>
                 <style>
-                  <class name="button"/>
+                  <class name="button_text"/>
+                  <class name="button_common"/>
                   <class name="bottom_button"/>
                 </style>
               </object>

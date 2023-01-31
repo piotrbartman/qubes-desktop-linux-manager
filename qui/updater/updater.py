@@ -3,6 +3,7 @@
 # pylint: disable=wrong-import-position,import-error
 import asyncio
 import re
+import selectors
 import time
 import threading
 import subprocess
@@ -17,7 +18,7 @@ import gi  # isort:skip
 from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, \
     appviewer_lock, DATA, FROM, XEVENT, load_theme, is_theme_light, \
     copy_to_global_clipboard
-from qubes_config.widgets.utils import get_boolean_feature
+from qubes_config.widgets.utils import get_boolean_feature, get_feature
 from qui.updater.updater_settings import Settings
 
 gi.require_version('Gtk', '3.0')  # isort:skip
@@ -115,7 +116,7 @@ class QubesUpdater(Gtk.Application):
         self.checkbox_column_button.connect("toggled", self.on_header_toggled)
         self.update_checkbox_header = HeaderCheckbox(
             self.checkbox_column_button,
-            allowed=("YES", "MAYBE", "NO"),
+            allowed=["YES", "MAYBE", "NO"],
             callback_all=lambda: self.next_button.set_sensitive(True),
             callback_some=lambda: self.next_button.set_sensitive(True),
             callback_none=lambda: self.next_button.set_sensitive(False),
@@ -141,7 +142,7 @@ class QubesUpdater(Gtk.Application):
             "toggled", self.on_restart_header_toggled)
         self.restart_checkbox_header = HeaderCheckbox(
             self.retart_checkbox_column_button,
-            allowed=("SYS", "OTHER", "EXCLUDED"),
+            allowed=["", "", "EXCLUDED"],
             callback_all=lambda plural, num: self.next_button.set_label(
                 f"_Finish and restart {num} qube{plural}"),
             callback_some=lambda plural, num: self.next_button.set_label(
@@ -239,17 +240,18 @@ class QubesUpdater(Gtk.Application):
 
     @disable_checkboxes
     def on_header_toggled(self, _emitter):
-        if len(self.list_store_wrapped) == 0:  # to avoid infinite loop
-            return
-
-        selected_num = selected_num_old = sum(
-            row.selected for row in self.list_store_wrapped)
-        while selected_num == selected_num_old:
-            self.update_checkbox_header.next_state()
-            for row in self.list_store_wrapped:
-                row.selected = row.updates_available.value \
-                               in self.update_checkbox_header.allowed
-            selected_num = sum(row.selected for row in self.list_store_wrapped)
+        if len(self.list_store_wrapped) == 0:
+            self.update_checkbox_header.state = HeaderCheckbox.NONE
+        else:
+            selected_num = selected_num_old = sum(
+                row.selected for row in self.list_store_wrapped)
+            while selected_num == selected_num_old:
+                self.update_checkbox_header.next_state()
+                for row in self.list_store_wrapped:
+                    row.selected = row.updates_available.value \
+                                   in self.update_checkbox_header.allowed
+                selected_num = sum(
+                    row.selected for row in self.list_store_wrapped)
 
         self.update_checkbox_header.set_buttons()
 
@@ -266,10 +268,10 @@ class QubesUpdater(Gtk.Application):
     def refresh_buttons(self):
         selected_num = sum(
             row.selected for row in self.restart_list_store_wrapped)
-        if selected_num == len(self.restart_list_store):
-            self.restart_checkbox_header.state = HeaderCheckbox.ALL
-        elif selected_num == 0:
+        if selected_num == 0:
             self.restart_checkbox_header.state = HeaderCheckbox.NONE
+        elif selected_num == len(self.restart_list_store):
+            self.restart_checkbox_header.state = HeaderCheckbox.ALL
         else:
             self.restart_checkbox_header.state = HeaderCheckbox.SELECTED
         plural = "s" if selected_num > 1 else ""
@@ -278,32 +280,26 @@ class QubesUpdater(Gtk.Application):
     @disable_checkboxes
     def on_restart_header_toggled(self, _emitter):
         if len(self.restart_list_store_wrapped) == 0:  # to avoid infinite loop
-            return
-
-        selected_num = selected_num_old = sum(
-            row.selected for row in self.restart_list_store_wrapped)
-        while selected_num == selected_num_old:
-            self.restart_checkbox_header.next_state()
-            for row in self.restart_list_store_wrapped:
-                row.selected = (
-                    row.is_sys_qube and "SYS"
-                    in self.restart_checkbox_header.allowed
-                    or not row.is_excluded and "OTHER"
-                    in self.restart_checkbox_header.allowed
-                    or row.is_excluded and "EXCLUDED"
-                    in self.restart_checkbox_header.allowed
-                )
-            selected_num = sum(
+            self.restart_checkbox_header.state = HeaderCheckbox.NONE
+            selected_num = 0
+        else:
+            selected_num = selected_num_old = sum(
                 row.selected for row in self.restart_list_store_wrapped)
+            while selected_num == selected_num_old:
+                self.restart_checkbox_header.next_state()
+                self.select_restart_rows()
+                selected_num = sum(
+                    row.selected for row in self.restart_list_store_wrapped)
         plural = "s" if selected_num > 1 else ""
         self.restart_checkbox_header.set_buttons(plural, selected_num)
 
+    @disable_checkboxes
     def populate_restart_list(self):
         if hasattr(self, "restart_list_store_wrapped"):
             return
         self.updated_tmpls = [
             row for row in self.list_store_wrapped
-            if row.status
+            if bool(row.status)
             and QubeClass[row.qube.klass] == QubeClass.TemplateVM
         ]
         possibly_changed_vms = {appvm for template in self.updated_tmpls
@@ -317,11 +313,36 @@ class QubesUpdater(Gtk.Application):
         for qube in possibly_changed_vms:
             if qube.is_running() \
                     and (qube.klass != 'DispVM' or not qube.auto_cleanup):
-                to_restart = str(qube.name).startswith("sys-") \
-                             and self.restart_button.get_active()
                 row = RestartRowWrapper(
-                    self.restart_list_store, qube, to_restart, self.theme)
+                    self.restart_list_store, qube, self.theme)
                 self.restart_list_store_wrapped.append(row)
+
+        if self.settings.restart_system_vms:
+            self.restart_checkbox_header._allowed[0] = "SYS"
+        if self.settings.restart_other_vms:
+            self.restart_checkbox_header._allowed[1] = "OTHER"
+        if not self.restart_button.get_active():
+            self.restart_checkbox_header.state = HeaderCheckbox.NONE
+        else:
+            if self.settings.restart_system_vms:
+                self.restart_checkbox_header.state = HeaderCheckbox.SAFE
+            if self.settings.restart_other_vms:
+                self.restart_checkbox_header.state = HeaderCheckbox.EXTENDED
+        self.select_restart_rows()
+
+    def select_restart_rows(self):
+        for row in self.restart_list_store_wrapped:
+            row.selected = (
+                    row.is_sys_qube
+                    and not row.is_excluded
+                    and "SYS" in self.restart_checkbox_header.allowed
+                    or
+                    not row.is_sys_qube
+                    and not row.is_excluded
+                    and "OTHER" in self.restart_checkbox_header.allowed
+                    or
+                    "EXCLUDED" in self.restart_checkbox_header.allowed
+            )
 
     def open_settings_window(self, _emitter):
         self.settings.show()
@@ -503,138 +524,181 @@ class QubesUpdater(Gtk.Application):
                   if row.selected and row.qube.klass != 'AdminVM']
 
         if admins:
-            admin = admins[0]
-            if self.exit_triggered:
-                GObject.idle_add(admin.set_status, UpdateStatus.Cancelled)
-                GObject.idle_add(
-                    admin.append_text_view,
-                    _("Canceled update for {}\n").format(admin.vm.name))
-
-            GObject.idle_add(
-                admin.append_text_view,
-                _("Updating {}\n").format(admin.name))
-            GObject.idle_add(admin.set_status, UpdateStatus.ProgressUnknown)
-            time.sleep(1)
-
-            self.update_details.update_buffer()
-
-            self.ticker_done = False
-            thread = threading.Thread(target=self.ticker, args=(admin,))
-            thread.start()
-
-            try:
-                output = subprocess.check_output(
-                    ['sudo', 'qubesctl', '--dom0-only', '--no-color',
-                     'pkg.upgrade', 'refresh=True'],
-                    stderr=subprocess.STDOUT).decode()
-                ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
-                output = ansi_escape.sub('', output)
-
-                GObject.idle_add(admin.append_text_view, output)
-                GObject.idle_add(admin.set_status, UpdateStatus.Success)
-            except subprocess.CalledProcessError as ex:
-                GObject.idle_add(
-                    admin.append_text_view,
-                    _("Error on updating {}: {}\n{}").format(
-                        admin.vm.name, str(ex), ex.output.decode()))
-                GObject.idle_add(admin.set_status, UpdateStatus.Error)
-            self.ticker_done = True
+            self.update_admin_vm(admins)
 
         if templs:
-            if self.exit_triggered:
-                for row in templs:
-                    GObject.idle_add(row.set_status, UpdateStatus.Cancelled)
-                    GObject.idle_add(
-                        row.append_text_view,
-                        _("Canceled update for {}\n").format(row.vm.name))
-
-            for row in templs:
-                GObject.idle_add(
-                    row.append_text_view,
-                    _("Updating {}\n").format(row.name))
-                GObject.idle_add(row.set_status, UpdateStatus.InProgress)
-            self.update_details.update_buffer()
-
-            try:
-                targets = ",".join((row.name for row in templs))
-                rows = {row.name: row for row in templs}
-
-                args = []
-                if self.settings.max_concurrency is not None:
-                    args.extend(
-                        ('--max-concurrency',
-                         str(self.settings.max_concurrency)))
-                proc = subprocess.Popen(
-                    ['qubes-vm-update',
-                     '--show-output',
-                     '--just-print-progress',
-                     *args,
-                     '--targets', targets],
-                    stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-
-                for untrusted_line in iter(proc.stderr.readline, ''):
-                    if untrusted_line:
-                        line = untrusted_line.decode().rstrip()
-                        try:
-                            name, prog = line.split()
-                            progress = int(float(prog))
-                        except ValueError:
-                            continue
-
-                        if progress == 100.:
-                            GObject.idle_add(
-                                rows[name].set_status, UpdateStatus.Success)
-
-                        GObject.idle_add(
-                            rows[name].set_update_progress, progress)
-                        total_progress = sum(
-                            row.get_update_progress()
-                            for row in rows.values()) / len(rows)
-
-                        GObject.idle_add(
-                            self.set_total_progress, total_progress)
-                    else:
-                        break
-                proc.stderr.close()
-
-                for row in rows.values():
-                    if row.get_update_progress() != 100.:
-                        GObject.idle_add(row.set_status, UpdateStatus.Error)
-
-                GObject.idle_add(self.set_total_progress, 100)
-
-                name = ""
-                for untrusted_line in iter(proc.stdout.readline, ''):
-                    if untrusted_line:
-                        line = untrusted_line.decode()
-                        maybe_name, text = line.split(' ', 1)
-                        if maybe_name[:-1] in rows.keys():
-                            name = maybe_name[:-1]
-                        GObject.idle_add(
-                            rows[name].append_text_view, text)
-                    else:
-                        break
-                self.update_details.update_buffer()
-                proc.stdout.close()
-
-                proc.wait()
-
-            except subprocess.CalledProcessError as ex:
-                for row in templs:
-                    GObject.idle_add(
-                        row.append_text_view,
-                        _("Error on updating {}: {}\n{}").format(
-                            row.name, str(ex), ex.output.decode()))
-                    GObject.idle_add(row.set_status, UpdateStatus.Error)
-                self.update_details.update_buffer()
+            self.update_templates(templs)
 
         GObject.idle_add(self.next_button.set_sensitive, True)
         GObject.idle_add(self.header_label.set_text, _("Update finished"))
         GObject.idle_add(self.cancel_button.set_visible, False)
 
+    def update_templates(self, templs):
+        if self.exit_triggered:
+            for row in templs:
+                GObject.idle_add(row.set_status, UpdateStatus.Cancelled)
+                GObject.idle_add(
+                    row.append_text_view,
+                    _("Canceled update for {}\n").format(row.vm.name))
+
+        for row in templs:
+            GObject.idle_add(
+                row.append_text_view,
+                _("Updating {}\n").format(row.name))
+            GObject.idle_add(row.set_status, UpdateStatus.InProgress)
+        self.update_details.update_buffer()
+
+        try:
+            targets = ",".join((row.name for row in templs))
+            rows = {row.name: row for row in templs}
+
+            args = []
+            if self.settings.max_concurrency is not None:
+                args.extend(
+                    ('--max-concurrency',
+                     str(self.settings.max_concurrency)))
+            proc = subprocess.Popen(
+                ['qubes-vm-update',
+                 '--show-output',
+                 '--just-print-progress',
+                 *args,
+                 '--targets', targets],
+                stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+
+            sel = selectors.DefaultSelector()
+            sel.register(proc.stdout, selectors.EVENT_READ)
+            sel.register(proc.stderr, selectors.EVENT_READ)
+
+            data = True
+            outbuf = b''
+            errbuf = b''
+            self.curr_name_out = ""
+            while data:
+                for key, __ in sel.select():
+                    data = key.fileobj.read1()
+                    if not data:
+                        break
+                    if key.fileobj is proc.stdout:
+                        if data != b'\n':
+                            outbuf += data
+                        else:
+                            self.handle_err_line(outbuf, rows)
+                            outbuf = b''
+                    else:
+                        if data != b'\n':
+                            errbuf += data
+                        else:
+                            self.handle_err_line(errbuf, rows)
+                            errbuf = b''
+
+            # for untrusted_line in iter(proc.stderr.readline, ''):
+            #     if untrusted_line:
+            #         self.handle_err_line(untrusted_line, rows)
+            #     else:
+            #         break
+            proc.stderr.close()
+
+            for row in rows.values():
+                if row.get_update_progress() != 100.:
+                    GObject.idle_add(row.set_status, UpdateStatus.Error)
+
+            GObject.idle_add(self.set_total_progress, 100)
+
+            # for untrusted_line in iter(proc.stdout.readline, ''):
+            #     if untrusted_line:
+            #         self.handle_out_line(untrusted_line, rows)
+            #     else:
+            #         break
+            self.update_details.update_buffer()
+            proc.stdout.close()
+
+            proc.wait()
+
+        except subprocess.CalledProcessError as ex:
+            for row in templs:
+                GObject.idle_add(
+                    row.append_text_view,
+                    _("Error on updating {}: {}\n{}").format(
+                        row.name, str(ex), ex.output.decode()))
+                GObject.idle_add(row.set_status, UpdateStatus.Error)
+            self.update_details.update_buffer()
+
+    def update_admin_vm(self, admins):
+        admin = admins[0]
+        if self.exit_triggered:
+            GObject.idle_add(admin.set_status, UpdateStatus.Cancelled)
+            GObject.idle_add(
+                admin.append_text_view,
+                _("Canceled update for {}\n").format(admin.vm.name))
+
+        GObject.idle_add(
+            admin.append_text_view,
+            _("Updating {}\n").format(admin.name))
+        GObject.idle_add(admin.set_status, UpdateStatus.ProgressUnknown)
+
+        self.update_details.update_buffer()
+
+        self.ticker_done = False
+        thread = threading.Thread(target=self.ticker, args=(admin,))
+        thread.start()
+
+        try:
+            output = subprocess.check_output(
+                ['sudo', 'qubesctl', '--dom0-only', '--no-color',
+                 'pkg.upgrade', 'refresh=True'],
+                stderr=subprocess.STDOUT).decode()
+            ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
+            output = ansi_escape.sub('', output)
+
+            GObject.idle_add(admin.append_text_view, output)
+            GObject.idle_add(admin.set_status, UpdateStatus.Success)
+        except subprocess.CalledProcessError as ex:
+            GObject.idle_add(
+                admin.append_text_view,
+                _("Error on updating {}: {}\n{}").format(
+                    admin.qube.name, str(ex), ex.output.decode()))
+            GObject.idle_add(admin.set_status, UpdateStatus.Error)
+        self.ticker_done = True
+
+    def handle_err_line(self, untrusted_line, rows):
+        line = untrusted_line.decode().rstrip()
+        try:
+            name, prog = line.split()
+            progress = int(float(prog))
+        except ValueError:
+            return
+
+        if progress == 100.:
+            if get_feature(rows[name].qube, "last-updates-check") \
+                    == get_feature(rows[name].qube, "last-update"):
+                GObject.idle_add(
+                    rows[name].set_status, UpdateStatus.Success)
+            else:
+                GObject.idle_add(
+                    rows[name].set_status,
+                    UpdateStatus.NoUpdatesFound
+                )
+
+        GObject.idle_add(
+            rows[name].set_update_progress, progress)
+        total_progress = sum(
+            row.get_update_progress()
+            for row in rows.values()) / len(rows)
+
+        GObject.idle_add(
+            self.set_total_progress, total_progress)
+
+    def handle_out_line(self, untrusted_line, rows):
+        line = untrusted_line.decode()
+        maybe_name, text = line.split(' ', 1)
+        if maybe_name[:-1] in rows.keys():
+            self.curr_name_out = maybe_name[:-1]
+        GObject.idle_add(
+            rows[self.curr_name_out].append_text_view, text)
+
     def ticker(self, row):
         while not self.ticker_done:
-            new_value = (row.get_update_progress()) % 100 + 1
+            new_value = (row.get_update_progress()) % 96 + 1
             row.set_update_progress(new_value)
             time.sleep(1 / 12)
 
@@ -741,7 +805,7 @@ class UpdateStatus(Enum):
             color = "green"
         elif self == UpdateStatus.NoUpdatesFound:
             text = "No updates found"
-            color = "orange"
+            color = "green"
         elif self == UpdateStatus.Cancelled:
             text = "Cancelled"
         elif self in (UpdateStatus.InProgress, UpdateStatus.ProgressUnknown):
@@ -754,6 +818,11 @@ class UpdateStatus(Enum):
 
     def __lt__(self, other):
         return self.value < other.value
+
+    def __bool__(self):
+        return self == UpdateStatus.Success \
+            or self == UpdateStatus.NoUpdatesFound  # TODO
+
 
 
 class Theme(Enum):
@@ -885,7 +954,7 @@ class UpdateRowWrapper(GObject.GObject):
 
 
 class RestartRowWrapper(GObject.GObject):
-    def __init__(self, list_store, qube, to_restart: bool, theme: Theme):
+    def __init__(self, list_store, qube, theme: Theme):
         super().__init__()
         self.list_store = list_store
         self.qube = qube
@@ -893,7 +962,7 @@ class RestartRowWrapper(GObject.GObject):
         label = QubeLabel[self.qube.label.name]
         qube_row = [
             self,
-            to_restart,
+            False,
             get_domain_icon(qube),
             QubeName(qube.name, label.name, theme),
             '',
@@ -908,6 +977,14 @@ class RestartRowWrapper(GObject.GObject):
     @selected.setter
     def selected(self, value):
         self.qube_row[1] = value
+        self.qube_row[4] = ''
+        if value and not self.is_sys_qube:
+            self.qube_row[4] = 'Restarting an app ' \
+                               'qube will shut down all running applications'
+        if value and self.is_excluded:
+            self.qube_row[4] = '<span foreground="red">This qube has been ' \
+                               'explicitly disabled from restarting in ' \
+                               'settings</span>'
 
     @property
     def icon(self):
@@ -984,7 +1061,7 @@ class HeaderCheckbox:
     def __init__(
             self,
             header_button,
-            allowed: tuple,
+            allowed: list,
             callback_all: Callable,
             callback_some: Callable,
             callback_none: Callable
@@ -1123,11 +1200,11 @@ class CellRendererProgressWithResult(
             self.draw_icon('qubes-check-yes', context, cell_area)
         elif status == UpdateStatus.NoUpdatesFound:
             self.draw_icon('qubes-check-maybe', context, cell_area)
-            self.set_property('text', "    (no updates found)")
-            self.set_property("pulse", -1)
-            self.set_property("value", 0)
-            Gtk.CellRendererProgress.do_render(
-                self, context, widget, background_area, cell_area, flags)
+            # self.set_property('text', "    (no updates found)")
+            # self.set_property("pulse", -1)
+            # self.set_property("value", 0)
+            # Gtk.CellRendererProgress.do_render(
+            #     self, context, widget, background_area, cell_area, flags)
         elif status in (UpdateStatus.Error, UpdateStatus.Cancelled):
             self.draw_icon('qubes-delete-x', context, cell_area)
         elif status == UpdateStatus.ProgressUnknown:

@@ -29,12 +29,14 @@ from qubes_config.widgets.utils import get_boolean_feature, \
     apply_feature_change, get_feature
 
 
+GObject.signal_new('child-removed',
+                   Gtk.FlowBox,
+                   GObject.SignalFlags.RUN_LAST, GObject.TYPE_PYOBJECT,
+                   (GObject.TYPE_PYOBJECT,))
+
+
 class Settings:
     def __init__(self, main_window, qapp, refresh_callback: Callable):
-        GObject.signal_new('child-removed',
-                           Gtk.FlowBox,
-                           GObject.SignalFlags.RUN_LAST, GObject.TYPE_PYOBJECT,
-                           (GObject.TYPE_PYOBJECT,))
         self.qapp = qapp
         self.refresh_callback = refresh_callback
         self.vm = self.qapp.domains[self.qapp.local_name]
@@ -199,7 +201,7 @@ class Settings:
                 apply_feature_change(vm, 'automatic-restart', None)
             self.exceptions.save()
 
-        self.refresh_callback()
+        self.refresh_callback(self.update_if_stale)
         self.settings_window.close()
 
     def _save_option(
@@ -212,4 +214,3 @@ class Settings:
             if value == default:
                 value = None
             apply_feature_change(self.vm, f"qubes-vm-update-{name}", value)
-

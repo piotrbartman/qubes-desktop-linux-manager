@@ -316,7 +316,7 @@
                                     <property name="relief">none</property>
                                     <style>
                                       <class name="button_text"/>
-                                      <class name="button_common"/>
+                                      <class name="button_highlighted"/>
                                     </style>
                                   </object>
                                   <packing>

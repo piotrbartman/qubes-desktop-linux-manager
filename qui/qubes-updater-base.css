@@ -7,6 +7,10 @@
     color: @light-gray;
 }
 
+.ok_button:disabled {
+    color: @medium-gray;
+}
+
 .bottom_button {
     border: 0.4px solid @light-gray;
     border-radius: 3px;
@@ -15,20 +19,36 @@
     padding-right: 35px;
 }
 
+.bottom_button:hover {
+    border: 0.8px solid @light-gray;
+}
+
 .settings_bottom_button {
     min-width: 134px;
     min-height: 39px;
 
-    border: 0.4px solid @dark-gray-2;
+    border: 0.4px solid @light-gray;
     border-radius: 3px;
+}
+
+.settings_bottom_button:hover {
+    border: 0.8px solid @light-gray;
 }
 
 .button_common {
   background: linear-gradient(180deg, @gradient-0 0%, @gradient-1 78.32%, @gradient-2 100%);
 }
 
+.button_common:disabled {
+  background: @gradient-0;
+}
+
 .button_highlighted {
     background: linear-gradient(180deg, #72A9F3 0%, #2C7EED 83.02%, #1059BC 100%);
+}
+
+.button_highlighted:disabled {
+    background: #72A9F3;
 }
 
 .button_text {
@@ -43,12 +63,20 @@
     color: @text-color;
 }
 
+.button_text:disabled {
+    color: @medium-gray;
+}
+
+.button_text:hover {
+    border: 0.8px solid @dark-gray-2;
+}
+
 .button_save {
     background: linear-gradient(180deg, #72A9F3 0%, #2C7EED 83.02%, #1059BC 100%);
 
     font-family: 'Source Sans Pro';
     font-style: normal;
-    font-weight: 400;
+    font-weight: 700;
     font-size: 13px;
 
     border: 0.4px solid @dark-gray-2;
@@ -58,12 +86,12 @@
 }
 
 .button_cancel {
-    background: background: linear-gradient(180deg, @gradient-0 0%, @gradient-1 78.32%, @gradient-2 100%);
+    background: linear-gradient(180deg, @gradient-0 0%, @gradient-1 78.32%, @gradient-2 100%);
 
     font-family: 'Source Sans Pro';
     font-style: normal;
     font-weight: 400;
-    font-size: 16px;
+    font-size: 13px;
 
     border: 0.4px solid @dark-gray-2;
     border-radius: 3px;

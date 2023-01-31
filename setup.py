@@ -45,7 +45,7 @@ setuptools.setup(name='qui',
       url='https://www.qubes-os.org/',
       packages=("qui", "qui.tray", "qubes_config",
                 "qubes_config.global_config", "qubes_config.widgets",
-                "qubes_config.new_qube"),
+                "qubes_config.new_qube", 'qubes_config.policy_editor'),
       entry_points={
           'gui_scripts': [
               'qui-domains = qui.tray.domains:main',
@@ -55,7 +55,8 @@ setuptools.setup(name='qui',
               'qubes-update-gui = qui.updater:main',
               'qui-clipboard = qui.clipboard:main',
               'qubes-new-qube = qubes_config.new_qube.new_qube_app:main',
-              'qubes-global-config = qubes_config.global_config.global_config:main'
+              'qubes-global-config = qubes_config.global_config.global_config:main',
+              'qubes-policy-editor = qubes_config.policy_editor.policy_editor:main'
           ]
       },
       package_data={'qui': ["updater.glade"],
@@ -67,9 +68,14 @@ setuptools.setup(name='qui',
                                      "qubes-global-config-base.css",
                                      "qubes-global-config-light.css",
                                      "qubes-global-config-dark.css",
+                                     "qubes-policy-editor-base.css",
+                                     "qubes-policy-editor-light.css",
+                                     "qubes-policy-editor-dark.css",
                                      "qubes-colors-dark.css",
                                      "qubes-colors-light.css",
-                                     "qubes-widgets-base.css"]},
+                                     "qubes-widgets-base.css",
+                                     "policy_editor.glade",
+                                     "policy_editor/policy_help.txt"]},
       cmdclass={
           'install': InstallWithLocale
       },

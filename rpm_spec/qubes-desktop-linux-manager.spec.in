@@ -59,6 +59,7 @@ Requires:  python%{python3_pkgversion}-qubesadmin >= 4.1.8
 Requires:  qubes-artwork >= 4.1.5
 # for qui/widget-wrapper
 Requires:  xhost
+Requires:  gtksourceview4
 
 Provides:   qui = %{version}-%{release}
 Obsoletes:  qui < 4.0.0
@@ -153,10 +154,19 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 %{python3_sitelib}/qubes_config/qubes-global-config-base.css
 %{python3_sitelib}/qubes_config/qubes-global-config-light.css
 %{python3_sitelib}/qubes_config/qubes-global-config-dark.css
+%{python3_sitelib}/qubes_config/qubes-policy-editor-base.css
+%{python3_sitelib}/qubes_config/qubes-policy-editor-light.css
+%{python3_sitelib}/qubes_config/qubes-policy-editor-dark.css
 %{python3_sitelib}/qubes_config/qubes-new-qube-base.css
 %{python3_sitelib}/qubes_config/qubes-new-qube-light.css
 %{python3_sitelib}/qubes_config/qubes-new-qube-dark.css
 %{python3_sitelib}/qubes_config/qubes-widgets-base.css
+
+%{python3_sitelib}/qubes_config/policy_editor/__pycache__/*
+%{python3_sitelib}/qubes_config/policy_editor.glade
+%{python3_sitelib}/qubes_config/policy_editor/policy_editor.py
+%{python3_sitelib}/qubes_config/policy_editor/__init__.py
+%{python3_sitelib}/qubes_config/policy_editor/policy_help.txt
 
 %{_bindir}/qui-domains
 %{_bindir}/qui-devices
@@ -182,6 +192,7 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 
 %{_bindir}/qubes-new-qube
 %{_bindir}/qubes-global-config
+%{_bindir}/qubes-policy-editor
 
 /usr/share/icons/hicolor/16x16/apps/qui-domains.png
 /usr/share/icons/hicolor/24x24/apps/qui-domains.png
@@ -212,6 +223,8 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 /usr/share/icons/hicolor/scalable/apps/check_no.svg
 /usr/share/icons/hicolor/scalable/apps/check_maybe.svg
 /usr/share/icons/hicolor/scalable/apps/check_yes.svg
+
+/usr/share/gtksourceview-4/language-specs/qubes-rpc.lang
 
 %changelog
 @CHANGELOG@

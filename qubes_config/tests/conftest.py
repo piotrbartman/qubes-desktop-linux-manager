@@ -403,6 +403,14 @@ Test * test-red test-blue deny"""
         self.files[filename] = policy_text
         self.file_tokens[filename] = str(len(policy_text))
 
+    def policy_list(self):
+        return list(self.files.keys())
+
+@pytest.fixture
+def test_policy_client():
+    """Policy client fixture"""
+    return TestPolicyClient()
+
 
 @pytest.fixture
 def test_policy_manager():

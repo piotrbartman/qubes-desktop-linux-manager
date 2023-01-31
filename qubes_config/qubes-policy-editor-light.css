@@ -1,0 +1,14 @@
+@import "qubes-colors-light.css";
+@define-color error-background #fce9e3;
+@define-color ok-background #cef2e0;
+@import "qubes-widgets-base.css";
+@import "qubes-policy-editor-base.css";
+
+.help_label {
+    background: @medium-gray-2;
+    color: @dark-text-color;
+}
+
+.background {
+    background: @top-background-2;
+}

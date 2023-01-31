@@ -67,7 +67,11 @@ install-autostart:
 	cp desktop/qubes-global-config.desktop $(DESTDIR)/usr/share/applications/
 	cp desktop/qubes-new-qube.desktop $(DESTDIR)/usr/share/applications/
 
-install: install-autostart install-icons
+install-lang:
+	mkdir -p $(DESTDIR)/usr/share/gtksourceview-4/language-specs/
+	cp qubes_config/policy_editor/qubes-rpc.lang $(DESTDIR)/usr/share/gtksourceview-4/language-specs/
+
+install: install-autostart install-icons install-lang
 
 .PHONY: clean
 clean:

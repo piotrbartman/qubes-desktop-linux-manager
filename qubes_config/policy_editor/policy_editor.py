@@ -52,7 +52,8 @@ class FileListBoxRow(Gtk.ListBoxRow):
         self.filename = filename
 
 class OpenDialogHandler:
-    def __init__(self, builder: Gtk.Builder, policy_client: PolicyClient,
+    def __init__(self, builder: Gtk.Builder,
+                 policy_client: 'PolicyClientWrapper',
                  triggered_func: Callable):
         self.policy_client = policy_client
         self.triggered_func = triggered_func
@@ -451,26 +452,33 @@ class PolicyEditor(Gtk.Application):
         if name is None:
             return
         self.source_view.set_sensitive(True)
-        try:
-            text, self.token = self.policy_client.policy_get(name)
-        except subprocess.CalledProcessError:
-            response = ask_question(
-                self.main_window, "Policy file not found",
-                "File {} not found. Do you want to create a "
-                "new policy file?".format(name))
-            if response == Gtk.ResponseType.YES:
-                # make new file
-                text = ""
-                self.token = "any"
-            elif response == Gtk.ResponseType.NO:
-                # make no file
-                text = "Create new file or open an existing one."
-                self.token = None
-                self.source_view.set_sensitive(False)
-            else:
-                # quit
-                self._quit()
-                return
+        self.error_info.set_visible(True)
+        if name == '':
+            text = "Create new file or open an existing one."
+            self.token = None
+            self.source_view.set_sensitive(False)
+            self.error_info.set_visible(False)
+        else:
+            try:
+                text, self.token = self.policy_client.policy_get(name)
+            except subprocess.CalledProcessError:
+                response = ask_question(
+                    self.main_window, "Policy file not found",
+                    "File {} not found. Do you want to create a "
+                    "new policy file?".format(name))
+                if response == Gtk.ResponseType.YES:
+                    # make new file
+                    text = ""
+                    self.token = "any"
+                elif response == Gtk.ResponseType.NO:
+                    # make no file
+                    text = "Create new file or open an existing one."
+                    self.token = None
+                    self.source_view.set_sensitive(False)
+                else:
+                    # quit
+                    self._quit()
+                    return
         self._set_policy_file(name, text)
 
     def _text_changed(self, *_args):
@@ -518,12 +526,10 @@ def main():
     Start the app
     """
     policy_client = PolicyClient()
-    filename = sys.argv[1]
-    if not filename:
-        print("usage: qubes-policy-editor FILENAME\n\n"
-              "Edit provided policy file or create new "
-              "file under provided name.")
-        return
+    if len(sys.argv) > 1:
+        filename = sys.argv[1]
+    else:
+        filename = ''
     app = PolicyEditor(filename, policy_client)
     app.run()
 

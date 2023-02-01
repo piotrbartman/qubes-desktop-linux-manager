@@ -66,6 +66,7 @@ install-autostart:
 	cp linux-systemd/qubes-widget@.service $(DESTDIR)/lib/systemd/user/
 	cp desktop/qubes-global-config.desktop $(DESTDIR)/usr/share/applications/
 	cp desktop/qubes-new-qube.desktop $(DESTDIR)/usr/share/applications/
+	cp desktop/qubes-policy-editor.desktop $(DESTDIR)/usr/share/applications/
 
 install-lang:
 	mkdir -p $(DESTDIR)/usr/share/gtksourceview-4/language-specs/

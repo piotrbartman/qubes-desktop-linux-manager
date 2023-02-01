@@ -324,3 +324,36 @@ def test_unsaved_exit_save(test_policy_client):
         # quit, save
         assert mock_quit.call_count == 1
         assert test_policy_client.files['a-test'] == 'Test * vm1 vm2 allow'
+
+def test_includes(test_policy_client):
+    policy_editor = PolicyEditor('include/include-1', test_policy_client)
+    policy_editor.perform_setup()
+
+    assert policy_editor.source_buffer.get_text(
+        policy_editor.source_buffer.get_start_iter(),
+        policy_editor.source_buffer.get_end_iter(), False) == \
+           "!include include/include-2"
+
+    policy_editor.source_buffer.set_text('!include include/include-2\n'
+                                         'Test * vm1 vm2 allow')
+
+    policy_editor.action_items['save'].activate()
+
+    assert test_policy_client.include_files['include-1'] == \
+           '!include include/include-2\nTest * vm1 vm2 allow'
+
+    # open another
+    policy_editor.action_items['open'].activate()
+    assert policy_editor.file_select_handler.dialog_window.get_visible()
+
+    for row in policy_editor.file_select_handler.file_list.get_children():
+        if row.filename == 'include/include-2':
+            policy_editor.file_select_handler.file_list.select_row(row)
+            break
+
+    policy_editor.file_select_handler.ok_button.clicked()
+
+    assert policy_editor.source_buffer.get_text(
+        policy_editor.source_buffer.get_start_iter(),
+        policy_editor.source_buffer.get_end_iter(), False) == \
+           """Test.Test +argument @anyvm @anyvm allow"""

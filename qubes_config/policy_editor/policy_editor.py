@@ -20,7 +20,7 @@
 import subprocess
 import sys
 import re
-from typing import Callable, Optional, Dict
+from typing import Callable, Optional, Dict, Tuple
 
 import gi
 import pkg_resources
@@ -101,6 +101,39 @@ class OpenDialogHandler:
         self.file_list.select_row(None)
 
 
+class PolicyClientWrapper:
+    """
+    wrapper for policy client that handles files with include/ prefix
+    transparently
+    """
+    INCLUDE_PREFIX = 'include/'
+    def __init__(self, policy_client: PolicyClient):
+        self.policy_client = policy_client
+
+    def policy_list(self):
+        """List all policy files, prefacing those from include directory
+        with include/"""
+        file_list = self.policy_client.policy_list()
+        file_list.extend(['include/' + name for name in
+                          self.policy_client.policy_include_list()])
+        return file_list
+
+    def policy_get(self, name: str) -> Tuple[str, str]:
+        """Get provided policy file, return contents and token."""
+        if name.startswith(self.INCLUDE_PREFIX):
+            name = name[len(self.INCLUDE_PREFIX):]
+            return self.policy_client.policy_include_get(name)
+        return self.policy_client.policy_get(name)
+
+    def policy_replace(self, name: str, content: str, token="any"):
+        """Replace provided policy file."""
+        if name.startswith(self.INCLUDE_PREFIX):
+            name = name[len(self.INCLUDE_PREFIX):]
+            self.policy_client.policy_include_replace(name, content, token)
+            return
+        self.policy_client.policy_replace(name, content, token)
+
+
 class PolicyEditor(Gtk.Application):
     """
     Main Gtk.Application for new qube widget.
@@ -108,7 +141,7 @@ class PolicyEditor(Gtk.Application):
     def __init__(self, filename: str, policy_client: PolicyClient):
         super().__init__(application_id='org.qubesos.policyeditor')
         self.token: Optional[str] = None
-        self.policy_client = policy_client
+        self.policy_client = PolicyClientWrapper(policy_client)
         self.filename = filename
         self.window_title = 'Qubes OS Policy Editor'
         self.action_items: Dict[str, Gio.SimpleAction] = {}
@@ -325,11 +358,11 @@ class PolicyEditor(Gtk.Application):
             elif response == Gtk.ResponseType.CANCEL:
                 return
 
-        ask_dialog = Gtk.MessageDialog(self.main_window,
-                                       Gtk.DialogFlags.MODAL,
-                                       Gtk.MessageType.QUESTION,
-                                       Gtk.ButtonsType.OK_CANCEL,
-                                       "Name of the new policy file:")
+        ask_dialog = Gtk.MessageDialog(transient_for=self.main_window,
+                                       modal=True,
+                                       message_type=Gtk.MessageType.QUESTION,
+                                       buttons=Gtk.ButtonsType.OK_CANCEL,
+                                       text="Name of the new policy file:")
 
         ask_dialog.set_title("New file")
         entry = Gtk.Entry()
@@ -493,11 +526,6 @@ def main():
         return
     app = PolicyEditor(filename, policy_client)
     app.run()
-
-# Actual TODO
-# - handle includes
-# - add reformat button
-
 
 if __name__ == '__main__':
     sys.exit(main())

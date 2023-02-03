@@ -79,7 +79,7 @@ class Settings:
             if not get_boolean_feature(vm, 'automatic-restart', True)]
         self.exceptions = VMFlowboxHandler(
             self.builder, self.qapp, "restart_exceptions",
-            self.excluded_vms, lambda qube: qube in self.available_vms)
+            self.excluded_vms, lambda vm: vm in self.available_vms)
         self.restart_exceptions_page = self.builder.get_object(
             "restart_exceptions_page")
 

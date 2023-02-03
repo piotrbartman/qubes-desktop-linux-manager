@@ -81,9 +81,9 @@ class ProgressPage:
     def perform_update(self, vms_to_update, settings):
         self.vms_to_update = vms_to_update
         admins = [row for row in vms_to_update
-                  if row.selected and row.qube.klass == 'AdminVM']
+                  if row.selected and row.vm.klass == 'AdminVM']
         templs = [row for row in vms_to_update
-                  if row.selected and row.qube.klass != 'AdminVM']
+                  if row.selected and row.vm.klass != 'AdminVM']
 
         if admins:
             self.update_admin_vm(admins)
@@ -163,8 +163,8 @@ class ProgressPage:
         for row in rows.values():
             progress = row.get_update_progress()
             if progress == 100.:
-                if get_feature(row.qube, "last-updates-check") \
-                        == get_feature(row.qube, "last-update"):
+                if get_feature(row.vm, "last-updates-check") \
+                        == get_feature(row.vm, "last-update"):
                     GObject.idle_add(
                         row.set_status, UpdateStatus.Success)
                 else:
@@ -210,7 +210,7 @@ class ProgressPage:
             GObject.idle_add(
                 admin.append_text_view,
                 _("Error on updating {}: {}\n{}").format(
-                    admin.qube.name, str(ex), ex.output.decode()))
+                    admin.vm.name, str(ex), ex.output.decode()))
             GObject.idle_add(admin.set_status, UpdateStatus.Error)
         self.ticker_done = True
 

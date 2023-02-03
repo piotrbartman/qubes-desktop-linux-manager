@@ -21,14 +21,13 @@
 import asyncio
 from typing import Optional
 
-from gi.repository import GObject
 from qubesadmin import exc
 from qubesadmin.events.utils import wait_for_domain_shutdown
 
 from qubes_config.widgets.utils import get_boolean_feature
 from qui.updater.utils import disable_checkboxes, pass_through_event_window, \
     HeaderCheckbox, QubeClass, QubeLabel, QubeName, Theme, get_domain_icon, \
-    sort_func
+    RowWrapper, ListWrapper
 
 
 class SummaryPage:
@@ -39,13 +38,14 @@ class SummaryPage:
         self.next_button = next_button
         self.disable_checkboxes = False
 
-        self.restart_list_store_wrapped: Optional[list] = None
         self.updated_tmpls: Optional[list] = None
 
         self.restart_list = self.builder.get_object("restart_list")
+        self.list_store: Optional[ListWrapper] = None
+
         self.restart_list.connect("row-activated",
                                   self.on_restart_checkbox_toggled)
-        self.restart_list_store = self.builder.get_object("restart_list_store")
+        self.app_vm_list = self.builder.get_object("restart_list_store")
         restart_checkbox_column = self.builder.get_object(
             "restart_checkbox_column")
         restart_checkbox_column.connect("clicked",
@@ -73,19 +73,19 @@ class SummaryPage:
         if path is None:
             return
 
-        it = self.restart_list_store.get_iter(path)
-        self.restart_list_store[it][1] = \
-            not self.restart_list_store[it][1]
+        it = self.app_vm_list.get_iter(path)
+        self.app_vm_list[it][1] = \
+            not self.app_vm_list[it][1]
         self.refresh_buttons()
 
     def refresh_buttons(self):
-        for row in self.restart_list_store_wrapped:
+        for row in self.list_store:
             row.refresh_additional_info()
         selected_num = sum(
-            row.selected for row in self.restart_list_store_wrapped)
+            row.selected for row in self.list_store)
         if selected_num == 0:
             self.restart_checkbox_header.state = HeaderCheckbox.NONE
-        elif selected_num == len(self.restart_list_store):
+        elif selected_num == len(self.app_vm_list):
             self.restart_checkbox_header.state = HeaderCheckbox.ALL
         else:
             self.restart_checkbox_header.state = HeaderCheckbox.SELECTED
@@ -94,44 +94,41 @@ class SummaryPage:
 
     @disable_checkboxes
     def on_restart_header_toggled(self, _emitter):
-        if len(self.restart_list_store_wrapped) == 0:  # to avoid infinite loop
+        if len(self.list_store) == 0:  # to avoid infinite loop
             self.restart_checkbox_header.state = HeaderCheckbox.NONE
             selected_num = 0
         else:
             selected_num = selected_num_old = sum(
-                row.selected for row in self.restart_list_store_wrapped)
+                row.selected for row in self.list_store)
             while selected_num == selected_num_old:
                 self.restart_checkbox_header.next_state()
                 self.select_restart_rows()
                 selected_num = sum(
-                    row.selected for row in self.restart_list_store_wrapped)
+                    row.selected for row in self.list_store)
         plural = "s" if selected_num > 1 else ""
         self.restart_checkbox_header.set_buttons(plural, selected_num)
 
+    @property
+    def is_populated(self) -> bool:
+        return self.list_store is None
+
     @disable_checkboxes
     def populate_restart_list(self, restart, vm_list_wrapped, settings):
-        if self.restart_list_store_wrapped is not None:
-            return
-
         self.updated_tmpls = [
             row for row in vm_list_wrapped
             if bool(row.status)
-            and QubeClass[row.qube.klass] == QubeClass.TemplateVM
+            and QubeClass[row.vm.klass] == QubeClass.TemplateVM
         ]
         possibly_changed_vms = {appvm for template in self.updated_tmpls
-                                for appvm in template.qube.appvms
+                                for appvm in template.vm.appvms
                                 }
-        self.restart_list_store.set_sort_func(0, sort_func, 0)
-        self.restart_list_store.set_sort_func(3, sort_func, 3)
+        self.list_store = ListWrapper(
+            RestartRowWrapper, self.app_vm_list, self.theme)
 
-        self.restart_list_store_wrapped = []
-
-        for qube in possibly_changed_vms:
-            if qube.is_running() \
-                    and (qube.klass != 'DispVM' or not qube.auto_cleanup):
-                row = RestartRowWrapper(
-                    self.restart_list_store, qube, self.theme)
-                self.restart_list_store_wrapped.append(row)
+        for vm in possibly_changed_vms:
+            if vm.is_running() \
+                    and (vm.klass != 'DispVM' or not vm.auto_cleanup):
+                self.list_store.append_vm(vm)
 
         if settings.restart_system_vms:
             self.restart_checkbox_header._allowed[0] = "SYS"
@@ -147,7 +144,7 @@ class SummaryPage:
         self.select_restart_rows()
 
     def select_restart_rows(self):
-        for row in self.restart_list_store_wrapped:
+        for row in self.list_store:
             row.selected = (
                     row.is_sys_qube
                     and not row.is_excluded
@@ -161,15 +158,15 @@ class SummaryPage:
             )
 
     def perform_restart(self):
-        tmpls_to_shutdown = [row.qube
+        tmpls_to_shutdown = [row.vm
                              for row in self.updated_tmpls
-                             if row.qube.is_running()]
-        to_restart = [qube_row.qube
-                      for qube_row in self.restart_list_store_wrapped
+                             if row.vm.is_running()]
+        to_restart = [qube_row.vm
+                      for qube_row in self.list_store
                       if qube_row.selected
                       and qube_row.is_sys_qube]
-        to_shutdown = [qube_row.qube
-                       for qube_row in self.restart_list_store_wrapped
+        to_shutdown = [qube_row.vm
+                       for qube_row in self.list_store
                        if qube_row.selected
                        and not qube_row.is_sys_qube]
         shutdown_domains(tmpls_to_shutdown)
@@ -177,30 +174,30 @@ class SummaryPage:
         shutdown_domains(to_shutdown)
 
 
-class RestartRowWrapper(GObject.GObject):
-    def __init__(self, list_store, qube, theme: Theme):
-        super().__init__()
-        self.list_store = list_store
-        self.qube = qube
-        self.theme = theme
-        label = QubeLabel[self.qube.label.name]
-        qube_row = [
-            self,
+class RestartRowWrapper(RowWrapper):
+    COLUMN_NUM = 5
+    _SELECTION = 1
+    _ICON = 2
+    _NAME = 3
+    _ADDITIONAL_INFO = 4
+
+    def __init__(self, list_store, vm, theme: Theme):
+        label = QubeLabel[vm.label.name]
+        raw_row = [
             False,
-            get_domain_icon(qube),
-            QubeName(qube.name, label.name, theme),
+            get_domain_icon(vm),
+            QubeName(vm.name, label.name, theme),
             '',
         ]
-        self.list_store.append(qube_row)
-        self.qube_row = self.list_store[-1]
+        super().__init__(list_store, vm, theme, raw_row)
 
     @property
     def selected(self):
-        return self.qube_row[1]
+        return self.qube_row[self._SELECTION]
 
     @selected.setter
     def selected(self, value):
-        self.qube_row[1] = value
+        self.qube_row[self._SELECTION] = value
         self.refresh_additional_info()
 
     def refresh_additional_info(self):
@@ -215,48 +212,27 @@ class RestartRowWrapper(GObject.GObject):
 
     @property
     def icon(self):
-        return self.qube_row[2]
+        return self.qube_row[self._ICON]
 
     @property
     def name(self):
-        return self.qube.name
+        return self.vm.name
 
     @property
     def color_name(self):
-        return self.qube_row[3]
+        return self.qube_row[self._NAME]
 
     @property
     def additional_info(self):
-        return self.qube_row[4]
+        return self.qube_row[self._ADDITIONAL_INFO]
 
     @property
     def is_sys_qube(self):
-        return str(self.qube.name).startswith("sys-")
+        return str(self.vm.name).startswith("sys-")
 
     @property
     def is_excluded(self):
-        return not get_boolean_feature(self.qube, 'automatic-restart', True)
-
-    def __eq__(self, other):
-        self_class = QubeClass[self.qube.klass]
-        other_class = QubeClass[other.qube.klass]
-        if self_class == other_class:
-            self_label = QubeLabel[self.qube.label.name]
-            other_label = QubeLabel[other.qube.label.name]
-            return self_label.value == other_label.value
-        return False
-
-    def __lt__(self, other):
-        self_class = QubeClass[self.qube.klass]
-        other_class = QubeClass[other.qube.klass]
-        if self_class == other_class:
-            self_label = QubeLabel[self.qube.label.name]
-            other_label = QubeLabel[other.qube.label.name]
-            return self_label.value < other_label.value
-        return self_class.value < other_class.value
-
-    def delete(self):
-        self.list_store.remove(self.qube_row.iter)
+        return not get_boolean_feature(self.vm, 'automatic-restart', True)
 
 
 # TODO: duplication

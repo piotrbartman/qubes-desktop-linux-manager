@@ -22,7 +22,7 @@ import functools
 
 from enum import Enum
 from typing import Callable
-from gi.repository import Gtk
+from gi.repository import Gtk, GObject
 
 
 def disable_checkboxes(func):
@@ -194,3 +194,72 @@ class UpdateStatus(Enum):
     def __bool__(self):
         return self == UpdateStatus.Success \
             or self == UpdateStatus.NoUpdatesFound  # TODO
+
+
+class RowWrapper(GObject.GObject):
+    def __init__(self, list_store, vm, theme: Theme, raw_row: list):
+        super().__init__()
+        self.list_store = list_store
+        self.vm = vm
+        self.theme = theme
+
+        self.list_store.append([self, *raw_row])
+        self.qube_row = self.list_store[-1]
+
+    def __eq__(self, other):
+        self_class = QubeClass[self.vm.klass]
+        other_class = QubeClass[other.vm.klass]
+        if self_class == other_class:
+            self_label = QubeLabel[self.vm.label.name]
+            other_label = QubeLabel[other.vm.label.name]
+            return self_label.value == other_label.value
+        return False
+
+    def __lt__(self, other):
+        self_class = QubeClass[self.vm.klass]
+        other_class = QubeClass[other.vm.klass]
+        if self_class == other_class:
+            self_label = QubeLabel[self.vm.label.name]
+            other_label = QubeLabel[other.vm.label.name]
+            return self_label.value < other_label.value
+        return self_class.value < other_class.value
+
+    def delete(self):
+        self.list_store.remove(self.qube_row.iter)
+
+
+class UpdateListIter:
+    def __init__(self, list_store_wrapped):
+        self.list_store_wrapped = list_store_wrapped
+        self._id = -1
+
+    def __next__(self) -> RowWrapper:
+        self._id += 1
+        if 0 <= self._id < len(self.list_store_wrapped):
+            return self.list_store_wrapped[self._id]
+        raise StopIteration
+
+
+class ListWrapper:
+    def __init__(self, row_type, vm_list, theme):
+        self.list_store_raw = vm_list.get_model()
+        self.list_store_wrapped: list = []
+        self.theme = theme
+        self.row_type = row_type
+        for idx in range(self.row_type.COLUMN_NUM):
+            self.list_store_raw.set_sort_func(idx, sort_func, idx)
+
+    def __iter__(self) -> UpdateListIter:
+        return UpdateListIter(self.list_store_wrapped)
+
+    def __len__(self) -> int:
+        return len(self.list_store_wrapped)
+
+    def append_vm(self, vm, state: bool = False):
+        qube_row = self.row_type(self.list_store_raw, vm, state, self.theme)
+        self.list_store_wrapped.append(qube_row)
+
+    def invert_selection(self, path):
+        it = self.list_store_raw.get_iter(path)
+        self.list_store_raw[it][0].selected = \
+            not self.list_store_raw[it][0].selected

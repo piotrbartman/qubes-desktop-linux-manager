@@ -24,12 +24,11 @@ gi.require_version('Gtk', '3.0')  # isort:skip
 
 from gi.repository import Gtk, Gdk, GObject, Gio  # isort:skip
 from qubesadmin import Qubes
-from qubesadmin import exc
 
 # using locale.gettext is necessary for Gtk.Builder translation support to work
 # in most cases gettext is better, but it cannot handle Gtk.Builder/glade files
 import locale
-from locale import gettext as _
+from locale import gettext as l
 
 locale.bindtextdomain("desktop-linux-manager", "/usr/locales/")
 locale.textdomain('desktop-linux-manager')
@@ -180,10 +179,10 @@ class QubesUpdater(Gtk.Application):
 
             self.progress_page.show_progress_page()
             self.next_button.set_sensitive(False)
-            self.cancel_button.set_label(_("_Cancel updates"))
+            self.cancel_button.set_label(l("_Cancel updates"))
             self.cancel_button.show()
 
-            self.header_label.set_text(_("Update in progress..."))
+            self.header_label.set_text(l("Update in progress..."))
             self.header_label.set_halign(Gtk.Align.CENTER)
 
             # pylint: disable=attribute-defined-outside-init
@@ -200,19 +199,20 @@ class QubesUpdater(Gtk.Application):
             qube_no_updates_plural = "s" if qube_no_updates_num != 1 else ""
             qube_failed_plural = "s" if qube_failed_num != 1 else ""
             summary = f"{qube_updated_num} qube{qube_updated_plural} " + \
-                      _("updated successfully.") + "\n" \
+                      l("updated successfully.") + "\n" \
                       f"{qube_no_updates_num} qube{qube_no_updates_plural} " + \
-                      _("attempted to update but found no updates.") + "\n" \
+                      l("attempted to update but found no updates.") + "\n" \
                       f"{qube_failed_num} qube{qube_failed_plural} " + \
-                      _("failed to update.")
+                      l("failed to update.")
             self.label_summary.set_label(summary)
-            self.summary_page.populate_restart_list(
-                restart=self.restart_button.get_active(),
-                vm_list_wrapped=self.vms_to_update,
-                settings=self.settings
-            )
+            if not self.summary_page.is_populated:
+                self.summary_page.populate_restart_list(
+                    restart=self.restart_button.get_active(),
+                    vm_list_wrapped=self.vms_to_update,
+                    settings=self.settings
+                )
             self.stack.set_visible_child(self.restart_page)
-            self.cancel_button.set_label(_("_Back"))
+            self.cancel_button.set_label(l("_Back"))
             self.cancel_button.show()
             self.summary_page.refresh_buttons()
         elif self.stack.get_visible_child() == self.restart_page:
@@ -251,7 +251,7 @@ class QubesUpdater(Gtk.Application):
             self.progress_page.exit_triggered = True
             dialog = Gtk.MessageDialog(
                 self.main_window, Gtk.DialogFlags.MODAL, Gtk.MessageType.OTHER,
-                Gtk.ButtonsType.NONE, _(
+                Gtk.ButtonsType.NONE, l(
                     "Waiting for current qube to finish updating."
                     " Updates for remaining qubes have been cancelled."))
             dialog.show()
@@ -275,6 +275,7 @@ class QubesUpdater(Gtk.Application):
     def exit_updater(self, _emitter=None):
         if self.primary:
             self.release()
+
 
 def main():
     qapp = Qubes()

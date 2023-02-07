@@ -30,7 +30,7 @@ from ..widgets.utils import get_feature, apply_feature_change_from_widget, \
     apply_feature_change
 from ..widgets.gtk_utils import ask_question, show_error
 from .page_handler import PageHandler
-from .policy_rules import RuleSimple
+from .policy_rules import RuleTargetedAdminVM
 from .policy_manager import PolicyManager
 from .rule_list_widgets import VMWidget, ActionWidget
 from .vm_flowbox import VMFlowboxHandler
@@ -190,9 +190,10 @@ class InputDeviceHandler:
         self.policy_manager = policy_manager
         self.policy_file_name = '50-config-input'
         self.sys_usb = sys_usb
-        # generally do an update_usb thingy
 
         self.warn_box = gtk_builder.get_object('usb_input_problem_box_warn')
+        self.warn_label: Gtk.Label = gtk_builder.get_object(
+            'usb_input_problem_warn_label')
         self.warn_box.set_visible(False)
 
         self.default_policy = f"""
@@ -214,13 +215,17 @@ qubes.InputTablet * {self.sys_usb} @adminvm deny
         self.grid: Gtk.Grid = gtk_builder.get_object('usb_input_grid')
 
         if len(self.rules) != 3:
-            self._warn()
+            self._warn("Unexpected number of policy lines.")
 
         for rule in self.rules:
             if rule.service not in self.policy_order or \
                     rule.target != '@adminvm':
-                self._warn()
-            wrapped_rule = RuleSimple(rule)
+                self._warn(str(rule))
+            try:
+                wrapped_rule = RuleTargetedAdminVM(rule)
+            except Exception:  # pylint: disable=broad-except
+                self._warn(str(rule))
+                continue
 
             action_widget = ActionWidget(
                 choices=self.ACTION_CHOICES,
@@ -233,13 +238,38 @@ qubes.InputTablet * {self.sys_usb} @adminvm deny
                              left=1, top=self.policy_order[rule.service],
                              width=1, height=1)
 
+        # if there are any missing rules, fill them with default
+        for policy_service in self.policy_order.keys():
+            if policy_service in self.action_widgets:
+                continue
+            default_rule = [
+                rule for rule in
+                self.policy_manager.text_to_rules(self.default_policy)
+                if rule.service == policy_service][0]
+            wrapped_rule = RuleTargetedAdminVM(default_rule)
+            action_widget = ActionWidget(
+                choices=self.ACTION_CHOICES,
+                verb_description=None,
+                rule=wrapped_rule)
+            widget_with_buttons = WidgetWithButtons(action_widget)
+
+            self.action_widgets[default_rule.service] = \
+                widget_with_buttons
+            self.grid.attach(child=widget_with_buttons,
+                             left=1,
+                             top=self.policy_order[default_rule.service],
+                             width=1, height=1)
+
+
         self.conflict_file_handler = ConflictFileHandler(
             gtk_builder=gtk_builder, prefix="usb_input",
             service_names=list(self.policy_order.keys()),
             own_file_name=self.policy_file_name,
             policy_manager=self.policy_manager)
 
-    def _warn(self):
+    def _warn(self, error_descr: str):
+        self.warn_label.set_text(
+            self.warn_label.get_text() + '\n' + error_descr)
         self.warn_box.set_visible(True)
 
     def save(self):
@@ -274,6 +304,7 @@ qubes.InputTablet * {self.sys_usb} @adminvm deny
         """Reset changes to the initial state."""
         for widget in self.action_widgets.values():
             widget.reset()
+        self.warn_label.set_text('Unexpected policy file contents:')
 
 
 class U2FPolicyHandler:

@@ -23,7 +23,8 @@
 import pytest
 
 from qrexec.policy.parser import Rule
-from ..global_config.policy_rules import RuleSimple, RuleTargeted, RuleDispVM
+from ..global_config.policy_rules import RuleSimple, RuleTargeted,\
+    RuleDispVM, RuleTargetedAdminVM
 
 def make_rule(source, target, action):
     return Rule.from_line(
@@ -78,6 +79,29 @@ def test_targeted_rule():
     assert wrapped_rule.raw_rule == ask_rule
     assert wrapped_rule.source == 'vm1'
     assert wrapped_rule.target == 'vm2'
+    assert wrapped_rule.action == 'ask'
+
+
+def test_targeted_adminvm_rule():
+    deny_rule = make_rule('vm1', '@adminvm', 'deny')
+    wrapped_rule = RuleTargetedAdminVM(deny_rule)
+    assert wrapped_rule.raw_rule == deny_rule
+    assert wrapped_rule.source == 'vm1'
+    assert wrapped_rule.target == '@adminvm'
+    assert wrapped_rule.action == 'deny'
+
+    allow_rule = make_rule('vm1', '@adminvm', 'allow')
+    wrapped_rule = RuleTargetedAdminVM(allow_rule)
+    assert wrapped_rule.raw_rule == allow_rule
+    assert wrapped_rule.source == 'vm1'
+    assert wrapped_rule.target == '@adminvm'
+    assert wrapped_rule.action == 'allow'
+
+    ask_rule = make_rule('vm1', '@adminvm', 'ask default_target=@adminvm')
+    wrapped_rule = RuleTargetedAdminVM(ask_rule)
+    assert wrapped_rule.raw_rule == ask_rule
+    assert wrapped_rule.source == 'vm1'
+    assert wrapped_rule.target == '@adminvm'
     assert wrapped_rule.action == 'ask'
 
 
@@ -153,6 +177,26 @@ def test_targeted_change_action():
 
     wrapped_allow = RuleTargeted(allow_rule)
     wrapped_ask = RuleTargeted(ask_rule)
+
+    wrapped_ask.action = 'allow'
+    assert str(wrapped_allow.raw_rule) == str(wrapped_ask.raw_rule)
+
+
+def test_targeted_adminvm_change_action():
+    allow_rule = make_rule('vm1', '@adminvm', 'allow')
+    ask_rule = make_rule('vm1', '@adminvm', 'ask default_target=@adminvm')
+
+    wrapped_allow = RuleTargetedAdminVM(allow_rule)
+    wrapped_ask = RuleTargetedAdminVM(ask_rule)
+
+    wrapped_allow.action = 'ask'
+    assert str(wrapped_allow.raw_rule) == str(wrapped_ask.raw_rule)
+
+    allow_rule = make_rule('vm1', '@adminvm', 'allow')
+    ask_rule = make_rule('vm1', '@adminvm', 'ask default_target=@adminvm')
+
+    wrapped_allow = RuleTargetedAdminVM(allow_rule)
+    wrapped_ask = RuleTargetedAdminVM(ask_rule)
 
     wrapped_ask.action = 'allow'
     assert str(wrapped_allow.raw_rule) == str(wrapped_ask.raw_rule)

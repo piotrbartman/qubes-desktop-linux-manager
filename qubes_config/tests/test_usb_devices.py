@@ -165,7 +165,7 @@ def test_input_devices_no_policy(test_qapp, test_policy_manager, real_builder):
         handler.save()
 
         expected_rules = handler.policy_manager.text_to_rules(
-"""qubes.InputMouse * sys-usb @adminvm ask
+"""qubes.InputMouse * sys-usb @adminvm ask default_target=@adminvm
 qubes.InputKeyboard * sys-usb @adminvm deny
 qubes.InputTablet * sys-usb @adminvm deny
 """)

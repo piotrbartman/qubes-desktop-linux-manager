@@ -57,6 +57,8 @@ Requires:  python%{python3_pkgversion}-qubesadmin >= 4.1.8
 # FIXME: we need some way for applying updates from GUI VM
 #Requires:  qubes-mgmt-salt-dom0-update >= 4.0.5
 Requires:  qubes-artwork >= 4.1.5
+# for qui/widget-wrapper
+Requires:  xhost
 
 Provides:   qui = %{version}-%{release}
 Obsoletes:  qui < 4.0.0

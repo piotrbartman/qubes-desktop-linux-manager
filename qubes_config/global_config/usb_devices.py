@@ -239,7 +239,7 @@ qubes.InputTablet * {self.sys_usb} @adminvm deny
                              width=1, height=1)
 
         # if there are any missing rules, fill them with default
-        for policy_service in self.policy_order.keys():
+        for policy_service in self.policy_order:
             if policy_service in self.action_widgets:
                 continue
             default_rule = [

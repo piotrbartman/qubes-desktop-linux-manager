@@ -407,7 +407,7 @@ class DevicesTray(Gtk.Application):
             device_menu.set_submenu(domain_menu)
             menu_items.append(device_menu)
 
-        menu_items.sort(key=(lambda x: x.device.devclass + str(x.device)))
+        menu_items.sort(key=lambda x: x.device.devclass + str(x.device))
 
         if menu_items:
             tray_menu.add(DevclassHeaderMenuItem(menu_items[0].device.devclass))

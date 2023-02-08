@@ -131,6 +131,15 @@ def test_targeted_rule_weird_cases():
     assert str(wrapped_rule.raw_rule) == \
            str(make_rule('vm1', '@default', 'ask default_target=vm3'))
 
+    wrong_rule = make_rule('vm1', '@adminvm', 'ask default_target=sys-usb')
+    with pytest.raises(ValueError):
+        RuleTargetedAdminVM(wrong_rule)
+
+    wrong_rule_2 = make_rule('vm1', 'sys-usb', 'ask default_target=@adminvm')
+    with pytest.raises(ValueError):
+        RuleTargetedAdminVM(wrong_rule_2)
+
+
 def test_targeted_tokens():
     # can't make a rule with @anyvm target here
     allow_rule = make_rule('vm1', '@anyvm', 'allow')
@@ -200,6 +209,34 @@ def test_targeted_adminvm_change_action():
 
     wrapped_ask.action = 'allow'
     assert str(wrapped_allow.raw_rule) == str(wrapped_ask.raw_rule)
+
+
+def test_targeted_adminvm_change_tokens():
+    allow_rule = make_rule('vm1', '@adminvm', 'allow')
+    ask_rule = make_rule('vm1', '@adminvm', 'ask default_target=@adminvm')
+    deny_rule = make_rule('vm1', '@adminvm', 'deny')
+
+    wrapped_allow = RuleTargetedAdminVM(allow_rule)
+    wrapped_ask = RuleTargetedAdminVM(ask_rule)
+    wrapped_deny = RuleTargetedAdminVM(deny_rule)
+
+    with pytest.raises(ValueError):
+        wrapped_allow.target = 'vm2'
+    with pytest.raises(ValueError):
+        wrapped_ask.target = 'vm2'
+    with pytest.raises(ValueError):
+        wrapped_deny.target = 'vm2'
+
+    wrapped_allow.source = 'vm2'
+    wrapped_ask.source = 'vm2'
+    wrapped_deny.source = 'vm2'
+
+    assert str(wrapped_allow.raw_rule) == \
+           str(make_rule('vm2', '@adminvm', 'allow'))
+    assert str(wrapped_ask.raw_rule) == \
+           str(make_rule('vm2', '@adminvm', 'ask default_target=@adminvm'))
+    assert str(wrapped_deny.raw_rule) == \
+           str(make_rule('vm2', '@adminvm', 'deny'))
 
 
 def test_targeted_fundamental():

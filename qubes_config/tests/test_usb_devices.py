@@ -175,6 +175,50 @@ qubes.InputTablet * sys-usb @adminvm deny
                [str(rule) for rule in rules]
 
 
+def test_input_devices_faulty_policy_lines(test_qapp,
+                                           test_policy_manager, real_builder):
+    test_policy_manager.policy_client.files['50-config-input'] = """
+qubes.InputMouse * sys-usb @adminvm deny
+qubes.InputKeyboard * sys-usb @adminvm ask default_target=@adminvm
+"""
+    test_policy_manager.policy_client.file_tokens['50-config-input'] = '55'
+
+    sys_usb = test_qapp.domains['sys-usb']
+    handler = InputDeviceHandler(test_qapp, test_policy_manager,
+                                 real_builder, sys_usb)
+
+    # check if defaults worked
+    for service, widget in handler.action_widgets.items():
+        if service == 'qubes.InputKeyboard':
+            assert widget.select_widget.model.get_selected() == 'ask'
+        else:
+            assert widget.select_widget.model.get_selected() == 'deny'
+
+    # check if there's warning visible
+    assert handler.warn_box.get_visible()
+
+
+def test_input_devices_faulty_policy_err(test_qapp,
+                                         test_policy_manager, real_builder):
+    test_policy_manager.policy_client.files['50-config-input'] = """
+qubes.InputMouse * sys-usb @adminvm allow target=test-red
+qubes.InputTablet * sys-usb test-red deny
+qubes.InputKeyboard * sys-usb @adminvm ask default_target=sys-net
+"""
+    test_policy_manager.policy_client.file_tokens['50-config-input'] = '55'
+
+    sys_usb = test_qapp.domains['sys-usb']
+    handler = InputDeviceHandler(test_qapp, test_policy_manager,
+                                 real_builder, sys_usb)
+
+    # check if defaults worked
+    for _, widget in handler.action_widgets.items():
+        assert widget.select_widget.model.get_selected() == 'deny'
+
+    # check if there's warning visible
+    assert handler.warn_box.get_visible()
+
+
 def test_u2f_handler_init(test_qapp, test_policy_manager, real_builder):
     sys_usb = test_qapp.domains['sys-usb']
     handler = U2FPolicyHandler(test_qapp, test_policy_manager, real_builder,

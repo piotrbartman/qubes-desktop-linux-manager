@@ -232,6 +232,10 @@ class RuleTargetedAdminVM(AbstractRuleWrapper):
             if rule.action.default_target != '@adminvm':
                 raise ValueError(_('If action is ask, '
                                    'default_target must be @adminvm'))
+        if isinstance(rule.action, Allow):
+            if rule.action.target:
+                raise ValueError(_('If action is allow, no '
+                                   'parameters are allowed'))
 
     @property
     def target(self):

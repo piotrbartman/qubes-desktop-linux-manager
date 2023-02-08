@@ -867,8 +867,9 @@ Documentation will open in a disposable qube.</property>
                             <property name="orientation">vertical</property>
                             <child>
                               <object class="GtkLabel" id="usb_input_problem_warn_label">
+                                <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Unexpected contents of policy file found.</property>
+                                <property name="label" translatable="yes">Unexpected policy file contents:</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>

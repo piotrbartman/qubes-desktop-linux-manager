@@ -205,6 +205,71 @@ class RuleSimpleNoAllow(RuleSimple):
             return _('Unrecognized action: ') + action
         return None
 
+
+class RuleTargetedAdminVM(AbstractRuleWrapper):
+    """
+    Rule wrapper for rules with the following rules:
+    - source is source
+    - action is main action (e.g. 'allow target=vm' is allow
+    - wrapped rule must have target=@adminvm
+    - if action is ask, wrapped rule must have default_target=@adminvm
+    Returns strings as target/source/action. Target is not settable.
+    """
+    ACTION_CHOICES = {
+        "ask": _("enable"),
+        "allow": _("allow"),
+        "deny": _("disable")
+    }
+
+    def __init__(self, rule: Rule):
+        """
+        :param rule: Rule object
+        """
+        super().__init__(rule)
+        if rule.target != '@adminvm':
+            raise ValueError(_('Target must be @adminvm'))
+        if isinstance(rule.action, Ask):
+            if rule.action.default_target != '@adminvm':
+                raise ValueError(_('If action is ask, '
+                                   'default_target must be @adminvm'))
+        if isinstance(rule.action, Allow):
+            if rule.action.target:
+                raise ValueError(_('If action is allow, no '
+                                   'parameters are allowed'))
+
+    @property
+    def target(self):
+        return '@adminvm'
+
+    @target.setter
+    def target(self, new_value):
+        raise ValueError(_('Cannot set target on this type of rule.'))
+
+    @property
+    def source(self):
+        return str(self._rule.source)
+
+    @source.setter
+    def source(self, new_value):
+        new_source = Source(new_value)
+        self._rule.source = new_source
+
+    @property
+    def action(self):
+        return type(self._rule.action).__name__.lower()
+
+    @action.setter
+    def action(self, new_value):
+        new_action = Action[new_value].value(self._rule)
+        self._rule.action = new_action
+        if new_value == 'ask':
+            self._rule.action.default_target = '@adminvm'
+
+    @property
+    def raw_rule(self):
+        return self._rule
+
+
 class RuleTargeted(AbstractRuleWrapper):
     """
     Rule wrapper for rules with the following rules:

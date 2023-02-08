@@ -131,22 +131,21 @@ def clipboard_formatted_size() -> str:
         file_size = os.path.getsize(DATA)
     except OSError:
         return _('? bytes')
+    if file_size == 1:
+        formatted_bytes = _('1 byte')
     else:
-        if file_size == 1:
-            formatted_bytes = _('1 byte')
-        else:
-            formatted_bytes = str(file_size) + _(' bytes')
+        formatted_bytes = str(file_size) + _(' bytes')
 
-        if file_size > 0:
-            magnitude = min(
-                int(math.log(file_size) / math.log(2) * 0.1), len(units) - 1)
-            if magnitude > 0:
-                # pylint: disable=consider-using-f-string
-                return '%s (%.1f %s)' % (formatted_bytes,
-                                         file_size / (2.0**(10 * magnitude)),
-                                         units[magnitude])
-        # pylint: disable=consider-using-f-string
-        return '%s' % (formatted_bytes)
+    if file_size > 0:
+        magnitude = min(
+            int(math.log(file_size) / math.log(2) * 0.1), len(units) - 1)
+        if magnitude > 0:
+            # pylint: disable=consider-using-f-string
+            return '%s (%.1f %s)' % (formatted_bytes,
+                                     file_size / (2.0**(10 * magnitude)),
+                                     units[magnitude])
+    # pylint: disable=consider-using-f-string
+    return '%s' % (formatted_bytes)
 
 
 class NotificationApp(Gtk.Application):

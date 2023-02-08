@@ -106,6 +106,7 @@ class RepoHandler:
             self.template_community_testing.set_sensitive(True)
 
     def _load_data(self):
+        # pylint: disable=superfluous-parens
         try:
             for row in self._run_qrexec_repo('qubes.repos.List').split('\n'):
                 lst = row.split('\0')
@@ -268,7 +269,7 @@ class UpdateCheckerHandler:
         self.flowbox_handler = VMFlowboxHandler(
             gtk_builder, qapp, "updates_exception",
             initial_vms=self.initial_exceptions,
-            filter_function=(lambda vm: vm.klass != 'AdminVM'))
+            filter_function=lambda vm: vm.klass != 'AdminVM')
 
         self._set_label()
         self.enable_radio.connect('toggled', self._enable_disable_toggled)

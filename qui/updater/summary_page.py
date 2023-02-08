@@ -21,27 +21,42 @@
 import asyncio
 from typing import Optional
 
+from qubes_config.widgets.gtk_utils import load_icon
 from qubesadmin import exc
 from qubesadmin.events.utils import wait_for_domain_shutdown
 
 from qubes_config.widgets.utils import get_boolean_feature
 from qui.updater.utils import disable_checkboxes, pass_through_event_window, \
-    HeaderCheckbox, QubeClass, QubeLabel, QubeName, Theme, get_domain_icon, \
+    HeaderCheckbox, QubeClass, QubeLabel, QubeName, Theme, \
     RowWrapper, ListWrapper
+
+from locale import gettext as l
 
 
 class SummaryPage:
 
-    def __init__(self, builder, theme, next_button):
+    def __init__(
+            self,
+            builder,
+            theme,
+            next_button,
+            cancel_button,
+            back_by_row_selection
+    ):
         self.builder = builder
         self.theme = theme
         self.next_button = next_button
+        self.cancel_button = cancel_button
         self.disable_checkboxes = False
 
         self.updated_tmpls: Optional[list] = None
 
         self.restart_list = self.builder.get_object("restart_list")
         self.list_store: Optional[ListWrapper] = None
+
+        self.stack = self.builder.get_object("main_stack")
+        self.page = self.builder.get_object("restart_page")
+        self.label_summary = self.builder.get_object("label_summary")
 
         self.restart_list.connect("row-activated",
                                   self.on_restart_checkbox_toggled)
@@ -67,6 +82,9 @@ class SummaryPage:
                 f"_Finish and restart {num} qube{plural}"),
             callback_none=lambda _, __: self.next_button.set_label("_Finish"),
         )
+
+        self.summary_list = self.builder.get_object("summary_list")
+        self.summary_list.connect("row-activated", back_by_row_selection)
 
     @disable_checkboxes
     def on_restart_checkbox_toggled(self, _emitter, path, *_args):
@@ -110,7 +128,28 @@ class SummaryPage:
 
     @property
     def is_populated(self) -> bool:
-        return self.list_store is None
+        return self.list_store is not None
+
+    @property
+    def is_visible(self):
+        return self.stack.get_visible_child() == self.page
+
+    def show(self, qube_updated_num: int, qube_no_updates_num: int,
+         qube_failed_num: int):
+        self.stack.set_visible_child(self.page)
+        qube_updated_plural = "s" if qube_updated_num != 1 else ""
+        qube_no_updates_plural = "s" if qube_no_updates_num != 1 else ""
+        qube_failed_plural = "s" if qube_failed_num != 1 else ""
+        summary = f"{qube_updated_num} qube{qube_updated_plural} " + \
+                  l("updated successfully.") + "\n" \
+                  f"{qube_no_updates_num} qube{qube_no_updates_plural} " + \
+                  l("attempted to update but found no updates.") + "\n" \
+                  f"{qube_failed_num} qube{qube_failed_plural} " + \
+                  l("failed to update.")
+        self.label_summary.set_label(summary)
+        self.cancel_button.set_label(l("_Back"))
+        self.cancel_button.show()
+        self.refresh_buttons()
 
     @disable_checkboxes
     def populate_restart_list(self, restart, vm_list_wrapped, settings):
@@ -123,7 +162,7 @@ class SummaryPage:
                                 for appvm in template.vm.appvms
                                 }
         self.list_store = ListWrapper(
-            RestartRowWrapper, self.app_vm_list, self.theme)
+            RestartRowWrapper, self.restart_list, self.theme)
 
         for vm in possibly_changed_vms:
             if vm.is_running() \
@@ -182,10 +221,10 @@ class RestartRowWrapper(RowWrapper):
     _ADDITIONAL_INFO = 4
 
     def __init__(self, list_store, vm, theme: Theme):
-        label = QubeLabel[vm.label.name]
+        label = QubeLabel[str(vm.label)]
         raw_row = [
             False,
-            get_domain_icon(vm),
+            load_icon(vm),
             QubeName(vm.name, label.name, theme),
             '',
         ]
@@ -193,26 +232,26 @@ class RestartRowWrapper(RowWrapper):
 
     @property
     def selected(self):
-        return self.qube_row[self._SELECTION]
+        return self.raw_row[self._SELECTION]
 
     @selected.setter
     def selected(self, value):
-        self.qube_row[self._SELECTION] = value
+        self.raw_row[self._SELECTION] = value
         self.refresh_additional_info()
 
     def refresh_additional_info(self):
-        self.qube_row[4] = ''
+        self.raw_row[4] = ''
         if self.selected and not self.is_sys_qube:
-            self.qube_row[4] = 'Restarting an app ' \
+            self.raw_row[4] = 'Restarting an app ' \
                                'qube will shut down all running applications'
         if self.selected and self.is_excluded:
-            self.qube_row[4] = '<span foreground="red">This qube has been ' \
+            self.raw_row[4] = '<span foreground="red">This qube has been ' \
                                'explicitly disabled from restarting in ' \
                                'settings</span>'
 
     @property
     def icon(self):
-        return self.qube_row[self._ICON]
+        return self.raw_row[self._ICON]
 
     @property
     def name(self):
@@ -220,11 +259,11 @@ class RestartRowWrapper(RowWrapper):
 
     @property
     def color_name(self):
-        return self.qube_row[self._NAME]
+        return self.raw_row[self._NAME]
 
     @property
     def additional_info(self):
-        return self.qube_row[self._ADDITIONAL_INFO]
+        return self.raw_row[self._ADDITIONAL_INFO]
 
     @property
     def is_sys_qube(self):

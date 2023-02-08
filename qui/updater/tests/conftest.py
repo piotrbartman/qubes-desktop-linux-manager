@@ -30,10 +30,6 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('GdkPixbuf', '2.0')
 from gi.repository import Gtk
 
-from ..global_config.global_config import GlobalConfig
-from ..global_config.policy_manager import PolicyManager
-from ..new_qube.new_qube_app import CreateNewQube
-
 default_vm_properties = {
     "autostart": ("bool", True, "False"),
     "backup_timestamp": ("int", True, ""),
@@ -162,10 +158,12 @@ def add_expected_vm(qapp,
         qapp.expected_calls[(name, "admin.vm.tag.Get", tag, None)] = \
             b"0\x001"
 
+
 def add_dom0_vm_property(qapp, prop_name, prop_value):
     """Add a vm property to dom0"""
     qapp.expected_calls[('dom0', 'admin.property.Get', prop_name, None)] = \
         b'0\x00' + f'default=True type=vm {prop_value}'.encode()
+
 
 def add_dom0_text_property(qapp, prop_name, prop_value):
     """Add a str property to dom0"""
@@ -182,6 +180,7 @@ def add_dom0_feature(qapp, feature, feature_value):
         qapp.expected_calls[('dom0', 'admin.vm.feature.Get', feature, None)] = \
             b'2\x00QubesFeatureNotFoundError\x00\x00' \
             + str(feature).encode() + b'\x00'
+
 
 def add_feature_with_template_to_all(qapp, feature_name,
                                      enable_vm_names: List[str]):
@@ -228,6 +227,7 @@ def test_qapp():
     add_dom0_feature(qapp, 'gui-default-allow-fullscreen', '')
     add_dom0_feature(qapp, 'gui-default-allow-utf8-titles', '')
     add_dom0_feature(qapp, 'gui-default-trayicon-mode', '')
+    add_dom0_feature(qapp, 'qubes-vm-update-update-if-stale', None)
 
     # setup labels
     qapp.expected_calls[('dom0', 'admin.label.List', None, None)] = \
@@ -261,15 +261,18 @@ def test_qapp():
                     {'service.qubes-update-check': None}, [])
 
     add_expected_vm(qapp, 'fedora-36', 'TemplateVM',
-                    {"netvm": ("vm", False, '')},
+                    {"netvm": ("vm", False, ''),
+                     'updateable': ('bool', True, "True")},
                     {'service.qubes-update-check': None}, [])
 
     add_expected_vm(qapp, 'fedora-35', 'TemplateVM',
-                    {"netvm": ("vm", False, '')},
+                    {"netvm": ("vm", False, ''),
+                     'updateable': ('bool', True, "True")},
                     {'service.qubes-update-check': None}, [])
 
     add_expected_vm(qapp, 'default-dvm', 'DispVM',
-                    {'template_for_dispvms': ('bool', False, 'True')},
+                    {'template_for_dispvms': ('bool', False, 'True'),
+                     'auto_cleanup': ('bool', False, 'False')},
                     {'service.qubes-update-check': None}, [])
 
     add_expected_vm(qapp, 'test-vm', 'AppVM',
@@ -284,7 +287,8 @@ def test_qapp():
                     {'service.qubes-update-check': None}, [])
 
     add_expected_vm(qapp, 'test-standalone', 'StandaloneVM',
-                    {'label': ('str', False, 'green')},
+                    {'label': ('str', False, 'green'),
+                     'updateable': ('bool', True, "True")},
                     {'service.qubes-update-check': None}, [])
 
     add_expected_vm(qapp, 'vault', 'AppVM',
@@ -295,6 +299,10 @@ def test_qapp():
                                      ['test-vm', 'fedora-35', 'sys-usb'])
     add_feature_to_all(qapp, 'service.qubes-u2f-proxy',
                                      ['test-vm'])
+    add_feature_to_all(qapp, 'automatic-restart', [])
+    add_feature_to_all(qapp, 'updates-available', [])
+    add_feature_to_all(qapp, 'last-update', [])
+    add_feature_to_all(qapp, 'last-updates-check', [])
 
     return qapp
 

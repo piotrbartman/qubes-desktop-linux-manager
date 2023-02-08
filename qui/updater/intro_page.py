@@ -21,12 +21,13 @@
 import subprocess
 from datetime import datetime, timedelta
 from typing import Union, Optional
-from gi.repository import GObject
+
+from qubes_config.widgets.gtk_utils import load_icon
 from qubesadmin import exc
 
 from qui.updater.utils import disable_checkboxes, HeaderCheckbox, \
-    pass_through_event_window, QubeLabel, sort_func, Theme, get_domain_icon, \
-    QubeName, label_color_theme, QubeClass, UpdateStatus, RowWrapper, \
+    pass_through_event_window, QubeLabel, Theme, \
+    QubeName, label_color_theme, UpdateStatus, RowWrapper, \
     ListWrapper
 
 
@@ -39,6 +40,8 @@ class IntroPage:
         self.disable_checkboxes = False
         self.active = True
 
+        self.page = self.builder.get_object("list_page")
+        self.stack = self.builder.get_object("main_stack")
         self.vm_list = self.builder.get_object("vm_list")
         self.list_store: Optional[ListWrapper] = None
 
@@ -60,6 +63,13 @@ class IntroPage:
         )
 
         self.vm_list.connect("row-activated", self.on_checkbox_toggled)
+
+        self.info_how_it_works = self.builder.get_object("info_how_it_works")
+        self.info_how_it_works.set_label(
+            self.info_how_it_works.get_label().format(
+                MAYBE='<span foreground="Orange"><b>MAYBE</b></span>'))
+
+        self.restart_button = self.builder.get_object("restart_button")
 
     def populate_vm_list(self, qapp, settings):
         self.list_store = ListWrapper(
@@ -101,6 +111,14 @@ class IntroPage:
         for elem in to_remove:
             elem.delete()
         return selected_rows
+
+    @property
+    def is_populated(self) -> bool:
+        return self.list_store is not None
+
+    @property
+    def is_visible(self):
+        return self.stack.get_visible_child() == self.page
 
     @disable_checkboxes
     def on_checkbox_toggled(self, _emitter, path, *_args):
@@ -155,8 +173,8 @@ class UpdateRowWrapper(RowWrapper):
         last_updates_check = vm.features.get('last-updates-check', None)
         last_update = vm.features.get('last-update', None)
 
-        label = QubeLabel[vm.label.name]
-        icon = get_domain_icon(vm)
+        label = QubeLabel[str(vm.label)]
+        icon = load_icon(vm)
         name = QubeName(vm.name, label.name, theme)
 
         raw_row = [
@@ -179,27 +197,27 @@ class UpdateRowWrapper(RowWrapper):
 
     @property
     def selected(self):
-        return self.qube_row[self._SELECTION]
+        return self.raw_row[self._SELECTION]
 
     @selected.setter
     def selected(self, value):
-        self.qube_row[self._SELECTION] = value
+        self.raw_row[self._SELECTION] = value
 
     @property
     def icon(self):
-        return self.qube_row[self._ICON]
+        return self.raw_row[self._ICON]
 
     @property
     def name(self):
-        return self.qube_row[self._NAME].name
+        return self.raw_row[self._NAME].name
 
     @property
     def color_name(self):
-        return self.qube_row[self._NAME]
+        return self.raw_row[self._NAME]
 
     @property
     def updates_available(self):
-        return self.qube_row[self._UPDATES_AVAILABLE]
+        return self.raw_row[self._UPDATES_AVAILABLE]
 
     @updates_available.setter
     def updates_available(self, value):
@@ -207,32 +225,32 @@ class UpdateRowWrapper(RowWrapper):
             self.vm.features.get('updates-available', False))
         if value and not updates_available:
             updates_available = None
-        self.qube_row[self._UPDATES_AVAILABLE] = \
+        self.raw_row[self._UPDATES_AVAILABLE] = \
             UpdatesAvailable(updates_available, self.theme)
 
     @property
     def last_updates_check(self):
-        return self.qube_row[self._LAST_UPDATES_CHECK]
+        return self.raw_row[self._LAST_UPDATES_CHECK]
 
     @property
     def last_update(self):
-        return self.qube_row[self._LAST_UPDATE]
+        return self.raw_row[self._LAST_UPDATE]
 
     def get_update_progress(self):
-        return self.qube_row[self._UPDATE_PROGRESS]
+        return self.raw_row[self._UPDATE_PROGRESS]
 
     @property
     def status(self) -> UpdateStatus:
-        return self.qube_row[self._STATUS]
+        return self.raw_row[self._STATUS]
 
     def set_status(self, status_code: UpdateStatus):
-        self.qube_row[self._STATUS] = status_code
+        self.raw_row[self._STATUS] = status_code
 
     def set_update_progress(self, progress):
-        self.qube_row[7] = progress
+        self.raw_row[7] = progress
 
 
-class Date(GObject.GObject):
+class Date:
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.date_format_source = "%Y-%m-%d %H:%M:%S"

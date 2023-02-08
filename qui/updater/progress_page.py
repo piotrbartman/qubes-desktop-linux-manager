@@ -23,18 +23,15 @@ import selectors
 import subprocess
 import threading
 import time
-from datetime import datetime, timedelta
-from typing import Union, Optional
 from gi.repository import Gtk, Gdk, GObject
-from qubesadmin import exc
 from locale import gettext as _
 
 from qubes_config.widgets.gtk_utils import copy_to_global_clipboard, \
     load_icon_at_gtk_size
 from qubes_config.widgets.utils import get_feature
-from qui.updater.utils import disable_checkboxes, HeaderCheckbox, \
-    pass_through_event_window, QubeLabel, sort_func, Theme, get_domain_icon, \
-    QubeName, label_color_theme, QubeClass, UpdateStatus
+from qui.updater.utils import UpdateStatus
+
+from locale import gettext as l
 
 
 class ProgressPage:
@@ -42,7 +39,6 @@ class ProgressPage:
     def __init__(
             self,
             builder,
-            stack,
             theme,
             header_label,
             next_button,
@@ -50,15 +46,16 @@ class ProgressPage:
     ):
         self.builder = builder
         self.theme = theme
-        self.stack = stack
         self.header_label = header_label
         self.next_button = next_button
         self.cancel_button = cancel_button
         self.vms_to_update = None
         self.exit_triggered = False
+        self.update_thread = None
 
         self.update_details = QubeUpdateDetails(self.builder)
 
+        self.stack = self.builder.get_object("main_stack")
         self.page = self.builder.get_object("progress_page")
         self.progressbar = self.builder.get_object("progressbar")
         progress_store = self.progressbar.get_model()
@@ -67,6 +64,8 @@ class ProgressPage:
         self.progressbar_renderer = self.builder.get_object(
             "progressbar_renderer")
         self.progressbar_renderer.set_fixed_size(-1, 26)
+
+        self.stack = self.builder.get_object("main_stack")
 
         progress_list = self.builder.get_object("progress_list")
         progress_list.connect("row-activated", self.row_selected)
@@ -78,8 +77,23 @@ class ProgressPage:
         progress_column.add_attribute(renderer, "value", 7)
         progress_column.add_attribute(renderer, "status", 8)
 
-    def perform_update(self, vms_to_update, settings):
+    def init_update(self, vms_to_update, settings):
         self.vms_to_update = vms_to_update
+        self.next_button.set_sensitive(False)
+        self.cancel_button.set_label(l("_Cancel updates"))
+        self.cancel_button.show()
+
+        self.header_label.set_text(l("Update in progress..."))
+        self.header_label.set_halign(Gtk.Align.CENTER)
+
+        # pylint: disable=attribute-defined-outside-init
+        self.update_thread = threading.Thread(
+            target=self.perform_update,
+            args=(self.vms_to_update, settings)
+        )
+        self.update_thread.start()
+
+    def perform_update(self, vms_to_update, settings):
         admins = [row for row in vms_to_update
                   if row.selected and row.vm.klass == 'AdminVM']
         templs = [row for row in vms_to_update
@@ -94,6 +108,10 @@ class ProgressPage:
         GObject.idle_add(self.next_button.set_sensitive, True)
         GObject.idle_add(self.header_label.set_text, _("Update finished"))
         GObject.idle_add(self.cancel_button.set_visible, False)
+
+    @property
+    def is_visible(self):
+        return self.stack.get_visible_child() == self.page
 
     def update_templates(self, templs, settings):
         if self.exit_triggered:
@@ -249,10 +267,10 @@ class ProgressPage:
         self.total_progress[0] = progress
 
     def back_by_row_selection(self, _emitter, path, *args):
-        self.show_progress_page()
+        self.show()
         self.row_selected(_emitter, path, *args)
 
-    def show_progress_page(self):
+    def show(self):
         self.update_details.set_active_row(None)
         self.stack.set_visible_child(self.page)
 
@@ -262,6 +280,18 @@ class ProgressPage:
     def row_selected(self, _emitter, path, _col):
         self.update_details.set_active_row(
             self.vms_to_update[path.get_indices()[0]])
+
+    def get_update_summary(self):
+        qube_updated_num = len(
+            [row for row in self.vms_to_update
+             if row.status == UpdateStatus.Success])
+        qube_no_updates_num = len(
+            [row for row in self.vms_to_update
+             if row.status == UpdateStatus.NoUpdatesFound])
+        qube_failed_num = len(
+            [row for row in self.vms_to_update
+             if row.status in  (UpdateStatus.Error, UpdateStatus.Cancelled)])
+        return qube_updated_num, qube_no_updates_num, qube_failed_num
 
 
 class QubeUpdateDetails:
@@ -357,4 +387,4 @@ class CellRendererProgressWithResult(
         context.paint()
 
 
-GObject.type_register(CellRendererProgressWithResult)
+GObject.type_register(CellRendererProgressWithResult)  # TODO

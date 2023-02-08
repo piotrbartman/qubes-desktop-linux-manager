@@ -95,6 +95,9 @@ class HeaderCheckbox:
 
 
 class QubeClass(Enum):
+    """
+    Sorting order by vm type.
+    """
     AdminVM = 0
     TemplateVM = 1
     StandaloneVM = 2
@@ -103,6 +106,9 @@ class QubeClass(Enum):
 
 
 class QubeLabel(Enum):
+    """
+    Sorting order by label color.
+    """
     black = 0
     purple = 1
     blue = 2
@@ -111,6 +117,17 @@ class QubeLabel(Enum):
     yellow = 5
     orange = 6
     red = 7
+
+
+class Theme(Enum):
+    LIGHT = 0
+    DARK = 1
+
+
+def label_color_theme(theme: Theme, color: str) -> str:
+    if theme == Theme.DARK and color.lower() == "black":
+        return "white"
+    return color
 
 
 class QubeName:
@@ -128,36 +145,6 @@ class QubeName:
 
     def __lt__(self, other):
         return self.name < other.name
-
-
-class Theme(Enum):
-    LIGHT = 0
-    DARK = 1
-
-
-def get_domain_icon(vm):
-    icon_vm = Gtk.IconTheme.get_default().load_icon(vm.icon, 16, 0)
-    return icon_vm
-
-
-def sort_func(model, iter1, iter2, data):
-    # Get the values at the two iter indices
-    value1 = model[iter1][data]
-    value2 = model[iter2][data]
-
-    # Compare the values and return -1, 0, or 1
-    if value1 < value2:
-        return -1
-    elif value1 == value2:
-        return 0
-    else:
-        return 1
-
-
-def label_color_theme(theme: Theme, color: str) -> str:
-    if theme == Theme.DARK and color.lower() == "black":
-        return "white"
-    return color
 
 
 class UpdateStatus(Enum):
@@ -192,11 +179,10 @@ class UpdateStatus(Enum):
         return self.value < other.value
 
     def __bool__(self):
-        return self == UpdateStatus.Success \
-            or self == UpdateStatus.NoUpdatesFound  # TODO
+        return self == UpdateStatus.Success
 
 
-class RowWrapper(GObject.GObject):
+class RowWrapper:
     def __init__(self, list_store, vm, theme: Theme, raw_row: list):
         super().__init__()
         self.list_store = list_store
@@ -204,14 +190,14 @@ class RowWrapper(GObject.GObject):
         self.theme = theme
 
         self.list_store.append([self, *raw_row])
-        self.qube_row = self.list_store[-1]
+        self.raw_row = self.list_store[-1]
 
     def __eq__(self, other):
         self_class = QubeClass[self.vm.klass]
         other_class = QubeClass[other.vm.klass]
         if self_class == other_class:
-            self_label = QubeLabel[self.vm.label.name]
-            other_label = QubeLabel[other.vm.label.name]
+            self_label = QubeLabel[str(self.vm.label)]
+            other_label = QubeLabel[str(other.vm.label)]
             return self_label.value == other_label.value
         return False
 
@@ -219,13 +205,13 @@ class RowWrapper(GObject.GObject):
         self_class = QubeClass[self.vm.klass]
         other_class = QubeClass[other.vm.klass]
         if self_class == other_class:
-            self_label = QubeLabel[self.vm.label.name]
-            other_label = QubeLabel[other.vm.label.name]
+            self_label = QubeLabel[str(self.vm.label)]
+            other_label = QubeLabel[str(other.vm.label)]
             return self_label.value < other_label.value
         return self_class.value < other_class.value
 
     def delete(self):
-        self.list_store.remove(self.qube_row.iter)
+        self.list_store.remove(self.raw_row.iter)
 
 
 class UpdateListIter:
@@ -247,7 +233,7 @@ class ListWrapper:
         self.theme = theme
         self.row_type = row_type
         for idx in range(self.row_type.COLUMN_NUM):
-            self.list_store_raw.set_sort_func(idx, sort_func, idx)
+            self.list_store_raw.set_sort_func(idx, self.sort_func, idx)
 
     def __iter__(self) -> UpdateListIter:
         return UpdateListIter(self.list_store_wrapped)
@@ -263,3 +249,16 @@ class ListWrapper:
         it = self.list_store_raw.get_iter(path)
         self.list_store_raw[it][0].selected = \
             not self.list_store_raw[it][0].selected
+
+    def sort_func(self, model, iter1, iter2, data):
+        # Get the values at the two iter indices
+        value1 = model[iter1][data]
+        value2 = model[iter2][data]
+
+        # Compare the values and return -1, 0, or 1
+        if value1 < value2:
+            return -1
+        elif value1 == value2:
+            return 0
+        else:
+            return 1

@@ -13,7 +13,7 @@
   <object class="GtkListStore" id="list_store">
     <columns>
       <!-- column-name gobject -->
-      <column type="GObject"/>
+      <column type="PyObject"/>
       <!-- column-name gboolean -->
       <column type="gboolean"/>
       <!-- column-name gdkpixbuf -->
@@ -23,9 +23,9 @@
       <!-- column-name gobject1 -->
       <column type="PyObject"/>
       <!-- column-name gobject2 -->
-      <column type="GObject"/>
+      <column type="PyObject"/>
       <!-- column-name gobject3 -->
-      <column type="GObject"/>
+      <column type="PyObject"/>
       <!-- column-name gint -->
       <column type="gint"/>
       <!-- column-name gchararray -->
@@ -176,11 +176,11 @@
                           </object>
                         </child>
                         <child>
-                          <object class="GtkTreeViewColumn" id="name_column">
+                          <object class="GtkTreeViewColumn" id="intro_name_column">
                             <property name="title">Qube name</property>
                             <property name="sort-column-id">3</property>
                             <child>
-                              <object class="GtkCellRendererText" id="name_renderer"/>
+                              <object class="GtkCellRendererText" id="intro_name_renderer"/>
                             </child>
                           </object>
                         </child>

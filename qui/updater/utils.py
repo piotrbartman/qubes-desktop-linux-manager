@@ -227,8 +227,8 @@ class UpdateListIter:
 
 
 class ListWrapper:
-    def __init__(self, row_type, vm_list, theme):
-        self.list_store_raw = vm_list.get_model()
+    def __init__(self, row_type, list_store_raw, theme):
+        self.list_store_raw = list_store_raw
         self.list_store_wrapped: list = []
         self.theme = theme
         self.row_type = row_type
@@ -237,6 +237,9 @@ class ListWrapper:
 
     def __iter__(self) -> UpdateListIter:
         return UpdateListIter(self.list_store_wrapped)
+
+    def __getitem__(self, item):
+        return self.list_store_wrapped[item]
 
     def __len__(self) -> int:
         return len(self.list_store_wrapped)
@@ -249,6 +252,17 @@ class ListWrapper:
         it = self.list_store_raw.get_iter(path)
         self.list_store_raw[it][0].selected = \
             not self.list_store_raw[it][0].selected
+
+    def get_selected(self) -> "ListWrapper":
+        empty_copy = Gtk.ListStore(*(
+            self.list_store_raw.get_column_type(i)
+            for i in range(self.list_store_raw.get_n_columns())
+        ))
+        result = ListWrapper(self.row_type, empty_copy, self.theme)
+        selected_rows = [row for row in self if row.selected]
+        for row in selected_rows:
+            result.append_vm(row.vm)
+        return result
 
     def sort_func(self, model, iter1, iter2, data):
         # Get the values at the two iter indices

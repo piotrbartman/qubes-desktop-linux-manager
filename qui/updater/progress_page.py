@@ -67,8 +67,8 @@ class ProgressPage:
 
         self.stack = self.builder.get_object("main_stack")
 
-        progress_list = self.builder.get_object("progress_list")
-        progress_list.connect("row-activated", self.row_selected)
+        self.progress_list = self.builder.get_object("progress_list")
+        self.progress_list.connect("row-activated", self.row_selected)
         progress_column = self.builder.get_object("progress_column")
         renderer = CellRendererProgressWithResult()
         renderer.props.ypad = 10
@@ -79,6 +79,7 @@ class ProgressPage:
 
     def init_update(self, vms_to_update, settings):
         self.vms_to_update = vms_to_update
+        self.progress_list.set_model(vms_to_update.list_store_raw)
         self.next_button.set_sensitive(False)
         self.cancel_button.set_label(l("_Cancel updates"))
         self.cancel_button.show()

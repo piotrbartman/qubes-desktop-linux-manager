@@ -162,7 +162,7 @@ class SummaryPage:
                                 for appvm in template.vm.appvms
                                 }
         self.list_store = ListWrapper(
-            RestartRowWrapper, self.restart_list, self.theme)
+            RestartRowWrapper, self.restart_list.get_model(), self.theme)
 
         for vm in possibly_changed_vms:
             if vm.is_running() \

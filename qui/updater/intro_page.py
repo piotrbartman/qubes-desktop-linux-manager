@@ -21,6 +21,7 @@
 import subprocess
 from datetime import datetime, timedelta
 from typing import Union, Optional
+from gi.repository import Gtk
 
 from qubes_config.widgets.gtk_utils import load_icon
 from qubesadmin import exc
@@ -73,7 +74,7 @@ class IntroPage:
 
     def populate_vm_list(self, qapp, settings):
         self.list_store = ListWrapper(
-            UpdateRowWrapper, self.vm_list, self.theme)
+            UpdateRowWrapper, self.vm_list.get_model(), self.theme)
 
         for vm in qapp.domains:
             if vm.klass == 'AdminVM':
@@ -90,6 +91,9 @@ class IntroPage:
         self.refresh_update_list(settings.update_if_stale)
 
     def refresh_update_list(self, update_if_stale):
+        """
+        Refresh "Updates Available" column if settings changed.
+        """
         if not self.active:
             return
 
@@ -104,13 +108,7 @@ class IntroPage:
             row.updates_available = bool(row.vm.name in to_update)
 
     def get_vms_to_update(self):
-        selected_rows = [row for row in self.list_store
-                         if row.selected]
-        to_remove = [row for row in self.list_store
-                     if not row.selected]
-        for elem in to_remove:
-            elem.delete()
-        return selected_rows
+        return self.list_store.get_selected()
 
     @property
     def is_populated(self) -> bool:

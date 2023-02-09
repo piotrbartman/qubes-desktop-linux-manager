@@ -84,7 +84,11 @@ def test_populate_vm_list(mock_subprocess, test_qapp):
     # inconsistent output of qubes-vm-update, but it does not matter
     mock_subprocess.return_value = b'Following templates will be updated:'
 
+    assert not sut.is_populated
+
     sut.populate_vm_list(test_qapp, MockSettings())
+
+    assert sut.is_populated
     assert len(sut.list_store) == 4
     assert len(sut.get_vms_to_update()) == 1
 
@@ -144,3 +148,70 @@ def test_on_header_toggled(test_qapp, updates_available, expectations):
                and expected == 0
         assert mock_button.value or expected == 0
         sut.on_header_toggled(None)
+
+
+# @pytest.mark.parametrize(
+#     "updates_available, expectations",
+#     (
+#         pytest.param((2, 6), (0, 2, 6, 12, 0)),
+#         pytest.param((6, 0), (0, 6, 12, 0)),
+#     ),
+# )
+def test_on_checkbox_toggled(test_qapp):
+    vm_list = MockListStore()
+
+    mock_button = MockButton()
+
+    builder = Gtk.Builder()
+    builder.set_translation_domain("desktop-linux-manager")
+    builder.add_from_file(pkg_resources.resource_filename(
+        'qui', 'updater.glade'))
+    sut = IntroPage(builder, Theme.LIGHT, mock_button)
+
+    # populate_vm_list
+    sut.list_store = ListWrapper(UpdateRowWrapper, vm_list, sut.theme)
+    for vm in test_qapp.domains:
+        sut.list_store.append_vm(vm)
+
+    assert len(sut.list_store) == 12
+
+    sut.update_checkbox_header.state = HeaderCheckbox.NONE
+    sut.update_checkbox_header.set_buttons()
+
+    # If button is inconsistent we do not care if it is active or not
+    # (we do not use this value)
+
+    # no selected row
+    assert not sut.checkbox_column_button.get_inconsistent()
+    assert not sut.checkbox_column_button.get_active()
+
+    # only one row selected
+    sut.on_checkbox_toggled(_emitter=None, path=(3,))
+
+    assert sut.checkbox_column_button.get_inconsistent()
+
+    for i in range(len(sut.list_store)):
+        sut.on_checkbox_toggled(_emitter=None, path=(i,))
+
+    # almost all rows selected (except one)
+    assert sut.checkbox_column_button.get_inconsistent()
+
+    sut.on_checkbox_toggled(_emitter=None, path=(3,))
+
+    # all rows selected
+    assert not sut.checkbox_column_button.get_inconsistent()
+    assert sut.checkbox_column_button.get_active()
+
+    sut.on_checkbox_toggled(_emitter=None, path=(3,))
+
+    # almost all rows selected (except one)
+    assert sut.checkbox_column_button.get_inconsistent()
+
+    for i in range(len(sut.list_store)):
+        if i == 3:
+            continue
+        sut.on_checkbox_toggled(_emitter=None, path=(i,))
+
+    # no selected row
+    assert not sut.checkbox_column_button.get_inconsistent()
+    assert not sut.checkbox_column_button.get_active()

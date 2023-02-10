@@ -160,7 +160,7 @@ class QubesUpdater(Gtk.Application):
             if not self.summary_page.is_populated:
                 self.summary_page.populate_restart_list(
                     restart=self.intro_page.restart_button.get_active(),
-                    vm_list_wrapped=self.progress_page.vms_to_update,
+                    vm_updated=self.progress_page.vms_to_update,
                     settings=self.settings
                 )
             self.summary_page.show(*self.progress_page.get_update_summary())

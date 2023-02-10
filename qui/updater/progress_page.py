@@ -78,9 +78,11 @@ class ProgressPage:
         progress_column.add_attribute(renderer, "status", 8)
 
     def init_update(self, vms_to_update, settings):
+        """Starts `perform_update` in new thread."""
         self.vms_to_update = vms_to_update
         self.progress_list.set_model(vms_to_update.list_store_raw)
         self.next_button.set_sensitive(False)
+        self.cancel_button.set_sensitive(True)
         self.cancel_button.set_label(l("_Cancel updates"))
         self.cancel_button.show()
 
@@ -90,15 +92,16 @@ class ProgressPage:
         # pylint: disable=attribute-defined-outside-init
         self.update_thread = threading.Thread(
             target=self.perform_update,
-            args=(self.vms_to_update, settings)
+            args=(settings,)
         )
         self.update_thread.start()
 
-    def perform_update(self, vms_to_update, settings):
-        admins = [row for row in vms_to_update
-                  if row.selected and row.vm.klass == 'AdminVM']
-        templs = [row for row in vms_to_update
-                  if row.selected and row.vm.klass != 'AdminVM']
+    def perform_update(self, settings):
+        """Updates dom0 and then other vms."""
+        admins = [row for row in self.vms_to_update
+                  if row.vm.klass == 'AdminVM']
+        templs = [row for row in self.vms_to_update
+                  if row.vm.klass != 'AdminVM']
 
         if admins:
             self.update_admin_vm(admins)
@@ -112,6 +115,7 @@ class ProgressPage:
 
     @property
     def is_visible(self):
+        """Returns True if page is shown by stack."""
         return self.stack.get_visible_child() == self.page
 
     def update_templates(self, templs, settings):
@@ -157,10 +161,6 @@ class ProgressPage:
              '--targets', targets],
             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
-        sel = selectors.DefaultSelector()
-        sel.register(proc.stdout, selectors.EVENT_READ)
-        sel.register(proc.stderr, selectors.EVENT_READ)
-
         for untrusted_line in iter(proc.stderr.readline, ''):
             if untrusted_line:
                 self.handle_err_line(untrusted_line, rows)
@@ -197,6 +197,7 @@ class ProgressPage:
         GObject.idle_add(self.set_total_progress, 100)
 
     def update_admin_vm(self, admins):
+        """Run command to update dom0."""
         admin = admins[0]
         if self.exit_triggered:
             GObject.idle_add(admin.set_status, UpdateStatus.Cancelled)
@@ -211,27 +212,25 @@ class ProgressPage:
 
         self.update_details.update_buffer()
 
-        self.ticker_done = False
-        thread = threading.Thread(target=self.ticker, args=(admin,))
-        thread.start()
-
         try:
-            output = subprocess.check_output(
-                ['sudo', 'qubesctl', '--dom0-only', '--no-color',
-                 'pkg.upgrade', 'refresh=True'],
-                stderr=subprocess.STDOUT).decode()
-            ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
-            output = ansi_escape.sub('', output)
+            with Ticker(admin):
+                output = subprocess.check_output(
+                    ['sudo', 'qubesctl', '--dom0-only', '--no-color',
+                     'pkg.upgrade', 'refresh=True'],
+                    stderr=subprocess.STDOUT).decode()
+                ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
+                output = ansi_escape.sub('', output)
 
-            GObject.idle_add(admin.append_text_view, output)
-            GObject.idle_add(admin.set_status, UpdateStatus.Success)
+                GObject.idle_add(admin.append_text_view, output)
+                GObject.idle_add(admin.set_status, UpdateStatus.Success)
         except subprocess.CalledProcessError as ex:
             GObject.idle_add(
                 admin.append_text_view,
                 _("Error on updating {}: {}\n{}").format(
                     admin.vm.name, str(ex), ex.output.decode()))
             GObject.idle_add(admin.set_status, UpdateStatus.Error)
-        self.ticker_done = True
+
+        self.update_details.update_buffer()
 
     def handle_err_line(self, untrusted_line, rows):
         line = untrusted_line.decode().rstrip()
@@ -258,20 +257,17 @@ class ProgressPage:
         GObject.idle_add(
             rows[self.curr_name_out].append_text_view, text)
 
-    def ticker(self, row):
-        while not self.ticker_done:
-            new_value = (row.get_update_progress()) % 96 + 1
-            row.set_update_progress(new_value)
-            time.sleep(1 / 12)
-
     def set_total_progress(self, progress):
+        """Set the value of main big progressbar."""
         self.total_progress[0] = progress
 
     def back_by_row_selection(self, _emitter, path, *args):
+        """Show this page and select row selected on summary page."""
         self.show()
         self.row_selected(_emitter, path, *args)
 
     def show(self):
+        """Show this page and handle buttons."""
         self.update_details.set_active_row(None)
         self.stack.set_visible_child(self.page)
 
@@ -279,20 +275,50 @@ class ProgressPage:
         self.cancel_button.hide()
 
     def row_selected(self, _emitter, path, _col):
+        """Handle clicking on a row to show more info.
+
+        Set updated details (name of vm and textview)."""
         self.update_details.set_active_row(
             self.vms_to_update[path.get_indices()[0]])
 
     def get_update_summary(self):
-        qube_updated_num = len(
+        """Returns update summary.
+
+        It is a triple of:
+        1. number of updated vms,
+        2. number of vms that tried to update but no update was found,
+        3. vms that update was canceled before starting.
+        """
+        vm_updated_num = len(
             [row for row in self.vms_to_update
              if row.status == UpdateStatus.Success])
-        qube_no_updates_num = len(
+        vm_no_updates_num = len(
             [row for row in self.vms_to_update
              if row.status == UpdateStatus.NoUpdatesFound])
-        qube_failed_num = len(
+        vm_failed_num = len(
             [row for row in self.vms_to_update
-             if row.status in  (UpdateStatus.Error, UpdateStatus.Cancelled)])
-        return qube_updated_num, qube_no_updates_num, qube_failed_num
+             if row.status in (UpdateStatus.Error, UpdateStatus.Cancelled)])
+        return vm_updated_num, vm_no_updates_num, vm_failed_num
+
+
+class Ticker:
+    """Helper for dom0 progressbar."""
+    def __init__(self, *args):
+        self.ticker_done = False
+        self.args = args
+
+    def __enter__(self):
+        thread = threading.Thread(target=self.tick, args=self.args)
+        thread.start()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.ticker_done = True
+
+    def tick(self, row):
+        while not self.ticker_done:
+            new_value = (row.get_update_progress()) % 96 + 1
+            row.set_update_progress(new_value)
+            time.sleep(1 / 12)
 
 
 class QubeUpdateDetails:

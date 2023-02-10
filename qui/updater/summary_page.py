@@ -152,9 +152,10 @@ class SummaryPage:
         self.refresh_buttons()
 
     @disable_checkboxes
-    def populate_restart_list(self, restart, vm_list_wrapped, settings):
+    def populate_restart_list(self, restart, vm_updated, settings):
+        self.summary_list.set_model(vm_updated.list_store_raw)
         self.updated_tmpls = [
-            row for row in vm_list_wrapped
+            row for row in vm_updated
             if bool(row.status)
             and QubeClass[row.vm.klass] == QubeClass.TemplateVM
         ]
@@ -224,7 +225,7 @@ class RestartRowWrapper(RowWrapper):
         label = QubeLabel[str(vm.label)]
         raw_row = [
             False,
-            load_icon(vm),
+            load_icon(vm.icon),
             QubeName(vm.name, label.name, theme),
             '',
         ]

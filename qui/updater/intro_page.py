@@ -21,7 +21,6 @@
 import subprocess
 from datetime import datetime, timedelta
 from typing import Union, Optional
-from gi.repository import Gtk
 
 from qubes_config.widgets.gtk_utils import load_icon
 from qubesadmin import exc
@@ -33,6 +32,11 @@ from qui.updater.utils import disable_checkboxes, HeaderCheckbox, \
 
 
 class IntroPage:
+    """
+    First content page of updater.
+
+    Show the list of updatable vms with a updates info.
+    """
 
     def __init__(self, builder, theme, next_button):
         self.builder = builder
@@ -73,6 +77,7 @@ class IntroPage:
         self.restart_button = self.builder.get_object("restart_button")
 
     def populate_vm_list(self, qapp, settings):
+        """Adds to list any updatable vms with a updates info."""
         self.list_store = ListWrapper(
             UpdateRowWrapper, self.vm_list.get_model(), self.theme)
 
@@ -92,7 +97,7 @@ class IntroPage:
 
     def refresh_update_list(self, update_if_stale):
         """
-        Refresh "Updates Available" column if settings changed.
+        Refreshes "Updates Available" column if settings changed.
         """
         if not self.active:
             return
@@ -107,19 +112,23 @@ class IntroPage:
         for row in self.list_store:
             row.updates_available = bool(row.vm.name in to_update)
 
-    def get_vms_to_update(self):
+    def get_vms_to_update(self) -> ListWrapper:
+        """Returns list of vms selected to be updated"""
         return self.list_store.get_selected()
 
     @property
     def is_populated(self) -> bool:
+        """Returns True if updatable vms list is populated."""
         return self.list_store is not None
 
     @property
     def is_visible(self):
+        """Returns True if page is shown by stack."""
         return self.stack.get_visible_child() == self.page
 
     @disable_checkboxes
     def on_checkbox_toggled(self, _emitter, path, *_args):
+        """Handles (un)selection of single row."""
         if path is None:
             return
 
@@ -135,6 +144,17 @@ class IntroPage:
 
     @disable_checkboxes
     def on_header_toggled(self, _emitter):
+        """Handles clicking on header checkbox.
+
+        Cycle between selection of:
+         <1> vms with `updates_available` (YES)
+         <2> <1> + vms no checked for updates for a while (YES and MAYBE)
+         <3> all vms (YES , MAYBE and NO)
+         <4> no vm. (nothing)
+
+        If the user has selected any vms that do not match the defined states,
+        the cycle will start from (1).
+        """
         if len(self.list_store) == 0:
             self.update_checkbox_header.state = HeaderCheckbox.NONE
         else:
@@ -172,7 +192,7 @@ class UpdateRowWrapper(RowWrapper):
         last_update = vm.features.get('last-update', None)
 
         label = QubeLabel[str(vm.label)]
-        icon = load_icon(vm)
+        icon = load_icon(vm.icon)
         name = QubeName(vm.name, label.name, theme)
 
         raw_row = [
@@ -249,6 +269,11 @@ class UpdateRowWrapper(RowWrapper):
 
 
 class Date:
+    """
+    Prints Date in desire way: never, today, yesterday, normal date.
+
+    Comparable.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.date_format_source = "%Y-%m-%d %H:%M:%S"
@@ -289,6 +314,11 @@ class Date:
 
 
 class UpdatesAvailable:
+    """
+    Formatted info about updates.
+
+    Comparable.
+    """
     def __init__(self, value: Union[Optional[bool], str], theme: Theme):
         super().__init__()
         if isinstance(value, str):

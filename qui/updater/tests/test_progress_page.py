@@ -18,3 +18,151 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+import time
+from unittest.mock import patch, call
+
+import gi
+import pkg_resources
+import pytest
+from gi.repository import Gtk
+
+from qui.updater.intro_page import IntroPage, UpdateRowWrapper, UpdatesAvailable
+from qui.updater.progress_page import ProgressPage
+from qui.updater.tests.conftest import mock_settings
+from qui.updater.utils import Theme, ListWrapper, HeaderCheckbox, UpdateStatus
+
+gi.require_version('Gtk', '3.0')
+gi.require_version('GdkPixbuf', '2.0')
+
+
+@patch('threading.Thread')
+def test_init_update(
+        mock_threading, test_qapp,
+        mock_next_button, mock_cancel_button, mock_label, mock_list_store):
+    class MockThread:
+        def __init__(self):
+            self.started = False
+
+        def start(self):
+            self.started = True
+
+    mock_thread = MockThread()
+
+    mock_threading.return_value = mock_thread
+
+    builder = Gtk.Builder()
+    builder.set_translation_domain("desktop-linux-manager")
+    builder.add_from_file(pkg_resources.resource_filename(
+        'qui', 'updater.glade'))
+    sut = ProgressPage(
+        builder, Theme.LIGHT, mock_label, mock_next_button, mock_cancel_button)
+
+    class MockTreeView:
+        def set_model(self, model):
+            self.model = model
+
+    sut.progress_list = MockTreeView()
+
+    vms_to_update = ListWrapper(UpdateRowWrapper, mock_list_store, sut.theme)
+    for vm in test_qapp.domains:
+        vms_to_update.append_vm(vm)
+
+    sut.init_update(vms_to_update, mock_settings)
+
+    assert not mock_next_button.sensitive
+    assert mock_cancel_button.sensitive
+    assert mock_cancel_button.visible
+    assert mock_cancel_button.label == "_Cancel updates"
+    assert mock_thread.started
+
+    assert mock_label.text == "Update in progress..."
+    assert mock_label.halign == Gtk.Align.CENTER
+
+    assert sut.progress_list.model == vms_to_update.list_store_raw
+
+
+@patch('gi.repository.GObject.idle_add')
+def test_perform_update(
+        idle_add, test_qapp,
+        mock_next_button, mock_cancel_button, mock_label, mock_list_store
+):
+    builder = Gtk.Builder()
+    builder.set_translation_domain("desktop-linux-manager")
+    builder.add_from_file(pkg_resources.resource_filename(
+        'qui', 'updater.glade'))
+    sut = ProgressPage(
+        builder, Theme.LIGHT, mock_label, mock_next_button, mock_cancel_button)
+
+    vms_to_update = ListWrapper(UpdateRowWrapper, mock_list_store, sut.theme)
+    for vm in test_qapp.domains:
+        if vm.klass in ("AdminVM", "TemplateVM", "StandaloneVM"):
+            vms_to_update.append_vm(vm)
+
+    sut.vms_to_update = vms_to_update
+
+    class VMConsumer:
+        def __call__(self, vm_rows, *args, **kwargs):
+            self.vm_rows = vm_rows
+
+    sut.update_admin_vm = VMConsumer()
+    sut.update_templates = VMConsumer()
+
+    sut.perform_update(mock_settings)
+
+    assert len(sut.update_admin_vm.vm_rows) == 1
+    assert len(sut.update_templates.vm_rows) == 3
+
+    calls = [call(mock_next_button.set_sensitive, True),
+             call(mock_label.set_text, "Update finished"),
+             call(mock_cancel_button.set_visible, False)]
+    idle_add.assert_has_calls(calls, any_order=True)
+
+
+@patch('subprocess.check_output')
+def test_update_admin_vm(
+        mock_subprocess, test_qapp,
+        mock_next_button, mock_cancel_button, mock_label, mock_list_store
+):
+    mock_subprocess.return_value = b''
+    builder = Gtk.Builder()
+    builder.set_translation_domain("desktop-linux-manager")
+    builder.add_from_file(pkg_resources.resource_filename(
+        'qui', 'updater.glade'))
+    sut = ProgressPage(
+        builder, Theme.LIGHT, mock_label, mock_next_button, mock_cancel_button)
+
+    admins = ListWrapper(UpdateRowWrapper, mock_list_store, sut.theme)
+    for vm in test_qapp.domains:
+        if vm.klass in ("AdminVM",):
+            admins.append_vm(vm)
+
+    sut.update_admin_vm(admins=admins)
+
+
+def test_get_update_summary(
+        test_qapp,
+        mock_next_button, mock_cancel_button, mock_label, mock_list_store):
+    builder = Gtk.Builder()
+    builder.set_translation_domain("desktop-linux-manager")
+    builder.add_from_file(pkg_resources.resource_filename(
+        'qui', 'updater.glade'))
+    sut = ProgressPage(
+        builder, Theme.LIGHT, mock_label, mock_next_button, mock_cancel_button)
+
+    vms_to_update = ListWrapper(UpdateRowWrapper, mock_list_store, sut.theme)
+    for vm in test_qapp.domains:
+        if vm.klass in ("AdminVM", "TemplateVM", "StandaloneVM"):
+            vms_to_update.append_vm(vm)
+
+    vms_to_update[0].set_status(UpdateStatus.NoUpdatesFound)
+    vms_to_update[1].set_status(UpdateStatus.Error)
+    vms_to_update[2].set_status(UpdateStatus.Cancelled)
+    vms_to_update[3].set_status(UpdateStatus.Success)
+
+    sut.vms_to_update = vms_to_update
+
+    vm_updated_num, vm_no_updates_num, vm_failed_num = sut.get_update_summary()
+
+    assert vm_updated_num == 1
+    assert vm_no_updates_num == 1
+    assert vm_failed_num == 2

@@ -420,3 +420,87 @@ def test_policy_manager():
     manager = PolicyManager()
     manager.policy_client = TestPolicyClient()
     return manager
+
+
+###
+class MockButton:
+    def __init__(self):
+        self.sensitive = None
+        self.label = None
+        self.visible = True
+
+    def set_sensitive(self, value: bool):
+        self.sensitive = value
+
+    def set_label(self, text):
+        self.label = text
+
+    def show(self):
+        self.visible = True
+
+    def set_visible(self, visible):
+        self.visible = visible
+
+
+@pytest.fixture
+def mock_next_button():
+    return MockButton()
+
+
+@pytest.fixture
+def mock_cancel_button():
+    return MockButton()
+
+
+class MockLabel:
+    def __init__(self):
+        self.text = None
+        self.halign = None
+
+    def set_text(self, text):
+        self.text = text
+
+    def set_halign(self, halign):
+        self.halign = halign
+
+
+@pytest.fixture
+def mock_label():
+    return MockLabel()
+
+
+@pytest.fixture
+def mock_settings():
+    class MockSettings:
+        def __init__(self):
+            self.update_if_stale = 7
+
+    return MockSettings()
+
+
+@pytest.fixture
+def mock_list_store():
+    class MockListStore:
+        def __init__(self):
+            self.raw_rows = []
+
+        def get_model(self):
+            return self
+
+        def get_iter(self, path):
+            return path[0]
+
+        def __getitem__(self, item):
+            return self.raw_rows[item]
+
+        def append(self, row):
+            self.raw_rows.append(row)
+            # TODO row.iter
+
+        def remove(self, idx):
+            self.raw_rows.remove(idx)
+
+        def set_sort_func(self, _col, _sort_func, _data):
+            pass
+
+    return MockListStore()

@@ -23,7 +23,7 @@ from unittest.mock import patch
 import gi
 import pkg_resources
 import pytest
-from gi.overrides import Gtk
+from gi.repository import Gtk
 
 from qui.updater.intro_page import IntroPage, UpdateRowWrapper, UpdatesAvailable
 from qui.updater.utils import Theme, ListWrapper, HeaderCheckbox
@@ -32,52 +32,14 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('GdkPixbuf', '2.0')
 
 
-class MockButton:  # TODO
-    def __init__(self):
-        self.value = None
-
-    def set_sensitive(self, value: bool):
-        self.value = value
-
-
-class MockSettings:
-    def __init__(self):
-        self.update_if_stale = 7
-
-
-class MockListStore:
-    def __init__(self):
-        self.raw_rows = []
-
-    def get_model(self):
-        return self
-
-    def get_iter(self, path):
-        return path[0]
-
-    def __getitem__(self, item):
-        return self.raw_rows[item]
-
-    def append(self, row):
-        self.raw_rows.append(row)
-        # TODO row.iter
-
-    def remove(self, idx):
-        self.raw_rows.remove(idx)
-
-    def set_sort_func(self, _col, _sort_func, _data):
-        pass
-
-
 @patch('subprocess.check_output')
-def test_populate_vm_list(mock_subprocess, test_qapp):
-    mock_button = MockButton()
-
+def test_populate_vm_list(
+        mock_subprocess, test_qapp, mock_next_button, mock_settings):
     builder = Gtk.Builder()
     builder.set_translation_domain("desktop-linux-manager")
     builder.add_from_file(pkg_resources.resource_filename(
         'qui', 'updater.glade'))
-    sut = IntroPage(builder, Theme.LIGHT, mock_button)
+    sut = IntroPage(builder, Theme.LIGHT, mock_next_button)
     test_qapp.expected_calls[
         ('test-standalone', "admin.vm.feature.Get", 'updates-available', None)
     ] = b"0\x00" + str(1).encode()
@@ -86,7 +48,7 @@ def test_populate_vm_list(mock_subprocess, test_qapp):
 
     assert not sut.is_populated
 
-    sut.populate_vm_list(test_qapp, MockSettings())
+    sut.populate_vm_list(test_qapp, mock_settings)
 
     assert sut.is_populated
     assert len(sut.list_store) == 4
@@ -96,7 +58,7 @@ def test_populate_vm_list(mock_subprocess, test_qapp):
         ('fedora-36', "admin.vm.feature.Get", 'updates-available', None)
     ] = b"0\x00" + str(1).encode()
 
-    sut.populate_vm_list(test_qapp, MockSettings())
+    sut.populate_vm_list(test_qapp, mock_settings)
     assert len(sut.list_store) == 4
     assert len(sut.get_vms_to_update()) == 2
 
@@ -108,19 +70,18 @@ def test_populate_vm_list(mock_subprocess, test_qapp):
         pytest.param((6, 0), (0, 6, 12, 0)),
     ),
 )
-def test_on_header_toggled(test_qapp, updates_available, expectations):
-    vm_list = MockListStore()
-
-    mock_button = MockButton()
-
+def test_on_header_toggled(
+        test_qapp, updates_available, expectations,
+        mock_next_button, mock_settings, mock_list_store
+):
     builder = Gtk.Builder()
     builder.set_translation_domain("desktop-linux-manager")
     builder.add_from_file(pkg_resources.resource_filename(
         'qui', 'updater.glade'))
-    sut = IntroPage(builder, Theme.LIGHT, mock_button)
+    sut = IntroPage(builder, Theme.LIGHT, mock_next_button)
 
     # populate_vm_list
-    sut.list_store = ListWrapper(UpdateRowWrapper, vm_list, sut.theme)
+    sut.list_store = ListWrapper(UpdateRowWrapper, mock_list_store, sut.theme)
     for vm in test_qapp.domains:
         sut.list_store.append_vm(vm)
 
@@ -146,30 +107,20 @@ def test_on_header_toggled(test_qapp, updates_available, expectations):
                and expected == 12 \
                or not sut.checkbox_column_button.get_active() \
                and expected == 0
-        assert mock_button.value or expected == 0
+        assert mock_next_button.sensitive or expected == 0
         sut.on_header_toggled(None)
 
 
-# @pytest.mark.parametrize(
-#     "updates_available, expectations",
-#     (
-#         pytest.param((2, 6), (0, 2, 6, 12, 0)),
-#         pytest.param((6, 0), (0, 6, 12, 0)),
-#     ),
-# )
-def test_on_checkbox_toggled(test_qapp):
-    vm_list = MockListStore()
-
-    mock_button = MockButton()
-
+def test_on_checkbox_toggled(
+        test_qapp, mock_next_button, mock_settings, mock_list_store):
     builder = Gtk.Builder()
     builder.set_translation_domain("desktop-linux-manager")
     builder.add_from_file(pkg_resources.resource_filename(
         'qui', 'updater.glade'))
-    sut = IntroPage(builder, Theme.LIGHT, mock_button)
+    sut = IntroPage(builder, Theme.LIGHT, mock_next_button)
 
     # populate_vm_list
-    sut.list_store = ListWrapper(UpdateRowWrapper, vm_list, sut.theme)
+    sut.list_store = ListWrapper(UpdateRowWrapper, mock_list_store, sut.theme)
     for vm in test_qapp.domains:
         sut.list_store.append_vm(vm)
 

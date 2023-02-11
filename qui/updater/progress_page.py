@@ -161,6 +161,20 @@ class ProgressPage:
              '--targets', targets],
             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
+        thread = threading.Thread(target=self.read_stdouts, args=(proc, rows))
+        thread.start()
+
+        self.read_stderrs(proc, rows)
+        # self.read_stdouts(proc, rows)
+
+        thread.join()
+        proc.wait()
+
+        self.set_statuses(rows)
+
+        GObject.idle_add(self.set_total_progress, 100)
+
+    def read_stderrs(self, proc, rows):
         for untrusted_line in iter(proc.stderr.readline, ''):
             if untrusted_line:
                 self.handle_err_line(untrusted_line, rows)
@@ -168,6 +182,7 @@ class ProgressPage:
                 break
         proc.stderr.close()
 
+    def read_stdouts(self, proc, rows):
         self.curr_name_out = ""
         for untrusted_line in iter(proc.stdout.readline, ''):
             if untrusted_line:
@@ -177,8 +192,8 @@ class ProgressPage:
         self.update_details.update_buffer()
         proc.stdout.close()
 
-        proc.wait()
-
+    @staticmethod
+    def set_statuses(rows):
         for row in rows.values():
             progress = row.get_update_progress()
             if progress == 100.:
@@ -193,8 +208,6 @@ class ProgressPage:
                     )
             else:
                 GObject.idle_add(row.set_status, UpdateStatus.Error)
-
-        GObject.idle_add(self.set_total_progress, 100)
 
     def update_admin_vm(self, admins):
         """Run command to update dom0."""
@@ -325,15 +338,17 @@ class QubeUpdateDetails:
 
     def __init__(self, builder):
         self.active_row = None
-
         self.builder = builder
+
         self.qube_details = self.builder.get_object("qube_details")
         self.details_label = self.builder.get_object("details_label")
         self.qube_icon = self.builder.get_object("qube_icon")
         self.qube_label = self.builder.get_object("qube_label")
         self.colon = self.builder.get_object("colon")
+
         self.copy_button = self.builder.get_object("copy_button")
         self.copy_button.connect("clicked", self.copy_content)
+
         self.progress_textview = self.builder.get_object("progress_textview")
         self.progress_scrolled_window = self.builder.get_object(
             "progress_textview")
@@ -375,6 +390,9 @@ class QubeUpdateDetails:
 class CellRendererProgressWithResult(
     Gtk.CellRendererProgress
 ):
+    """
+    Custom Cell Renderer to show progressbar or finish icon.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._status = None

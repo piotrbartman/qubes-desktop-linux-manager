@@ -26,6 +26,10 @@ from typing import Mapping, Union, Tuple, List
 from qubesadmin.tests import QubesTest
 
 import gi
+
+from qui.updater.intro_page import UpdateRowWrapper
+from qui.updater.utils import ListWrapper, Theme
+
 gi.require_version('Gtk', '3.0')
 gi.require_version('GdkPixbuf', '2.0')
 from gi.repository import Gtk
@@ -346,15 +350,10 @@ def test_builder():
 @pytest.fixture
 def real_builder():
     """Gtk builder with actual config glade file registered"""
-    global SIGNALS_REGISTERED  # pylint:disable=global-statement
-    # register all the signals various widgets might emit
-    if not SIGNALS_REGISTERED:
-        GlobalConfig.register_signals()
-        SIGNALS_REGISTERED = True
-    # test glade file contains very simple setup with correctly named widgets
     builder = Gtk.Builder()
+    builder.set_translation_domain("desktop-linux-manager")
     builder.add_from_file(pkg_resources.resource_filename(
-        'qubes_config', 'global_config.glade'))
+        'qui', 'updater.glade'))
     return builder
 
 
@@ -504,3 +503,20 @@ def mock_list_store():
             pass
 
     return MockListStore()
+
+
+@pytest.fixture
+def all_vms_list(test_qapp, mock_list_store):
+    result = ListWrapper(UpdateRowWrapper, mock_list_store, Theme.LIGHT)
+    for vm in test_qapp.domains:
+        result.append_vm(vm)
+    return result
+
+
+@pytest.fixture
+def updatable_vms_list(test_qapp, mock_list_store):
+    result = ListWrapper(UpdateRowWrapper, mock_list_store, Theme.LIGHT)
+    for vm in test_qapp.domains:
+        if vm.klass in ("AdminVM", "TemplateVM", "StandaloneVM"):
+            result.append_vm(vm)
+    return result

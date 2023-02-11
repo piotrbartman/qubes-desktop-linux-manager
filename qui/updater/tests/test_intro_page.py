@@ -34,12 +34,10 @@ gi.require_version('GdkPixbuf', '2.0')
 
 @patch('subprocess.check_output')
 def test_populate_vm_list(
-        mock_subprocess, test_qapp, mock_next_button, mock_settings):
-    builder = Gtk.Builder()
-    builder.set_translation_domain("desktop-linux-manager")
-    builder.add_from_file(pkg_resources.resource_filename(
-        'qui', 'updater.glade'))
-    sut = IntroPage(builder, Theme.LIGHT, mock_next_button)
+        mock_subprocess, real_builder, test_qapp,
+        mock_next_button, mock_settings
+):
+    sut = IntroPage(real_builder, Theme.LIGHT, mock_next_button)
     test_qapp.expected_calls[
         ('test-standalone', "admin.vm.feature.Get", 'updates-available', None)
     ] = b"0\x00" + str(1).encode()
@@ -71,14 +69,10 @@ def test_populate_vm_list(
     ),
 )
 def test_on_header_toggled(
-        test_qapp, updates_available, expectations,
+        real_builder, test_qapp, updates_available, expectations,
         mock_next_button, mock_settings, mock_list_store
 ):
-    builder = Gtk.Builder()
-    builder.set_translation_domain("desktop-linux-manager")
-    builder.add_from_file(pkg_resources.resource_filename(
-        'qui', 'updater.glade'))
-    sut = IntroPage(builder, Theme.LIGHT, mock_next_button)
+    sut = IntroPage(real_builder, Theme.LIGHT, mock_next_button)
 
     # populate_vm_list
     sut.list_store = ListWrapper(UpdateRowWrapper, mock_list_store, sut.theme)
@@ -112,12 +106,10 @@ def test_on_header_toggled(
 
 
 def test_on_checkbox_toggled(
-        test_qapp, mock_next_button, mock_settings, mock_list_store):
-    builder = Gtk.Builder()
-    builder.set_translation_domain("desktop-linux-manager")
-    builder.add_from_file(pkg_resources.resource_filename(
-        'qui', 'updater.glade'))
-    sut = IntroPage(builder, Theme.LIGHT, mock_next_button)
+        real_builder, test_qapp,
+        mock_next_button, mock_settings, mock_list_store
+):
+    sut = IntroPage(real_builder, Theme.LIGHT, mock_next_button)
 
     # populate_vm_list
     sut.list_store = ListWrapper(UpdateRowWrapper, mock_list_store, sut.theme)

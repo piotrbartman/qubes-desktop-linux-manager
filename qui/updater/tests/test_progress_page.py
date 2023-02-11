@@ -27,7 +27,7 @@ import pytest
 from gi.repository import Gtk
 
 from qui.updater.intro_page import IntroPage, UpdateRowWrapper, UpdatesAvailable
-from qui.updater.progress_page import ProgressPage
+from qui.updater.progress_page import ProgressPage, QubeUpdateDetails
 from qui.updater.tests.conftest import mock_settings
 from qui.updater.utils import Theme, ListWrapper, HeaderCheckbox, UpdateStatus
 
@@ -37,8 +37,8 @@ gi.require_version('GdkPixbuf', '2.0')
 
 @patch('threading.Thread')
 def test_init_update(
-        mock_threading, test_qapp,
-        mock_next_button, mock_cancel_button, mock_label, mock_list_store):
+        mock_threading, real_builder, test_qapp,
+        mock_next_button, mock_cancel_button, mock_label, all_vms_list):
     class MockThread:
         def __init__(self):
             self.started = False
@@ -50,12 +50,10 @@ def test_init_update(
 
     mock_threading.return_value = mock_thread
 
-    builder = Gtk.Builder()
-    builder.set_translation_domain("desktop-linux-manager")
-    builder.add_from_file(pkg_resources.resource_filename(
-        'qui', 'updater.glade'))
     sut = ProgressPage(
-        builder, Theme.LIGHT, mock_label, mock_next_button, mock_cancel_button)
+        real_builder, Theme.LIGHT,
+        mock_label, mock_next_button, mock_cancel_button
+    )
 
     class MockTreeView:
         def set_model(self, model):
@@ -63,11 +61,7 @@ def test_init_update(
 
     sut.progress_list = MockTreeView()
 
-    vms_to_update = ListWrapper(UpdateRowWrapper, mock_list_store, sut.theme)
-    for vm in test_qapp.domains:
-        vms_to_update.append_vm(vm)
-
-    sut.init_update(vms_to_update, mock_settings)
+    sut.init_update(all_vms_list, mock_settings)
 
     assert not mock_next_button.sensitive
     assert mock_cancel_button.sensitive
@@ -78,27 +72,20 @@ def test_init_update(
     assert mock_label.text == "Update in progress..."
     assert mock_label.halign == Gtk.Align.CENTER
 
-    assert sut.progress_list.model == vms_to_update.list_store_raw
+    assert sut.progress_list.model == all_vms_list.list_store_raw
 
 
 @patch('gi.repository.GObject.idle_add')
 def test_perform_update(
-        idle_add, test_qapp,
-        mock_next_button, mock_cancel_button, mock_label, mock_list_store
+        idle_add, real_builder,
+        mock_next_button, mock_cancel_button, mock_label, updatable_vms_list
 ):
-    builder = Gtk.Builder()
-    builder.set_translation_domain("desktop-linux-manager")
-    builder.add_from_file(pkg_resources.resource_filename(
-        'qui', 'updater.glade'))
     sut = ProgressPage(
-        builder, Theme.LIGHT, mock_label, mock_next_button, mock_cancel_button)
+        real_builder, Theme.LIGHT,
+        mock_label, mock_next_button, mock_cancel_button
+    )
 
-    vms_to_update = ListWrapper(UpdateRowWrapper, mock_list_store, sut.theme)
-    for vm in test_qapp.domains:
-        if vm.klass in ("AdminVM", "TemplateVM", "StandaloneVM"):
-            vms_to_update.append_vm(vm)
-
-    sut.vms_to_update = vms_to_update
+    sut.vms_to_update = updatable_vms_list
 
     class VMConsumer:
         def __call__(self, vm_rows, *args, **kwargs):
@@ -120,16 +107,14 @@ def test_perform_update(
 
 @patch('subprocess.check_output')
 def test_update_admin_vm(
-        mock_subprocess, test_qapp,
+        mock_subprocess, real_builder, test_qapp,
         mock_next_button, mock_cancel_button, mock_label, mock_list_store
 ):
     mock_subprocess.return_value = b''
-    builder = Gtk.Builder()
-    builder.set_translation_domain("desktop-linux-manager")
-    builder.add_from_file(pkg_resources.resource_filename(
-        'qui', 'updater.glade'))
     sut = ProgressPage(
-        builder, Theme.LIGHT, mock_label, mock_next_button, mock_cancel_button)
+        real_builder, Theme.LIGHT,
+        mock_label, mock_next_button, mock_cancel_button
+    )
 
     admins = ListWrapper(UpdateRowWrapper, mock_list_store, sut.theme)
     for vm in test_qapp.domains:
@@ -140,29 +125,52 @@ def test_update_admin_vm(
 
 
 def test_get_update_summary(
-        test_qapp,
-        mock_next_button, mock_cancel_button, mock_label, mock_list_store):
-    builder = Gtk.Builder()
-    builder.set_translation_domain("desktop-linux-manager")
-    builder.add_from_file(pkg_resources.resource_filename(
-        'qui', 'updater.glade'))
+        real_builder,
+        mock_next_button, mock_cancel_button, mock_label, updatable_vms_list
+):
     sut = ProgressPage(
-        builder, Theme.LIGHT, mock_label, mock_next_button, mock_cancel_button)
+        real_builder, Theme.LIGHT,
+        mock_label, mock_next_button, mock_cancel_button
+    )
 
-    vms_to_update = ListWrapper(UpdateRowWrapper, mock_list_store, sut.theme)
-    for vm in test_qapp.domains:
-        if vm.klass in ("AdminVM", "TemplateVM", "StandaloneVM"):
-            vms_to_update.append_vm(vm)
+    updatable_vms_list[0].set_status(UpdateStatus.NoUpdatesFound)
+    updatable_vms_list[1].set_status(UpdateStatus.Error)
+    updatable_vms_list[2].set_status(UpdateStatus.Cancelled)
+    updatable_vms_list[3].set_status(UpdateStatus.Success)
 
-    vms_to_update[0].set_status(UpdateStatus.NoUpdatesFound)
-    vms_to_update[1].set_status(UpdateStatus.Error)
-    vms_to_update[2].set_status(UpdateStatus.Cancelled)
-    vms_to_update[3].set_status(UpdateStatus.Success)
-
-    sut.vms_to_update = vms_to_update
+    sut.vms_to_update = updatable_vms_list
 
     vm_updated_num, vm_no_updates_num, vm_failed_num = sut.get_update_summary()
 
     assert vm_updated_num == 1
     assert vm_no_updates_num == 1
     assert vm_failed_num == 2
+
+
+def test_set_active_row(real_builder, updatable_vms_list):
+    sut = QubeUpdateDetails(real_builder)
+    row = updatable_vms_list[0]
+    sut.set_active_row(row)
+
+    assert sut.details_label.get_text().strip() == "Details for"
+    assert sut.qube_label.get_text().strip() == str(row.name)
+    assert sut.qube_icon.get_visible()
+    assert sut.qube_label.get_visible()
+    assert sut.colon.get_visible()
+    assert sut.progress_scrolled_window.get_visible()
+    assert sut.progress_textview.get_visible()
+    assert sut.copy_button.get_visible()
+
+
+def test_set_active_row_none(real_builder):
+    sut = QubeUpdateDetails(real_builder)
+
+    sut.set_active_row(None)
+
+    assert sut.details_label.get_text() == "Select a qube to see details."
+    assert not sut.qube_icon.get_visible()
+    assert not sut.qube_label.get_visible()
+    assert not sut.colon.get_visible()
+    assert not sut.progress_scrolled_window.get_visible()
+    assert not sut.progress_textview.get_visible()
+    assert not sut.copy_button.get_visible()

@@ -76,7 +76,7 @@ class Settings:
             or vm.klass == 'AppVM']
         self.excluded_vms = [
             vm for vm in self.available_vms
-            if not get_boolean_feature(vm, 'automatic-restart', True)]
+            if not get_boolean_feature(vm, 'restart-after-update', True)]
         self.exceptions = VMFlowboxHandler(
             self.builder, self.qapp, "restart_exceptions",
             self.excluded_vms, lambda vm: vm in self.available_vms)
@@ -196,9 +196,9 @@ class Settings:
 
         if self.exceptions.is_changed():
             for vm in self.exceptions.added_vms:
-                apply_feature_change(vm, 'automatic-restart', False)
+                apply_feature_change(vm, 'restart-after-update', False)
             for vm in self.exceptions.removed_vms:
-                apply_feature_change(vm, 'automatic-restart', None)
+                apply_feature_change(vm, 'restart-after-update', None)
             self.exceptions.save()
 
         self.refresh_callback(self.update_if_stale)

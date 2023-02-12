@@ -21,196 +21,21 @@
  reachable by all tests"""
 import pytest
 import pkg_resources
-import subprocess
-from typing import Mapping, Union, Tuple, List
+
+from qubes_config.tests.conftest import add_dom0_vm_property, \
+    add_dom0_text_property, add_dom0_feature, add_expected_vm, \
+    add_feature_with_template_to_all, add_feature_to_all
 from qubesadmin.tests import QubesTest
 
 import gi
 
 from qui.updater.intro_page import UpdateRowWrapper
+from qui.updater.summary_page import RestartRowWrapper
 from qui.updater.utils import ListWrapper, Theme
 
 gi.require_version('Gtk', '3.0')
 gi.require_version('GdkPixbuf', '2.0')
 from gi.repository import Gtk
-
-default_vm_properties = {
-    "autostart": ("bool", True, "False"),
-    "backup_timestamp": ("int", True, ""),
-    "debug": ("bool", True, "False"),
-    "default_user": ("str", True, "user"),
-    "dns": ("str", True, "10.139.1.1 10.139.1.2"),
-    "gateway": ("str", True, ""),
-    "gateway6": ("str", True, ""),
-    "icon": ("str", True, "appvm-green"),
-    "include_in_backups": ("bool", True, "True"),
-    "installed_by_rpm": ("bool", True, "False"),
-    "ip": ("str", True, "10.137.0.2"),
-    "ip6": ("str", True, ""),
-    "kernel": ("str", True, "5.15.52-1.fc32"),
-    "keyboard_layout": ("str", True, "us++"),
-    "klass": ("str", True, "AppVM"),
-    "label": ("label", False, "green"),
-    "mac": ("str", True, "00:16:3e:5e:6c:00"),
-    "maxmem": ("int", True, "4000"),
-    "memory": ("int", True, "400"),
-    "name": ("str", False, "testvm"),
-    "provides_network": ("bool", True, "False"),
-    "qid": ("int", False, "2"),
-    "qrexec_timeout": ("int", True, "60"),
-    "shutdown_timeout": ("int", True, "60"),
-    "start_time": ("str", True, ""),
-    "stubdom_mem": ("int", True, ""),
-    "stubdom_xid": ("str", True, "-1"),
-    "template_for_dispvms": ("bool", True, "False"),
-    "updateable": ("bool", True, "False"),
-    "uuid": ("str", False, "8fd73e95-a74b-4bf0-a87d-9978dbd1d8a4"),
-    "vcpus": ("int", True, "2"),
-    "virt_mode": ("str", True, "pvh"),
-    "visible_gateway": ("str", True, "10.137.0.1"),
-    "visible_gateway6": ("str", True, ""),
-    "visible_ip": ("str", True, "10.137.0.2"),
-    "visible_ip6": ("str", True, ""),
-    "visible_netmask": ("str", True, "255.255.255.255"),
-    "xid": ("str", True, "2"),
-    "audiovm": ("vm", True, "dom0"),
-    "default_dispvm": ("vm", False, "default-dvm"),
-    "guivm": ("vm", True, "dom0"),
-    "kernelopts": ("str", True, ""),
-    "management_dispvm": ("vm", True, "default-mgmt-dvm"),
-    "netvm": ("vm", False, "sys-firewall"),
-    "template": ("vm", False, "fedora-36"),
-}
-
-possible_tags = ['whonix-updatevm', 'anon-gateway']
-
-
-def add_expected_vm(qapp,
-                    name: str,
-                    klass: str,
-                    properties: Mapping[str,
-                                        Union[bool, str, int,
-                                              Tuple[str, bool, str]]],
-                    features,
-                    tags):
-    """Generate expected_calls entries to get info about a VM
-    :param qapp: QubesTest object
-    :param name: name of the VM
-    :param klass: class of the VM (AppVM, TemplateVM etc)
-    :param properties: dict of properties; values can be either a value
-        directly, or tuple of (type, is_default, value)
-    :param features: dict of expected features - use 'None' as value for
-        feature that will be checked but is not present
-    :param tags: list of tags
-    :return:
-    """
-    vm_list_call = ('dom0', 'admin.vm.List', None, None)
-    vm_list = b'0\x00'
-    if vm_list_call in qapp.expected_calls:
-        vm_list = qapp.expected_calls[vm_list_call]
-    vm_list += f'{name} class={klass} state=Halted\n'.encode()
-    qapp.expected_calls[vm_list_call] = vm_list
-    properties_getall = b"0\x00"
-    combined_properties = default_vm_properties.copy()
-    for prop, value in properties.items():
-        if isinstance(value, tuple):
-            combined_properties[prop] = value
-        elif value is None:
-            try:
-                del combined_properties[prop]
-            except KeyError:
-                pass
-        elif prop in combined_properties:
-            combined_properties[prop] = \
-                (combined_properties[prop][0],
-                 combined_properties[prop][1], str(value))
-        else:
-            raise KeyError(f"Unknown property '{prop}'")
-
-    for prop, value in combined_properties.items():
-        if prop == 'template' and klass in ("TemplateVM", "StandaloneVM"):
-            qapp.expected_calls[(name, "admin.vm.property.Get", prop, None)] = \
-                b'2\x00QubesNoSuchPropertyError\x00\x00No such property\x00'
-            continue
-        prop_line = f"default={value[1]} type={value[0]} {value[2]}"
-        properties_getall += (f"{prop} " + prop_line + "\n").encode()
-        qapp.expected_calls[(name, "admin.vm.property.Get", prop, None)] = \
-            b"0\x00" + prop_line.encode()
-
-    qapp.expected_calls[(name, "admin.vm.feature.List", None, None)] = \
-        ("0\x00" + "".join(f"{feature}\n" for feature, value in
-                           features.items() if value is not None)).encode()
-    for feature, value in features.items():
-        if value is None:
-            qapp.expected_calls[
-                (name, "admin.vm.feature.Get", feature, None)] = \
-                b'2\x00QubesFeatureNotFoundError\x00\x00' + \
-                str(feature).encode() + b'\x00'
-        else:
-            qapp.expected_calls[
-                (name, "admin.vm.feature.Get", feature, None)] = \
-                b"0\x00" + str(value).encode()
-
-    qapp.expected_calls[(name, "admin.vm.tag.List", None, None)] = \
-        ("0\x00" + "".join(f"{tag}\n" for tag in tags)).encode()
-
-    for tag in possible_tags:
-        qapp.expected_calls[(name, "admin.vm.tag.Get", tag, None)] = \
-            b"0\x000"
-
-    for tag in tags:
-        qapp.expected_calls[(name, "admin.vm.tag.Get", tag, None)] = \
-            b"0\x001"
-
-
-def add_dom0_vm_property(qapp, prop_name, prop_value):
-    """Add a vm property to dom0"""
-    qapp.expected_calls[('dom0', 'admin.property.Get', prop_name, None)] = \
-        b'0\x00' + f'default=True type=vm {prop_value}'.encode()
-
-
-def add_dom0_text_property(qapp, prop_name, prop_value):
-    """Add a str property to dom0"""
-    qapp.expected_calls[('dom0', 'admin.property.Get', prop_name, None)] = \
-        b'0\x00' + f'default=True type=str {prop_value}'.encode()
-
-
-def add_dom0_feature(qapp, feature, feature_value):
-    """Add dom0 feature"""
-    if feature_value is not None:
-        qapp.expected_calls[('dom0', 'admin.vm.feature.Get', feature, None)] = \
-            b'0\x00' + f'{feature_value}'.encode()
-    else:
-        qapp.expected_calls[('dom0', 'admin.vm.feature.Get', feature, None)] = \
-            b'2\x00QubesFeatureNotFoundError\x00\x00' \
-            + str(feature).encode() + b'\x00'
-
-
-def add_feature_with_template_to_all(qapp, feature_name,
-                                     enable_vm_names: List[str]):
-    """Add possibility of checking for a feature with templated to all qubes;
-    those listed in enabled_vm_names will have it set to 1, others will
-    have it absent."""
-    for vm in qapp.domains:
-        if vm.name in enable_vm_names:
-            result=b'0\x001'
-        else:
-            result = b'2\x00QubesFeatureNotFoundError\x00\x00' + \
-                     str(feature_name).encode() + b'\x00'
-        qapp.expected_calls[(vm, 'admin.vm.feature.CheckWithTemplate',
-                             feature_name, None)] = result
-
-def add_feature_to_all(qapp, feature_name, enable_vm_names: List[str]):
-    """Add possibility of checking for a feature to all qubes; those listed
-    in enabled_vm_names will have it set to 1, others will have it absent."""
-    for vm in qapp.domains:
-        if vm.name in enable_vm_names:
-            result=b'0\x001'
-        else:
-            result = b'2\x00QubesFeatureNotFoundError\x00\x00' + \
-                     str(feature_name).encode() + b'\x00'
-        qapp.expected_calls[(vm, 'admin.vm.feature.Get',
-                             feature_name, None)] = result
 
 
 @pytest.fixture
@@ -303,49 +128,13 @@ def test_qapp():
                                      ['test-vm', 'fedora-35', 'sys-usb'])
     add_feature_to_all(qapp, 'service.qubes-u2f-proxy',
                                      ['test-vm'])
-    add_feature_to_all(qapp, 'automatic-restart', [])
+    add_feature_to_all(qapp, 'restart-after-update', [])
     add_feature_to_all(qapp, 'updates-available', [])
     add_feature_to_all(qapp, 'last-update', [])
     add_feature_to_all(qapp, 'last-updates-check', [])
 
     return qapp
 
-
-@pytest.fixture
-def test_qapp_whonix(test_qapp):  # pylint: disable=redefined-outer-name
-    # pylint does not understand fixtures
-    """Testing qapp with whonix vms added"""
-    add_expected_vm(test_qapp, 'sys-whonix', 'AppVM',
-                    {},
-                    {'service.qubes-update-check': None,
-                     'service.qubes-updates-proxy': 1}, ['anon-gateway'])
-    add_expected_vm(test_qapp, 'anon-whonix', 'AppVM',
-                    {},
-                    {'service.qubes-update-check': None}, ['anon-gateway'])
-    add_expected_vm(test_qapp, 'whonix-gw-15', 'TemplateVM',
-                    {"netvm": ("vm", False, '')},
-                    {'service.qubes-update-check': None}, ['whonix-updatevm'])
-    add_expected_vm(test_qapp, 'whonix-gw-14', 'TemplateVM',
-                    {"netvm": ("vm", False, '')},
-                    {'service.qubes-update-check': None}, ['whonix-updatevm'])
-    test_qapp.domains.clear_cache()
-    return test_qapp
-
-SIGNALS_REGISTERED = False
-
-@pytest.fixture
-def test_builder():
-    """Test gtk_builder with loaded test glade file and registered signals."""
-    global SIGNALS_REGISTERED  # pylint:disable=global-statement
-    # register all the signals various widgets might emit
-    if not SIGNALS_REGISTERED:
-        GlobalConfig.register_signals()
-        SIGNALS_REGISTERED = True
-    # test glade file contains very simple setup with correctly named widgets
-    builder = Gtk.Builder()
-    builder.add_from_file(pkg_resources.resource_filename(
-        __name__, 'test.glade'))
-    return builder
 
 @pytest.fixture
 def real_builder():
@@ -356,77 +145,15 @@ def real_builder():
         'qui', 'updater.glade'))
     return builder
 
-
-
-NEW_QUBE_SIGNALS_REGISTERED = False
-
-
-@pytest.fixture
-def new_qube_builder():
-    """Gtk builder with actual config glade file registered"""
-    global NEW_QUBE_SIGNALS_REGISTERED  # pylint:disable=global-statement
-    # register all the signals various widgets might emit
-    if not NEW_QUBE_SIGNALS_REGISTERED:
-        CreateNewQube.register_signals()
-        NEW_QUBE_SIGNALS_REGISTERED = True
-    # test glade file contains very simple setup with correctly named widgets
-    builder = Gtk.Builder()
-    builder.add_from_file(pkg_resources.resource_filename(
-        'qubes_config', 'new_qube.glade'))
-    return builder
-
-
-class TestPolicyClient:
-    """Testing policy client that does not interact with Policy API"""
-    def __init__(self):
-        self.file_tokens = {
-            'a-test': 'a',
-            'b-test': 'b'
-        }
-        self.files = {
-            'a-test': """Test * @anyvm @anyvm deny""",
-            'b-test': """Test * test-vm @anyvm allow\n
-Test * test-red test-blue deny"""
-        }
-        self.service_to_files = {
-            'Test': ['a-test', 'b-test']
-        }
-
-    def policy_get_files(self, service_name):
-        """Get files connected to a given service; does not
-        take into account policy_replace"""
-        return self.service_to_files.get(service_name, '')
-
-    def policy_get(self, file_name):
-        """Get file contents; takes into account policy_replace."""
-        if file_name in self.files:
-            return self.files[file_name], self.file_tokens[file_name]
-        raise subprocess.CalledProcessError(2, 'test')
-
-    def policy_replace(self, filename, policy_text, token='any'):
-        """Replace file contents with provided contents."""
-        if token != 'any':
-            if token != self.file_tokens.get(filename, ''):
-                raise subprocess.CalledProcessError(2, 'test')
-        self.files[filename] = policy_text
-        self.file_tokens[filename] = str(len(policy_text))
-
-
-@pytest.fixture
-def test_policy_manager():
-    """Policy manager with patched out object requiring actual working
-    Admin API methods"""
-    manager = PolicyManager()
-    manager.policy_client = TestPolicyClient()
-    return manager
-
-
-###
-class MockButton:
+class MockWidget:
     def __init__(self):
         self.sensitive = None
         self.label = None
         self.visible = True
+        self.text = None
+        self.halign = None
+        self.model = None
+        self.widget = None
 
     def set_sensitive(self, value: bool):
         self.sensitive = value
@@ -440,41 +167,44 @@ class MockButton:
     def set_visible(self, visible):
         self.visible = visible
 
-
-@pytest.fixture
-def mock_next_button():
-    return MockButton()
-
-
-@pytest.fixture
-def mock_cancel_button():
-    return MockButton()
-
-
-class MockLabel:
-    def __init__(self):
-        self.text = None
-        self.halign = None
-
     def set_text(self, text):
         self.text = text
 
     def set_halign(self, halign):
         self.halign = halign
 
+    def set_model(self, model):
+        self.model = model
+
+    def get_buffer(self):
+        return self.widget
+
+
+@pytest.fixture
+def mock_next_button():
+    return MockWidget()
+
+
+@pytest.fixture
+def mock_cancel_button():
+    return MockWidget()
+
 
 @pytest.fixture
 def mock_label():
-    return MockLabel()
+    return MockWidget()
 
 
 @pytest.fixture
-def mock_settings():
-    class MockSettings:
-        def __init__(self):
-            self.update_if_stale = 7
+def mock_tree_view():
+    return MockWidget()
 
-    return MockSettings()
+
+@pytest.fixture
+def mock_text_view():
+    result = MockWidget()
+    result.widget = MockWidget()
+    return result
 
 
 @pytest.fixture
@@ -494,7 +224,6 @@ def mock_list_store():
 
         def append(self, row):
             self.raw_rows.append(row)
-            # TODO row.iter
 
         def remove(self, idx):
             self.raw_rows.remove(idx)
@@ -503,6 +232,18 @@ def mock_list_store():
             pass
 
     return MockListStore()
+
+
+@pytest.fixture
+def mock_settings():
+    class MockSettings:
+        def __init__(self):
+            self.update_if_stale = 7
+            self.restart_system_vms = True
+            self.restart_other_vms = True
+            self.max_concurrency = None
+
+    return MockSettings()
 
 
 @pytest.fixture
@@ -518,5 +259,14 @@ def updatable_vms_list(test_qapp, mock_list_store):
     result = ListWrapper(UpdateRowWrapper, mock_list_store, Theme.LIGHT)
     for vm in test_qapp.domains:
         if vm.klass in ("AdminVM", "TemplateVM", "StandaloneVM"):
+            result.append_vm(vm)
+    return result
+
+
+@pytest.fixture
+def appvms_list(test_qapp, mock_list_store):
+    result = ListWrapper(RestartRowWrapper, mock_list_store, Theme.LIGHT)
+    for vm in test_qapp.domains:
+        if vm.klass == "AppVM":
             result.append_vm(vm)
     return result

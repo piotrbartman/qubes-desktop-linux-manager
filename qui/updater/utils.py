@@ -26,8 +26,17 @@ from gi.repository import Gtk, GObject
 
 
 def disable_checkboxes(func):
+    """
+    Workaround for avoiding circular recursion.
+
+    Clicking on the header checkbox sets the value of the rows checkboxes, so it
+    calls the connected method which sets the header checkbox, and so on...
+    """
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
+        if not hasattr(self, "disable_checkboxes"):
+            raise TypeError("To use this decorator inside the class yu need to"
+                            " add attribute `disable_checkboxes`.")
         if self.disable_checkboxes:
             return
         self.disable_checkboxes = True
@@ -38,6 +47,9 @@ def disable_checkboxes(func):
 
 
 def pass_through_event_window(button):
+    """
+    Clicking on header button should activate the button not the header itself.
+    """
     if not isinstance(button, Gtk.Button):
         raise TypeError("%r is not a gtk.Button" % button)
     event_window = button.get_event_window()
@@ -92,6 +104,22 @@ class HeaderCheckbox:
 
     def next_state(self):
         self.state = (self.state + 1) % 4  # SELECTED is skipped
+
+
+def on_head_checkbox_toggled(list_store, head_checkbox, select_rows):
+    if len(list_store) == 0:  # to avoid infinite loop
+        head_checkbox.state = HeaderCheckbox.NONE
+        selected_num = 0
+    else:
+        selected_num = selected_num_old = sum(
+            row.selected for row in list_store)
+        while selected_num == selected_num_old:
+            head_checkbox.next_state()
+            select_rows()
+            selected_num = sum(
+                row.selected for row in list_store)
+    plural = "s" if selected_num > 1 else ""
+    head_checkbox.set_buttons(plural, selected_num)
 
 
 class QubeClass(Enum):
@@ -210,8 +238,25 @@ class RowWrapper:
             return self_label.value < other_label.value
         return self_class.value < other_class.value
 
-    def delete(self):
-        self.list_store.remove(self.raw_row.iter)
+    @property
+    def selected(self):
+        raise NotImplementedError()
+
+    @selected.setter
+    def selected(self, value):
+        raise NotImplementedError()
+
+    @property
+    def icon(self):
+        raise NotImplementedError()
+
+    @property
+    def name(self):
+        raise NotImplementedError()
+
+    @property
+    def color_name(self):
+        raise NotImplementedError()
 
 
 class UpdateListIter:
@@ -245,7 +290,7 @@ class ListWrapper:
         return len(self.list_store_wrapped)
 
     def append_vm(self, vm, state: bool = False):
-        qube_row = self.row_type(self.list_store_raw, vm, state, self.theme)
+        qube_row = self.row_type(self.list_store_raw, vm, self.theme, state)
         self.list_store_wrapped.append(qube_row)
 
     def invert_selection(self, path):

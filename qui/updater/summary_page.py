@@ -19,7 +19,8 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 import asyncio
-from typing import Optional
+import threading
+from typing import Optional, Any
 
 from qubes_config.widgets.gtk_utils import load_icon
 from qubesadmin import exc
@@ -28,12 +29,17 @@ from qubesadmin.events.utils import wait_for_domain_shutdown
 from qubes_config.widgets.utils import get_boolean_feature
 from qui.updater.utils import disable_checkboxes, pass_through_event_window, \
     HeaderCheckbox, QubeClass, QubeLabel, QubeName, Theme, \
-    RowWrapper, ListWrapper
+    RowWrapper, ListWrapper, on_head_checkbox_toggled
 
 from locale import gettext as l
 
 
 class SummaryPage:
+    """
+    Last content page of updater.
+
+    Show the summary of vm updates and appms that should be restarted.
+    """
 
     def __init__(
             self,
@@ -47,6 +53,7 @@ class SummaryPage:
         self.theme = theme
         self.next_button = next_button
         self.cancel_button = cancel_button
+        self.restart_thread = None
         self.disable_checkboxes = False
 
         self.updated_tmpls: Optional[list] = None
@@ -59,83 +66,90 @@ class SummaryPage:
         self.label_summary = self.builder.get_object("label_summary")
 
         self.restart_list.connect("row-activated",
-                                  self.on_restart_checkbox_toggled)
+                                  self.on_checkbox_toggled)
         self.app_vm_list = self.builder.get_object("restart_list_store")
         restart_checkbox_column = self.builder.get_object(
             "restart_checkbox_column")
         restart_checkbox_column.connect("clicked",
-                                        self.on_restart_header_toggled)
+                                        self.on_header_toggled)
         restart_header_button = restart_checkbox_column.get_button()
         restart_header_button.connect('realize', pass_through_event_window)
 
-        self.retart_checkbox_column_button = self.builder.get_object(
+        self.head_checkbox_button = self.builder.get_object(
             "restart_checkbox_header")
-        self.retart_checkbox_column_button.set_inconsistent(True)
-        self.retart_checkbox_column_button.connect(
-            "toggled", self.on_restart_header_toggled)
-        self.restart_checkbox_header = HeaderCheckbox(
-            self.retart_checkbox_column_button,
+        self.head_checkbox_button.set_inconsistent(True)
+        self.head_checkbox_button.connect(
+            "toggled", self.on_header_toggled)
+        self.head_checkbox = HeaderCheckbox(
+            self.head_checkbox_button,
             allowed=["", "", "EXCLUDED"],
             callback_all=lambda plural, num: self.next_button.set_label(
                 f"_Finish and restart {num} qube{plural}"),
             callback_some=lambda plural, num: self.next_button.set_label(
                 f"_Finish and restart {num} qube{plural}"),
-            callback_none=lambda _, __: self.next_button.set_label("_Finish"),
+            callback_none=lambda *_args: self.next_button.set_label("_Finish"),
         )
 
         self.summary_list = self.builder.get_object("summary_list")
         self.summary_list.connect("row-activated", back_by_row_selection)
 
     @disable_checkboxes
-    def on_restart_checkbox_toggled(self, _emitter, path, *_args):
+    def on_checkbox_toggled(self, _emitter, path, *_args):
+        """Handles (un)selection of single row."""
         if path is None:
             return
 
-        it = self.app_vm_list.get_iter(path)
-        self.app_vm_list[it][1] = \
-            not self.app_vm_list[it][1]
+        self.list_store.invert_selection(path)
         self.refresh_buttons()
 
     def refresh_buttons(self):
+        """Refresh additional info column and finish button info."""
         for row in self.list_store:
             row.refresh_additional_info()
         selected_num = sum(
             row.selected for row in self.list_store)
         if selected_num == 0:
-            self.restart_checkbox_header.state = HeaderCheckbox.NONE
-        elif selected_num == len(self.app_vm_list):
-            self.restart_checkbox_header.state = HeaderCheckbox.ALL
+            self.head_checkbox.state = HeaderCheckbox.NONE
+        elif selected_num == len(self.list_store):
+            self.head_checkbox.state = HeaderCheckbox.ALL
         else:
-            self.restart_checkbox_header.state = HeaderCheckbox.SELECTED
+            self.head_checkbox.state = HeaderCheckbox.SELECTED
         plural = "s" if selected_num > 1 else ""
-        self.restart_checkbox_header.set_buttons(plural, selected_num)
+        self.head_checkbox.set_buttons(plural, selected_num)
 
     @disable_checkboxes
-    def on_restart_header_toggled(self, _emitter):
-        if len(self.list_store) == 0:  # to avoid infinite loop
-            self.restart_checkbox_header.state = HeaderCheckbox.NONE
-            selected_num = 0
-        else:
-            selected_num = selected_num_old = sum(
-                row.selected for row in self.list_store)
-            while selected_num == selected_num_old:
-                self.restart_checkbox_header.next_state()
-                self.select_restart_rows()
-                selected_num = sum(
-                    row.selected for row in self.list_store)
-        plural = "s" if selected_num > 1 else ""
-        self.restart_checkbox_header.set_buttons(plural, selected_num)
+    def on_header_toggled(self, _emitter):
+        """Handles clicking on header checkbox.
+
+        Cycle between selection from appvms which templates was updated :
+         <1> only sys-vms
+         <2> sys-vms + other appvms but without excluded in settings
+         <3> all appvms
+         <4> no vm. (nothing)
+
+        If the user has selected any vms that do not match the defined states,
+        the cycle will start from (1).
+        """
+        on_head_checkbox_toggled(
+            self.list_store, self.head_checkbox, self.select_rows)
 
     @property
     def is_populated(self) -> bool:
+        """Returns True if restart list is populated."""
         return self.list_store is not None
 
     @property
     def is_visible(self):
+        """Returns True if page is shown by stack."""
         return self.stack.get_visible_child() == self.page
 
-    def show(self, qube_updated_num: int, qube_no_updates_num: int,
-         qube_failed_num: int):
+    def show(
+            self,
+            qube_updated_num: int,
+            qube_no_updates_num: int,
+            qube_failed_num: int
+    ):
+        """Show this page and handle buttons."""
         self.stack.set_visible_child(self.page)
         qube_updated_plural = "s" if qube_updated_num != 1 else ""
         qube_no_updates_plural = "s" if qube_no_updates_num != 1 else ""
@@ -153,6 +167,11 @@ class SummaryPage:
 
     @disable_checkboxes
     def populate_restart_list(self, restart, vm_updated, settings):
+        """
+        Adds to list any appvms/dispvm which template was successfully updated.
+
+        DispVM with auto_cleanup are skipped.
+        """
         self.summary_list.set_model(vm_updated.list_store_raw)
         self.updated_tmpls = [
             row for row in vm_updated
@@ -171,31 +190,35 @@ class SummaryPage:
                 self.list_store.append_vm(vm)
 
         if settings.restart_system_vms:
-            self.restart_checkbox_header._allowed[0] = "SYS"
+            self.head_checkbox._allowed[0] = "SYS"
         if settings.restart_other_vms:
-            self.restart_checkbox_header._allowed[1] = "OTHER"
+            self.head_checkbox._allowed[1] = "OTHER"
         if not restart:
-            self.restart_checkbox_header.state = HeaderCheckbox.NONE
+            self.head_checkbox.state = HeaderCheckbox.NONE
         else:
             if settings.restart_system_vms:
-                self.restart_checkbox_header.state = HeaderCheckbox.SAFE
+                self.head_checkbox.state = HeaderCheckbox.SAFE
             if settings.restart_other_vms:
-                self.restart_checkbox_header.state = HeaderCheckbox.EXTENDED
-        self.select_restart_rows()
+                self.head_checkbox.state = HeaderCheckbox.EXTENDED
+        self.select_rows()
 
-    def select_restart_rows(self):
+    def select_rows(self):
         for row in self.list_store:
             row.selected = (
                     row.is_sys_qube
                     and not row.is_excluded
-                    and "SYS" in self.restart_checkbox_header.allowed
+                    and "SYS" in self.head_checkbox.allowed
                     or
                     not row.is_sys_qube
                     and not row.is_excluded
-                    and "OTHER" in self.restart_checkbox_header.allowed
+                    and "OTHER" in self.head_checkbox.allowed
                     or
-                    "EXCLUDED" in self.restart_checkbox_header.allowed
+                    "EXCLUDED" in self.head_checkbox.allowed
             )
+
+    def restart_selected_vms(self):
+        self.restart_thread = threading.Thread(target=self.perform_restart)
+        self.restart_thread.start()
 
     def perform_restart(self):
         tmpls_to_shutdown = [row.vm
@@ -221,7 +244,7 @@ class RestartRowWrapper(RowWrapper):
     _NAME = 3
     _ADDITIONAL_INFO = 4
 
-    def __init__(self, list_store, vm, theme: Theme):
+    def __init__(self, list_store, vm, theme: Theme, _selection: Any):
         label = QubeLabel[str(vm.label)]
         raw_row = [
             False,
@@ -272,7 +295,7 @@ class RestartRowWrapper(RowWrapper):
 
     @property
     def is_excluded(self):
-        return not get_boolean_feature(self.vm, 'automatic-restart', True)
+        return not get_boolean_feature(self.vm, 'restart-after-update', True)
 
 
 # TODO: duplication

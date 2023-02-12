@@ -19,17 +19,19 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 import re
-import selectors
 import subprocess
 import threading
 import time
+from typing import Dict
+
 from gi.repository import Gtk, Gdk, GObject
 from locale import gettext as _
 
 from qubes_config.widgets.gtk_utils import copy_to_global_clipboard, \
     load_icon_at_gtk_size
 from qubes_config.widgets.utils import get_feature
-from qui.updater.utils import UpdateStatus
+from qui.updater.updater_settings import Settings
+from qui.updater.utils import UpdateStatus, RowWrapper
 
 from locale import gettext as l
 
@@ -77,6 +79,11 @@ class ProgressPage:
         progress_column.add_attribute(renderer, "value", 7)
         progress_column.add_attribute(renderer, "status", 8)
 
+    @property
+    def is_visible(self):
+        """Returns True if page is shown by stack."""
+        return self.stack.get_visible_child() == self.page
+
     def init_update(self, vms_to_update, settings):
         """Starts `perform_update` in new thread."""
         self.vms_to_update = vms_to_update
@@ -113,104 +120,8 @@ class ProgressPage:
         GObject.idle_add(self.header_label.set_text, _("Update finished"))
         GObject.idle_add(self.cancel_button.set_visible, False)
 
-    @property
-    def is_visible(self):
-        """Returns True if page is shown by stack."""
-        return self.stack.get_visible_child() == self.page
-
-    def update_templates(self, templs, settings):
-        if self.exit_triggered:
-            for row in templs:
-                GObject.idle_add(row.set_status, UpdateStatus.Cancelled)
-                GObject.idle_add(
-                    row.append_text_view,
-                    _("Canceled update for {}\n").format(row.vm.name))
-
-        for row in templs:
-            GObject.idle_add(
-                row.append_text_view,
-                _("Updating {}\n").format(row.name))
-            GObject.idle_add(row.set_status, UpdateStatus.InProgress)
-        self.update_details.update_buffer()
-
-        try:
-            self.do_update_templates(templs, settings)
-        except subprocess.CalledProcessError as ex:
-            for row in templs:
-                GObject.idle_add(
-                    row.append_text_view,
-                    _("Error on updating {}: {}\n{}").format(
-                        row.name, str(ex), ex.output.decode()))
-                GObject.idle_add(row.set_status, UpdateStatus.Error)
-            self.update_details.update_buffer()
-
-    def do_update_templates(self, templs, settings):
-        targets = ",".join((row.name for row in templs))
-        rows = {row.name: row for row in templs}
-
-        args = []
-        if settings.max_concurrency is not None:
-            args.extend(
-                ('--max-concurrency',
-                 str(settings.max_concurrency)))
-        proc = subprocess.Popen(
-            ['qubes-vm-update',
-             '--show-output',
-             '--just-print-progress',
-             *args,
-             '--targets', targets],
-            stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-
-        thread = threading.Thread(target=self.read_stdouts, args=(proc, rows))
-        thread.start()
-
-        self.read_stderrs(proc, rows)
-        # self.read_stdouts(proc, rows)
-
-        thread.join()
-        proc.wait()
-
-        self.set_statuses(rows)
-
-        GObject.idle_add(self.set_total_progress, 100)
-
-    def read_stderrs(self, proc, rows):
-        for untrusted_line in iter(proc.stderr.readline, ''):
-            if untrusted_line:
-                self.handle_err_line(untrusted_line, rows)
-            else:
-                break
-        proc.stderr.close()
-
-    def read_stdouts(self, proc, rows):
-        self.curr_name_out = ""
-        for untrusted_line in iter(proc.stdout.readline, ''):
-            if untrusted_line:
-                self.handle_out_line(untrusted_line, rows)
-            else:
-                break
-        self.update_details.update_buffer()
-        proc.stdout.close()
-
-    @staticmethod
-    def set_statuses(rows):
-        for row in rows.values():
-            progress = row.get_update_progress()
-            if progress == 100.:
-                if get_feature(row.vm, "last-updates-check") \
-                        == get_feature(row.vm, "last-update"):
-                    GObject.idle_add(
-                        row.set_status, UpdateStatus.Success)
-                else:
-                    GObject.idle_add(
-                        row.set_status,
-                        UpdateStatus.NoUpdatesFound
-                    )
-            else:
-                GObject.idle_add(row.set_status, UpdateStatus.Error)
-
     def update_admin_vm(self, admins):
-        """Run command to update dom0."""
+        """Runs command to update dom0."""
         admin = admins[0]
         if self.exit_triggered:
             GObject.idle_add(admin.set_status, UpdateStatus.Cancelled)
@@ -245,8 +156,69 @@ class ProgressPage:
 
         self.update_details.update_buffer()
 
+    def update_templates(self, to_update, settings):
+        """Updates templates and standalones and then sets update statuses."""
+        if self.exit_triggered:
+            for row in to_update:
+                GObject.idle_add(row.set_status, UpdateStatus.Cancelled)
+                GObject.idle_add(
+                    row.append_text_view,
+                    _("Canceled update for {}\n").format(row.vm.name))
+
+        for row in to_update:
+            GObject.idle_add(
+                row.append_text_view,
+                _("Updating {}\n").format(row.name))
+            GObject.idle_add(row.set_status, UpdateStatus.InProgress)
+        self.update_details.update_buffer()
+
+        try:
+            rows = {row.name: row for row in to_update}
+            self.do_update_templates(rows, settings)
+            self.set_statuses(rows)
+            GObject.idle_add(self.set_total_progress, 100)
+        except subprocess.CalledProcessError as ex:
+            for row in to_update:
+                GObject.idle_add(
+                    row.append_text_view,
+                    _("Error on updating {}: {}\n{}").format(
+                        row.name, str(ex), ex.output.decode()))
+                GObject.idle_add(row.set_status, UpdateStatus.Error)
+        self.update_details.update_buffer()
+
+    def do_update_templates(
+            self, rows: Dict[str, RowWrapper], settings: Settings):
+        """Runs `qubes-vm-update` command."""
+        targets = ",".join((name for name in rows.keys()))
+
+        args = []
+        if settings.max_concurrency is not None:
+            args.extend(
+                ('--max-concurrency',
+                 str(settings.max_concurrency)))
+        proc = subprocess.Popen(
+            ['qubes-vm-update',
+             '--show-output',
+             '--just-print-progress',
+             *args,
+             '--targets', targets],
+            stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+
+        self.read_stderrs(proc, rows)
+        self.read_stdouts(proc, rows)
+        proc.wait()
+
+    def read_stderrs(self, proc, rows):
+        for untrusted_line in iter(proc.stderr.readline, ''):
+            if untrusted_line:
+                self.handle_err_line(untrusted_line, rows)
+            else:
+                break
+        proc.stderr.close()
+
     def handle_err_line(self, untrusted_line, rows):
-        line = untrusted_line.decode().rstrip()
+        ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
+        line = ansi_escape.sub('', untrusted_line.decode().rstrip())
         try:
             name, prog = line.split()
             progress = int(float(prog))
@@ -262,13 +234,37 @@ class ProgressPage:
         GObject.idle_add(
             self.set_total_progress, total_progress)
 
-    def handle_out_line(self, untrusted_line, rows):
-        line = untrusted_line.decode()
-        maybe_name, text = line.split(' ', 1)
-        if maybe_name[:-1] in rows.keys():
-            self.curr_name_out = maybe_name[:-1]
-        GObject.idle_add(
-            rows[self.curr_name_out].append_text_view, text)
+    def read_stdouts(self, proc, rows):
+        curr_name_out = ""
+        for untrusted_line in iter(proc.stdout.readline, ''):
+            if untrusted_line:
+                ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
+                line = ansi_escape.sub('', untrusted_line.decode())
+                maybe_name, text = line.split(' ', 1)
+                if maybe_name[:-1] in rows.keys():
+                    curr_name_out = maybe_name[:-1]
+                rows[curr_name_out].append_text_view(text)
+            else:
+                break
+        self.update_details.update_buffer()
+        proc.stdout.close()
+
+    @staticmethod
+    def set_statuses(rows):
+        for row in rows.values():
+            progress = row.get_update_progress()
+            if progress == 100.:
+                if get_feature(row.vm, "last-updates-check") \
+                        == get_feature(row.vm, "last-update"):
+                    GObject.idle_add(
+                        row.set_status, UpdateStatus.Success)
+                else:
+                    GObject.idle_add(
+                        row.set_status,
+                        UpdateStatus.NoUpdatesFound
+                    )
+            else:
+                GObject.idle_add(row.set_status, UpdateStatus.Error)
 
     def set_total_progress(self, progress):
         """Set the value of main big progressbar."""
@@ -430,6 +426,3 @@ class CellRendererProgressWithResult(
             cell_area.y + self.props.ypad
         )
         context.paint()
-
-
-GObject.type_register(CellRendererProgressWithResult)  # TODO

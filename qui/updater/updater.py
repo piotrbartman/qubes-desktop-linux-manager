@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position,import-error
 import time
-import threading
 
 import pkg_resources
 import gi  # isort:skip
@@ -16,7 +15,6 @@ from qui.updater.intro_page import IntroPage
 from qui.updater.utils import Theme
 
 gi.require_version('Gtk', '3.0')  # isort:skip
-
 from gi.repository import Gtk, Gdk, GObject, Gio  # isort:skip
 from qubesadmin import Qubes
 
@@ -166,9 +164,7 @@ class QubesUpdater(Gtk.Application):
             self.summary_page.show(*self.progress_page.get_update_summary())
         elif self.summary_page.is_visible:
             self.main_window.hide()
-            self.restart_thread = threading.Thread(
-                target=self.summary_page.perform_restart)
-            self.restart_thread.start()
+            self.summary_page.restart_selected_vms()
             self.exit_updater()
 
     def cancel_clicked(self, _emitter):

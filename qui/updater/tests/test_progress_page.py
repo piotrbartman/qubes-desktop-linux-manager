@@ -18,27 +18,26 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
-import time
-from unittest.mock import patch, call
-
 import gi
-import pkg_resources
-import pytest
-from gi.repository import Gtk
+import subprocess
 
-from qui.updater.intro_page import IntroPage, UpdateRowWrapper, UpdatesAvailable
-from qui.updater.progress_page import ProgressPage, QubeUpdateDetails
-from qui.updater.tests.conftest import mock_settings
-from qui.updater.utils import Theme, ListWrapper, HeaderCheckbox, UpdateStatus
+from unittest.mock import patch, call
 
 gi.require_version('Gtk', '3.0')
 gi.require_version('GdkPixbuf', '2.0')
+from gi.repository import Gtk
+
+from qui.updater.intro_page import UpdateRowWrapper
+from qui.updater.progress_page import ProgressPage, QubeUpdateDetails
+from qui.updater.tests.conftest import mock_settings
+from qui.updater.utils import Theme, ListWrapper, UpdateStatus
 
 
 @patch('threading.Thread')
 def test_init_update(
         mock_threading, real_builder, test_qapp,
-        mock_next_button, mock_cancel_button, mock_label, all_vms_list):
+        mock_next_button, mock_cancel_button, mock_label, mock_tree_view,
+        all_vms_list):
     class MockThread:
         def __init__(self):
             self.started = False
@@ -55,11 +54,7 @@ def test_init_update(
         mock_label, mock_next_button, mock_cancel_button
     )
 
-    class MockTreeView:
-        def set_model(self, model):
-            self.model = model
-
-    sut.progress_list = MockTreeView()
+    sut.progress_list = mock_tree_view
 
     sut.init_update(all_vms_list, mock_settings)
 
@@ -108,7 +103,8 @@ def test_perform_update(
 @patch('subprocess.check_output')
 def test_update_admin_vm(
         mock_subprocess, real_builder, test_qapp,
-        mock_next_button, mock_cancel_button, mock_label, mock_list_store
+        mock_next_button, mock_cancel_button, mock_label, mock_text_view,
+        mock_list_store
 ):
     mock_subprocess.return_value = b''
     sut = ProgressPage(
@@ -121,7 +117,80 @@ def test_update_admin_vm(
         if vm.klass in ("AdminVM",):
             admins.append_vm(vm)
 
+    sut.update_details.progress_textview = mock_text_view
+    # chose vm to show details
+    sut.update_details.active_row = admins[0]
+    admins[0].buffer = "Update details"
+
     sut.update_admin_vm(admins=admins)
+
+    assert sut.update_details.progress_textview.widget.text == "Update details"
+
+
+@patch('gi.repository.GObject.idle_add')
+def test_update_templates(
+        idle_add, real_builder, updatable_vms_list,
+        mock_next_button, mock_cancel_button, mock_label, mock_text_view
+):
+    sut = ProgressPage(
+        real_builder, Theme.LIGHT,
+        mock_label, mock_next_button, mock_cancel_button
+    )
+    sut.do_update_templates = lambda *_args, **_kwargs: None
+    sut.set_statuses = lambda *_args, **_kwargs: None
+
+    sut.update_details.progress_textview = mock_text_view
+    # chose vm to show details
+    sut.update_details.active_row = updatable_vms_list[0]
+    for i, row in enumerate(updatable_vms_list):
+        row.buffer = f"Details {i}"
+
+    sut.update_templates(updatable_vms_list, mock_settings)
+
+    calls = [call(sut.set_total_progress, 100)]
+    idle_add.assert_has_calls(calls)
+
+    assert sut.update_details.progress_textview.widget.text == "Details 0"
+    sut.update_details.set_active_row(updatable_vms_list[2])
+    assert sut.update_details.progress_textview.widget.text == "Details 2"
+
+
+@patch('subprocess.Popen')
+def test_do_update_templates(
+        mock_subprocess, real_builder, test_qapp,
+        mock_next_button, mock_cancel_button, mock_label, mock_list_store,
+        mock_settings
+):
+    class MockPorc:
+        def wait(self):
+            pass
+
+    mock_subprocess.return_value = MockPorc()
+
+    sut = ProgressPage(
+        real_builder, Theme.LIGHT,
+        mock_label, mock_next_button, mock_cancel_button
+    )
+    sut.read_stderrs = lambda *_args, **_kwargs: None
+    sut.read_stdouts = lambda *_args, **_kwargs: None
+
+    to_update = ListWrapper(UpdateRowWrapper, mock_list_store, Theme.LIGHT)
+    for vm in test_qapp.domains:
+        if vm.klass in ("TemplateVM", "StandaloneVM"):
+            to_update.append_vm(vm)
+
+    rows = {row.name: row for row in to_update}
+
+    sut.do_update_templates(rows, mock_settings)
+
+    calls = [call(
+        ['qubes-vm-update',
+         '--show-output',
+         '--just-print-progress',
+         '--targets',
+         'fedora-35,fedora-36,test-standalone'],
+        stderr=subprocess.PIPE, stdout=subprocess.PIPE)]
+    mock_subprocess.assert_has_calls(calls)
 
 
 def test_get_update_summary(

@@ -28,7 +28,7 @@ from qubesadmin import exc
 from qui.updater.utils import disable_checkboxes, HeaderCheckbox, \
     pass_through_event_window, QubeLabel, Theme, \
     QubeName, label_color_theme, UpdateStatus, RowWrapper, \
-    ListWrapper
+    ListWrapper, on_head_checkbox_toggled
 
 
 class IntroPage:
@@ -59,12 +59,12 @@ class IntroPage:
         self.checkbox_column_button = self.builder.get_object("checkbox_header")
         self.checkbox_column_button.set_inconsistent(True)
         self.checkbox_column_button.connect("toggled", self.on_header_toggled)
-        self.update_checkbox_header = HeaderCheckbox(
+        self.head_checkbox = HeaderCheckbox(
             self.checkbox_column_button,
             allowed=["YES", "MAYBE", "NO"],
-            callback_all=lambda: self.next_button.set_sensitive(True),
-            callback_some=lambda: self.next_button.set_sensitive(True),
-            callback_none=lambda: self.next_button.set_sensitive(False),
+            callback_all=lambda *_args: self.next_button.set_sensitive(True),
+            callback_some=lambda *_args: self.next_button.set_sensitive(True),
+            callback_none=lambda *_args: self.next_button.set_sensitive(False),
         )
 
         self.vm_list.connect("row-activated", self.on_checkbox_toggled)
@@ -135,12 +135,12 @@ class IntroPage:
         self.list_store.invert_selection(path)
         selected_num = sum(row.selected for row in self.list_store)
         if selected_num == len(self.list_store):
-            self.update_checkbox_header.state = HeaderCheckbox.ALL
+            self.head_checkbox.state = HeaderCheckbox.ALL
         elif selected_num == 0:
-            self.update_checkbox_header.state = HeaderCheckbox.NONE
+            self.head_checkbox.state = HeaderCheckbox.NONE
         else:
-            self.update_checkbox_header.state = HeaderCheckbox.SELECTED
-        self.update_checkbox_header.set_buttons()
+            self.head_checkbox.state = HeaderCheckbox.SELECTED
+        self.head_checkbox.set_buttons()
 
     @disable_checkboxes
     def on_header_toggled(self, _emitter):
@@ -155,20 +155,13 @@ class IntroPage:
         If the user has selected any vms that do not match the defined states,
         the cycle will start from (1).
         """
-        if len(self.list_store) == 0:
-            self.update_checkbox_header.state = HeaderCheckbox.NONE
-        else:
-            selected_num = selected_num_old = sum(
-                row.selected for row in self.list_store)
-            while selected_num == selected_num_old:
-                self.update_checkbox_header.next_state()
-                for row in self.list_store:
-                    row.selected = row.updates_available.value \
-                                   in self.update_checkbox_header.allowed
-                selected_num = sum(
-                    row.selected for row in self.list_store)
+        on_head_checkbox_toggled(
+            self.list_store, self.head_checkbox, self.select_rows)
 
-        self.update_checkbox_header.set_buttons()
+    def select_rows(self):
+        for row in self.list_store:
+            row.selected = row.updates_available.value \
+                           in self.head_checkbox.allowed
 
 
 class UpdateRowWrapper(RowWrapper):
@@ -182,7 +175,7 @@ class UpdateRowWrapper(RowWrapper):
     _UPDATE_PROGRESS = 7
     _STATUS = 8
 
-    def __init__(self, list_store, vm, to_update: bool, theme: Theme):
+    def __init__(self, list_store, vm, theme: Theme, to_update: bool):
         updates_available = bool(vm.features.get('updates-available', False))
         if to_update and not updates_available:
             updates_available = None

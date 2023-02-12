@@ -18,18 +18,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
-from unittest.mock import patch
-
-import gi
-import pkg_resources
 import pytest
-from gi.repository import Gtk
+from unittest.mock import patch
 
 from qui.updater.intro_page import IntroPage, UpdateRowWrapper, UpdatesAvailable
 from qui.updater.utils import Theme, ListWrapper, HeaderCheckbox
-
-gi.require_version('Gtk', '3.0')
-gi.require_version('GdkPixbuf', '2.0')
 
 
 @patch('subprocess.check_output')
@@ -90,7 +83,7 @@ def test_on_header_toggled(
             value = False
         row.raw_row[row._UPDATES_AVAILABLE] = UpdatesAvailable(
             value, Theme.LIGHT)
-    sut.update_checkbox_header.state = HeaderCheckbox.NONE
+    sut.head_checkbox.state = HeaderCheckbox.NONE
 
     for expected in expectations:
         selected_num = len([row for row in sut.list_store if row.selected])
@@ -118,8 +111,8 @@ def test_on_checkbox_toggled(
 
     assert len(sut.list_store) == 12
 
-    sut.update_checkbox_header.state = HeaderCheckbox.NONE
-    sut.update_checkbox_header.set_buttons()
+    sut.head_checkbox.state = HeaderCheckbox.NONE
+    sut.head_checkbox.set_buttons()
 
     # If button is inconsistent we do not care if it is active or not
     # (we do not use this value)

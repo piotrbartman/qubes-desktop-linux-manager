@@ -1,5 +1,5 @@
-@import "qubes-colors-light.css";
-@import "qubes-widgets-base.css";
+@import "../qui/styles/qubes-colors-light.css";
+@import "../qui/styles/qubes-widgets-base.css";
 @import "qubes-global-config-base.css";
 
 .qube-box-base {

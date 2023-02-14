@@ -140,7 +140,6 @@ checkbutton check {
     min-height: 16px;
     margin-right: 5px;
     color: @text-color;
-    /*background: @top-background;*/
 }
 
 .content_box {
@@ -174,15 +173,9 @@ checkbutton check {
 }
 
 .text_container {
-    /*background: @top-background;*/
     padding-left: 18px;
-    /*padding-right: 18px;*/
     padding-top: 18px;
     padding-bottom: 16px;
-    /*border: 3px;*/
-    /*border-style: solid;*/
-    /*border-radius: 5px;*/
-    /*border-color: @top-background;*/
 
     font-family: 'Source Sans Pro';
     font-style: normal;

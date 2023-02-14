@@ -1,3 +1,3 @@
-@import "qubes-colors-dark.css";
-@import "qubes-widgets-base.css";
+@import "../qui/styles/qubes-colors-dark.css";
+@import "../qui/styles/qubes-widgets-base.css";
 @import "qubes-new-qube-base.css";

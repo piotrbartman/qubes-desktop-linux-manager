@@ -206,6 +206,20 @@ class GlobalConfig(Gtk.Application):
         self.perform_setup()
         assert self.main_window
         self.main_window.show()
+        # resize to screen size
+        if self.main_window.get_allocated_width() > \
+                self.main_window.get_screen().get_width():
+            width = int(self.main_window.get_screen().get_width() * 0.9)
+        else:
+            # try to have at least 1100 pixels
+            width = min(int(self.main_window.get_screen().get_width() * 0.9),
+                        1100)
+        if self.main_window.get_allocated_height() > \
+                self.main_window.get_screen().get_height() * 0.9:
+            height = int(self.main_window.get_screen().get_height() * 0.9)
+        else:
+            height = self.main_window.get_allocated_height()
+        self.main_window.resize(width, height)
         self.hold()
 
     @staticmethod
@@ -244,7 +258,7 @@ class GlobalConfig(Gtk.Application):
         self.builder.add_from_file(pkg_resources.resource_filename(
             'qubes_config', 'global_config.glade'))
 
-        self.main_window = self.builder.get_object('main_window')
+        self.main_window: Gtk.Window = self.builder.get_object('main_window')
         self.main_notebook: Gtk.Notebook = \
             self.builder.get_object('main_notebook')
 
@@ -350,6 +364,7 @@ class GlobalConfig(Gtk.Application):
         self.progress_bar_dialog.update_progress(1)
         self.progress_bar_dialog.hide()
         self.progress_bar_dialog.destroy()
+
 
     def _usbvm_changed(self, *_args):
         response = show_dialog(

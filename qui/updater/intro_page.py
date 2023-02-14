@@ -35,7 +35,7 @@ class IntroPage:
     """
     First content page of updater.
 
-    Show the list of updatable vms with a updates info.
+    Show the list of updatable vms with an update info.
     """
 
     def __init__(self, builder, theme, next_button):
@@ -91,6 +91,9 @@ class IntroPage:
 
         for vm in qapp.domains:
             if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM':
+                self.list_store.append_vm(vm)
+        for vm in qapp.domains:  # TODO
+            if vm.name in ('devel-debian', 'devel-fedora'):
                 self.list_store.append_vm(vm)
 
         self.refresh_update_list(settings.update_if_stale)
@@ -263,7 +266,7 @@ class UpdateRowWrapper(RowWrapper):
 
 class Date:
     """
-    Prints Date in desire way: never, today, yesterday, normal date.
+    Prints Date in desire way: unknown, today, yesterday, normal date.
 
     Comparable.
     """
@@ -289,13 +292,13 @@ class Date:
         today_str = datetime.today().strftime(self.date_format)
         yesterday = datetime.today() - timedelta(days=1)
         yesterday_str = yesterday.strftime(self.date_format)
-        never_str = datetime.min.strftime(self.date_format)
+        unknown_str = datetime.min.strftime(self.date_format)
         if date_str == today_str:
             return "today"
         elif date_str == yesterday_str:
             return "yesterday"
-        elif date_str == never_str:
-            return "never"
+        elif date_str == unknown_str:
+            return "unknown"
         else:
             return date_str
 

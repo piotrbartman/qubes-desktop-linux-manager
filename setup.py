@@ -63,11 +63,7 @@ setuptools.setup(
                           "updater_settings.glade",
                           "qubes-updater-base.css",
                           "qubes-updater-light.css",
-                          "qubes-updater-dark.css",
-                          "qubes-colors-dark-updater.css",
-                          "qubes-colors-light-updater.css",
-                          "qubes-widgets-base.css"
-                          ],
+                          "qubes-updater-dark.css"],
                   'qubes_config': ["new_qube.glade",
                                    "global_config.glade",
                                    "qubes-new-qube-base.css",
@@ -75,10 +71,7 @@ setuptools.setup(
                                    "qubes-new-qube-dark.css",
                                    "qubes-global-config-base.css",
                                    "qubes-global-config-light.css",
-                                   "qubes-global-config-dark.css",
-                                   "qubes-colors-dark.css",
-                                   "qubes-colors-light.css",
-                                   "qubes-widgets-base.css"]},
+                                   "qubes-global-config-dark.css"]},
     cmdclass={
         'install': InstallWithLocale
     },

@@ -1,3 +1,3 @@
-@import "qubes-colors-light-updater.css";
-@import "qubes-widgets-base.css";
+@import "styles/qubes-colors-light.css";
+@import "styles/qubes-widgets-base.css";
 @import "qubes-updater-base.css";

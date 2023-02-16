@@ -789,9 +789,12 @@ class DomainTray(Gtk.Application):
         self.connect('shutdown', self._disconnect_signals)
 
     def refresh_all(self, _subject, _event, **_kwargs):
+        items_to_delete = []
         for vm in self.menu_items:
             if vm not in self.qapp.domains:
-                self.remove_domain_item(None, None, vm)
+                items_to_delete.append(vm)
+        for vm in items_to_delete:
+            self.remove_domain_item(None, None, vm)
         for vm in self.qapp.domains:
             self.update_domain_item(vm, '')
 

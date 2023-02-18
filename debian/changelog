@@ -1,3 +1,13 @@
+qubes-desktop-linux-manager (4.2.4-1) unstable; urgency=medium
+
+  [ Marta Marczykowska-Górecka ]
+  * Fix policies for Input Devices
+  * pylint update
+  * More tests for input devices config
+  * Avoid changing dictionary we're iterating over
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 18 Feb 2023 02:55:46 +0100
+
 qubes-desktop-linux-manager (4.2.3-1) unstable; urgency=medium
 
   * Use xhost instead of xdpyinfo for checking if X server is alive

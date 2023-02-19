@@ -15,13 +15,15 @@ from qui.updater.intro_page import IntroPage
 from qui.updater.utils import Theme
 
 gi.require_version('Gtk', '3.0')  # isort:skip
-from gi.repository import Gtk, Gdk, GObject, Gio  # isort:skip
+from gi.repository import Gtk, Gdk, Gio  # isort:skip
 from qubesadmin import Qubes
 
 # using locale.gettext is necessary for Gtk.Builder translation support to work
 # in most cases gettext is better, but it cannot handle Gtk.Builder/glade files
 import locale
-from locale import gettext as l
+# from locale import gettext as l
+def l(arg):  # TODO
+    return arg
 
 locale.bindtextdomain("desktop-linux-manager", "/usr/locales/")
 locale.textdomain('desktop-linux-manager')

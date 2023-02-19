@@ -25,7 +25,9 @@ import time
 from typing import Dict
 
 from gi.repository import Gtk, Gdk, GObject
-from locale import gettext as _
+# from locale import gettext as l
+def _(arg):  # TODO
+    return arg
 
 from qubes_config.widgets.gtk_utils import copy_to_global_clipboard, \
     load_icon_at_gtk_size
@@ -33,7 +35,9 @@ from qubes_config.widgets.utils import get_feature
 from qui.updater.updater_settings import Settings
 from qui.updater.utils import UpdateStatus, RowWrapper
 
-from locale import gettext as l
+# from locale import gettext as l
+def l(arg):  # TODO
+    return arg
 
 
 class ProgressPage:

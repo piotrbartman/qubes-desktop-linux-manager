@@ -22,7 +22,7 @@ import functools
 
 from enum import Enum
 from typing import Callable
-from gi.repository import Gtk, GObject
+from gi.repository import Gtk
 
 
 def disable_checkboxes(func):
@@ -88,6 +88,9 @@ class HeaderCheckbox:
             return self._allowed[:2]
         if self.state == HeaderCheckbox.NONE:
             return ()
+
+    def set_allowed(self, value, idx):
+        self._allowed[idx] = value
 
     def set_buttons(self, *args):
         if self.state == HeaderCheckbox.ALL:
@@ -317,7 +320,6 @@ class ListWrapper:
         # Compare the values and return -1, 0, or 1
         if value1 < value2:
             return -1
-        elif value1 == value2:
+        if value1 == value2:
             return 0
-        else:
-            return 1
+        return 1

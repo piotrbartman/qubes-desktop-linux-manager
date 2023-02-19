@@ -15,7 +15,7 @@ from qui.updater.intro_page import IntroPage
 from qui.updater.utils import Theme
 
 gi.require_version('Gtk', '3.0')  # isort:skip
-from gi.repository import Gtk, Gdk, GObject, Gio  # isort:skip
+from gi.repository import Gtk, Gdk, Gio  # isort:skip
 from qubesadmin import Qubes
 
 # using locale.gettext is necessary for Gtk.Builder translation support to work

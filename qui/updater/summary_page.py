@@ -22,10 +22,10 @@ import asyncio
 import threading
 from typing import Optional, Any
 
-from qubes_config.widgets.gtk_utils import load_icon
 from qubesadmin import exc
 from qubesadmin.events.utils import wait_for_domain_shutdown
 
+from qubes_config.widgets.gtk_utils import load_icon
 from qubes_config.widgets.utils import get_boolean_feature
 from qui.updater.utils import disable_checkboxes, pass_through_event_window, \
     HeaderCheckbox, QubeClass, QubeLabel, QubeName, Theme, \
@@ -190,9 +190,9 @@ class SummaryPage:
                 self.list_store.append_vm(vm)
 
         if settings.restart_system_vms:
-            self.head_checkbox._allowed[0] = "SYS"
+            self.head_checkbox.set_allowed("SYS", 0)
         if settings.restart_other_vms:
-            self.head_checkbox._allowed[1] = "OTHER"
+            self.head_checkbox.set_allowed("OTHER", 1)
         if not restart:
             self.head_checkbox.state = HeaderCheckbox.NONE
         else:

@@ -45,7 +45,7 @@ class IntroPage:
         self.disable_checkboxes = False
         self.active = True
 
-        self.page = self.builder.get_object("list_page")
+        self.page  = self.builder.get_object("list_page")
         self.stack = self.builder.get_object("main_stack")
         self.vm_list = self.builder.get_object("vm_list")
         self.list_store: Optional[ListWrapper] = None
@@ -92,9 +92,6 @@ class IntroPage:
         for vm in qapp.domains:
             if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM':
                 self.list_store.append_vm(vm)
-        for vm in qapp.domains:  # TODO
-            if vm.name in ('devel-debian', 'devel-fedora'):
-                self.list_store.append_vm(vm)
 
         self.refresh_update_list(settings.update_if_stale)
 
@@ -109,8 +106,10 @@ class IntroPage:
             ['qubes-vm-update', '--dry-run',
              '--update-if-stale', str(update_if_stale)])
 
-        to_update = [vm_name.strip() for vm_name
-                     in output.decode().split("\n")[0].split(":")[1].split(",")]
+        to_update = [
+            vm_name.strip() for vm_name
+            in output.decode().split("\n", maxsplit=1)[0]
+                .split(":", maxsplit=1)[1].split(",")]
 
         for row in self.list_store:
             row.updates_available = bool(row.vm.name in to_update)
@@ -261,12 +260,12 @@ class UpdateRowWrapper(RowWrapper):
         self.raw_row[self._STATUS] = status_code
 
     def set_update_progress(self, progress):
-        self.raw_row[7] = progress
+        self.raw_row[self._UPDATE_PROGRESS] = progress
 
 
 class Date:
     """
-    Prints Date in desire way: unknown, today, yesterday, normal date.
+    Prints Date in desired way: unknown, today, yesterday, normal date.
 
     Comparable.
     """
@@ -295,12 +294,11 @@ class Date:
         unknown_str = datetime.min.strftime(self.date_format)
         if date_str == today_str:
             return "today"
-        elif date_str == yesterday_str:
+        if date_str == yesterday_str:
             return "yesterday"
-        elif date_str == unknown_str:
+        if date_str == unknown_str:
             return "unknown"
-        else:
-            return date_str
+        return date_str
 
     def __eq__(self, other):
         return self.datetime == other.datetime

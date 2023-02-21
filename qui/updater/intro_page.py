@@ -92,9 +92,6 @@ class IntroPage:
         for vm in qapp.domains:
             if getattr(vm, 'updateable', False) and vm.klass != 'AdminVM':
                 self.list_store.append_vm(vm)
-        for vm in qapp.domains:  # TODO
-            if vm.name in ('devel-debian', 'devel-fedora'):
-                self.list_store.append_vm(vm)
 
         self.refresh_update_list(settings.update_if_stale)
 
@@ -263,12 +260,12 @@ class UpdateRowWrapper(RowWrapper):
         self.raw_row[self._STATUS] = status_code
 
     def set_update_progress(self, progress):
-        self.raw_row[7] = progress
+        self.raw_row[self._UPDATE_PROGRESS] = progress
 
 
 class Date:
     """
-    Prints Date in desire way: unknown, today, yesterday, normal date.
+    Prints Date in desired way: unknown, today, yesterday, normal date.
 
     Comparable.
     """

@@ -115,7 +115,7 @@ class ProgressPage:
             self.update_templates(templs, settings)
 
         GObject.idle_add(self.next_button.set_sensitive, True)
-        GObject.idle_add(self.header_label.set_text, _("Update finished"))
+        GObject.idle_add(self.header_label.set_text, l("Update finished"))
         GObject.idle_add(self.cancel_button.set_visible, False)
 
     def update_admin_vm(self, admins):
@@ -125,11 +125,11 @@ class ProgressPage:
             GObject.idle_add(admin.set_status, UpdateStatus.Cancelled)
             GObject.idle_add(
                 admin.append_text_view,
-                _("Canceled update for {}\n").format(admin.vm.name))
+                l("Canceled update for {}\n").format(admin.vm.name))
 
         GObject.idle_add(
             admin.append_text_view,
-            _("Updating {}\n").format(admin.name))
+            l("Updating {}\n").format(admin.name))
         GObject.idle_add(admin.set_status, UpdateStatus.ProgressUnknown)
 
         self.update_details.update_buffer()
@@ -148,7 +148,7 @@ class ProgressPage:
         except subprocess.CalledProcessError as ex:
             GObject.idle_add(
                 admin.append_text_view,
-                _("Error on updating {}: {}\n{}").format(
+                l("Error on updating {}: {}\n{}").format(
                     admin.vm.name, str(ex), ex.output.decode()))
             GObject.idle_add(admin.set_status, UpdateStatus.Error)
 
@@ -161,12 +161,12 @@ class ProgressPage:
                 GObject.idle_add(row.set_status, UpdateStatus.Cancelled)
                 GObject.idle_add(
                     row.append_text_view,
-                    _("Canceled update for {}\n").format(row.vm.name))
+                    l("Canceled update for {}\n").format(row.vm.name))
 
         for row in to_update:
             GObject.idle_add(
                 row.append_text_view,
-                _("Updating {}\n").format(row.name))
+                l("Updating {}\n").format(row.name))
             GObject.idle_add(row.set_status, UpdateStatus.InProgress)
         self.update_details.update_buffer()
 
@@ -179,7 +179,7 @@ class ProgressPage:
             for row in to_update:
                 GObject.idle_add(
                     row.append_text_view,
-                    _("Error on updating {}: {}\n{}").format(
+                    l("Error on updating {}: {}\n{}").format(
                         row.name, str(ex), ex.output.decode()))
                 GObject.idle_add(row.set_status, UpdateStatus.Error)
         self.update_details.update_buffer()
@@ -278,7 +278,7 @@ class ProgressPage:
         self.update_details.set_active_row(None)
         self.stack.set_visible_child(self.page)
 
-        self.next_button.set_label(_("_Next"))
+        self.next_button.set_label(l("_Next"))
         self.cancel_button.hide()
 
     def row_selected(self, _emitter, path, _col):
@@ -361,9 +361,9 @@ class QubeUpdateDetails:
         self.active_row = row
         row_activated = self.active_row is not None
         if not row_activated:
-            self.details_label.set_text(_("Select a qube to see details."))
+            self.details_label.set_text(l("Select a qube to see details."))
         else:
-            self.details_label.set_text(_("Details for") + "  ")
+            self.details_label.set_text(l("Details for") + "  ")
             self.qube_icon.set_from_pixbuf(self.active_row.icon)
             self.qube_label.set_markup(" " + str(self.active_row.color_name))
         self.update_buffer()
@@ -378,7 +378,7 @@ class QubeUpdateDetails:
     def update_buffer(self):
         if self.active_row is not None:
             buffer_ = self.progress_textview.get_buffer()
-            buffer_.set_text(self.active_row.buffer)
+            GObject.idle_add(buffer_.set_text, self.active_row.buffer)
 
 
 class CellRendererProgressWithResult(

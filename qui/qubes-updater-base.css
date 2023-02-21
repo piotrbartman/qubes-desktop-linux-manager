@@ -36,11 +36,15 @@
 }
 
 .button_common {
-  background: linear-gradient(180deg, @gradient-0 0%, @gradient-1 78.32%, @gradient-2 100%);
+  background: linear-gradient(180deg,
+                              @button-blue-gradient-0 0%,
+                              @button-blue-gradient-1 78.32%,
+                              @button-blue-gradient-2 100%
+                             );
 }
 
 .button_common:disabled {
-  background: @gradient-0;
+  background: @button-blue-gradient-0;
 }
 
 .button_highlighted {
@@ -86,7 +90,11 @@
 }
 
 .button_cancel {
-    background: linear-gradient(180deg, @gradient-0 0%, @gradient-1 78.32%, @gradient-2 100%);
+    background: linear-gradient(180deg,
+                                @button-blue-gradient-0 0%,
+                                @button-blue-gradient-1 78.32%,
+                                @button-blue-gradient-2 100%
+                               );
 
     font-family: 'Source Sans Pro';
     font-style: normal;
@@ -205,7 +213,11 @@ treeview.view
 
 treeview.view button
 {
-  background: linear-gradient(180deg, @gradient-0 0%, @gradient-1 78.32%, @gradient-2 100%);
+  background: linear-gradient(180deg,
+                              @button-blue-gradient-0 0%,
+                              @button-blue-gradient-1 78.32%,
+                              @button-blue-gradient-2 100%
+                             );
   color: @text-color;
 }
 

@@ -14,35 +14,35 @@ label {
 }
 
 .qube-box-red {
-    color: #631110;
+    color: @red-label;
 }
 
 .qube-box-orange {
-    color: #843A04;
+    color: @orange-label;
 }
 
 .qube-box-yellow {
-    color: #946705;
+    color: @yellow-label;
 }
 
 .qube-box-green {
-    color: #10631D;
+    color: @green-label;
 }
 
 .qube-box-gray {
-    color: #555555;
+    color: @gray-label;
 }
 
 .qube-box-blue {
-    color: #0E2276;
+    color: @bluelabel;
 }
 
 .qube-box-purple {
-    color: #3F0C46;
+    color: @purple-label;
 }
 
 .qube-box-black {
-    color: #000000;
+    color: @black-label;
 }
 
 .group_title {

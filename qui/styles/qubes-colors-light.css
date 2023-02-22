@@ -32,3 +32,12 @@
 @define-color button-blue-gradient-0 #f4f1f1;
 @define-color button-blue-gradient-1 #dbdbdb;
 @define-color button-blue-gradient-2 #cccbcb;
+
+@define-color red-label #631110;
+@define-color orange-label #843A04;
+@define-color yellow-label #946705;
+@define-color green-label #10631D;
+@define-color gray-label #555555;
+@define-color blue-label #0E2276;
+@define-color purple-label #3F0C46;
+@define-color black-label #000000;

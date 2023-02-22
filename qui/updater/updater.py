@@ -9,6 +9,7 @@ import gi  # isort:skip
 from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, \
     load_theme, is_theme_light
 from qui.updater.progress_page import ProgressPage
+from qui.updater.style import load_css
 from qui.updater.updater_settings import Settings
 from qui.updater.summary_page import SummaryPage
 from qui.updater.intro_page import IntroPage
@@ -54,10 +55,11 @@ class QubesUpdater(Gtk.Application):
         self.builder.add_from_file(pkg_resources.resource_filename(
             'qui', 'updater.glade'))
 
-        self.main_window = self.builder.get_object("main_window")
-        self.next_button = self.builder.get_object("button_next")
+        self.main_window: Gtk.Window = self.builder.get_object("main_window")
+        self.next_button: Gtk.Button = self.builder.get_object("button_next")
         self.next_button.connect("clicked", self.next_clicked)
-        self.cancel_button = self.builder.get_object("button_cancel")
+        self.cancel_button: Gtk.Button = self.builder.get_object(
+            "button_cancel")
         self.cancel_button.connect("clicked", self.cancel_clicked)
 
         load_theme(widget=self.main_window,
@@ -68,7 +70,7 @@ class QubesUpdater(Gtk.Application):
         self.theme = Theme.LIGHT if is_theme_light(self.main_window) \
             else Theme.DARK
 
-        self.header_label = self.builder.get_object("header_label")
+        self.header_label: Gtk.Label = self.builder.get_object("header_label")
 
         self.intro_page = IntroPage(
             self.builder, self.theme, self.next_button)
@@ -88,7 +90,8 @@ class QubesUpdater(Gtk.Application):
         )
 
 
-        self.button_settings = self.builder.get_object("button_settings")
+        self.button_settings: Gtk.Button = self.builder.get_object(
+            "button_settings")
         self.button_settings.connect("clicked", self.open_settings_window)
         settings_pixbuf = load_icon_at_gtk_size(
             'qubes-customize', Gtk.IconSize.LARGE_TOOLBAR)
@@ -99,8 +102,6 @@ class QubesUpdater(Gtk.Application):
             self.qapp,
             refresh_callback=self.intro_page.refresh_update_list
         )
-
-        self.intro_page.populate_vm_list(self.qapp, self.settings)
 
         headers = [(3, "intro_name"), (3, "progress_name"), (3, "summary_name"),
                    (3, "restart_name"), (4, "available"), (5, "check"),
@@ -113,8 +114,8 @@ class QubesUpdater(Gtk.Application):
             cell.set_property("markup", str(obj))
 
         for col, name in headers:
-            renderer = self.builder.get_object(name + "_renderer")
-            column = self.builder.get_object(name + "_column")
+            renderer: Gtk.CellRenderer = self.builder.get_object(name + "_renderer")
+            column: Gtk.TreeViewColumn = self.builder.get_object(name + "_column")
             column.set_cell_data_func(renderer, cell_data_func, col)
             renderer.props.ypad = 10
             if not name.endswith("name") and name != "summary_status":
@@ -124,26 +125,10 @@ class QubesUpdater(Gtk.Application):
         self.main_window.connect("delete-event", self.window_close)
         self.main_window.connect("key-press-event", self.check_escape)
 
-        self.load_css()
+        load_css()
 
+        self.intro_page.populate_vm_list(self.qapp, self.settings)
         self.main_window.show_all()
-
-    @staticmethod
-    def load_css():
-        style_provider = Gtk.CssProvider()
-        css = b'''
-        .black-border { 
-            border-width: 1px; 
-            border-color: #c6c6c6; 
-            border-style: solid;
-        }
-        '''
-        style_provider.load_from_data(css)
-
-        Gtk.StyleContext.add_provider_for_screen(
-            Gdk.Screen.get_default(),
-            style_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 
     def open_settings_window(self, _emitter):
         self.settings.show()

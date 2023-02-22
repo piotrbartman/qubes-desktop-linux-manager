@@ -22,9 +22,11 @@ import re
 import subprocess
 import threading
 import time
+import gi
 from typing import Dict
 
-from gi.repository import Gtk, Gdk, GObject
+gi.require_version('Gtk', '3.0')  # isort:skip
+from gi.repository import Gtk, Gdk, GObject  # isort:skip
 from locale import gettext as l
 
 from qubes_config.widgets.gtk_utils import copy_to_global_clipboard, \
@@ -55,21 +57,21 @@ class ProgressPage:
 
         self.update_details = QubeUpdateDetails(self.builder)
 
-        self.stack = self.builder.get_object("main_stack")
-        self.page = self.builder.get_object("progress_page")
-        self.progressbar = self.builder.get_object("progressbar")
+        self.stack: Gtk.Stack = self.builder.get_object("main_stack")
+        self.page: Gtk.Box = self.builder.get_object("progress_page")
+        self.progressbar: Gtk.TreeView = self.builder.get_object("progressbar")
         progress_store = self.progressbar.get_model()
         progress_store.append([0])
         self.total_progress = progress_store[-1]
-        self.progressbar_renderer = self.builder.get_object(
-            "progressbar_renderer")
+        self.progressbar_renderer: Gtk.CellRendererProgress = \
+            self.builder.get_object("progressbar_renderer")
         self.progressbar_renderer.set_fixed_size(-1, 26)
 
-        self.stack = self.builder.get_object("main_stack")
-
-        self.progress_list = self.builder.get_object("progress_list")
+        self.progress_list: Gtk.TreeView = self.builder.get_object(
+            "progress_list")
         self.progress_list.connect("row-activated", self.row_selected)
-        progress_column = self.builder.get_object("progress_column")
+        progress_column: Gtk.TreeViewColumn = self.builder.get_object(
+            "progress_column")
         renderer = CellRendererProgressWithResult()
         renderer.props.ypad = 10
         progress_column.pack_start(renderer, True)
@@ -334,18 +336,19 @@ class QubeUpdateDetails:
         self.active_row = None
         self.builder = builder
 
-        self.qube_details = self.builder.get_object("qube_details")
-        self.details_label = self.builder.get_object("details_label")
-        self.qube_icon = self.builder.get_object("qube_icon")
-        self.qube_label = self.builder.get_object("qube_label")
-        self.colon = self.builder.get_object("colon")
+        self.qube_details: Gtk.Box = self.builder.get_object("qube_details")
+        self.details_label: Gtk.Label = self.builder.get_object("details_label")
+        self.qube_icon: Gtk.Image = self.builder.get_object("qube_icon")
+        self.qube_label: Gtk.Label = self.builder.get_object("qube_label")
+        self.colon: Gtk.Label = self.builder.get_object("colon")
 
-        self.copy_button = self.builder.get_object("copy_button")
+        self.copy_button: Gtk.Button = self.builder.get_object("copy_button")
         self.copy_button.connect("clicked", self.copy_content)
 
-        self.progress_textview = self.builder.get_object("progress_textview")
-        self.progress_scrolled_window = self.builder.get_object(
+        self.progress_textview: Gtk.TextView = self.builder.get_object(
             "progress_textview")
+        self.progress_scrolled_window: Gtk.ScrolledWindow = \
+            self.builder.get_object("progress_scrolled_window")
 
     def copy_content(self, _emitter):
         if self.active_row is None:

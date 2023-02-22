@@ -46,26 +46,29 @@ class Settings:
         self.builder.add_from_file(pkg_resources.resource_filename(
             'qui', 'updater_settings.glade'))
 
-        self.settings_window = self.builder.get_object("main_window")
+        self.settings_window: Gtk.Window = self.builder.get_object(
+            "main_window")
         self.settings_window.set_transient_for(main_window)
         self.settings_window.connect("delete-event", self.close_without_saving)
 
-        self.cancel_button = self.builder.get_object("button_settings_cancel")
+        self.cancel_button: Gtk.Button = self.builder.get_object(
+            "button_settings_cancel")
         self.cancel_button.connect(
             "clicked", lambda _: self.settings_window.close())
 
-        self.save_button = self.builder.get_object("button_settings_save")
+        self.save_button: Gtk.Button = self.builder.get_object(
+            "button_settings_save")
         self.save_button.connect("clicked", self.save_and_close)
 
-        self.days_without_update_button = self.builder.get_object(
-            "days_without_update")
+        self.days_without_update_button: Gtk.SpinButton = \
+            self.builder.get_object("days_without_update")
         adj = Gtk.Adjustment(7, 1, 100, 1, 1, 1)
         self.days_without_update_button.configure(adj, 1, 0)
 
-        self.restart_system_checkbox = self.builder.get_object(
+        self.restart_system_checkbox: Gtk.CheckButton = self.builder.get_object(
             "restart_system")
 
-        self.restart_other_checkbox = self.builder.get_object(
+        self.restart_other_checkbox: Gtk.CheckButton = self.builder.get_object(
             "restart_other")
         self.restart_other_checkbox.connect(
             "toggled", self._show_restart_exceptions)
@@ -80,14 +83,15 @@ class Settings:
         self.exceptions = VMFlowboxHandler(
             self.builder, self.qapp, "restart_exceptions",
             self.excluded_vms, lambda vm: vm in self.available_vms)
-        self.restart_exceptions_page = self.builder.get_object(
+        self.restart_exceptions_page: Gtk.Box = self.builder.get_object(
             "restart_exceptions_page")
 
-        self.limit_concurrency_checkbox = self.builder.get_object(
-            "limit_concurrency")
+        self.limit_concurrency_checkbox: Gtk.CheckButton = \
+            self.builder.get_object("limit_concurrency")
         self.limit_concurrency_checkbox.connect(
             "toggled", self._limit_concurrency_toggled)
-        self.max_concurrency_button = self.builder.get_object("max_concurrency")
+        self.max_concurrency_button: Gtk.SpinButton = \
+            self.builder.get_object("max_concurrency")
         adj = Gtk.Adjustment(4, 1, 17, 1, 1, 1)
         self.max_concurrency_button.configure(adj, 1, 0)
 

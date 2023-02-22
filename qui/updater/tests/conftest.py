@@ -153,7 +153,7 @@ class MockWidget:
         self.text = None
         self.halign = None
         self.model = None
-        self.widget = None
+        self.buffer = None
 
     def set_sensitive(self, value: bool):
         self.sensitive = value
@@ -177,7 +177,7 @@ class MockWidget:
         self.model = model
 
     def get_buffer(self):
-        return self.widget
+        return self.buffer
 
 
 @pytest.fixture
@@ -203,7 +203,7 @@ def mock_tree_view():
 @pytest.fixture
 def mock_text_view():
     result = MockWidget()
-    result.widget = MockWidget()
+    result.buffer = MockWidget()
     return result
 
 

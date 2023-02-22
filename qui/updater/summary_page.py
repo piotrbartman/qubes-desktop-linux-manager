@@ -20,6 +20,10 @@
 # USA.
 import asyncio
 import threading
+import gi
+
+gi.require_version('Gtk', '3.0')  # isort:skip
+from gi.repository import Gtk  # isort:skip
 from typing import Optional, Any
 
 from qubesadmin import exc
@@ -58,24 +62,26 @@ class SummaryPage:
 
         self.updated_tmpls: Optional[list] = None
 
-        self.restart_list = self.builder.get_object("restart_list")
+        self.restart_list: Gtk.TreeView = self.builder.get_object(
+            "restart_list")
         self.list_store: Optional[ListWrapper] = None
 
-        self.stack = self.builder.get_object("main_stack")
-        self.page = self.builder.get_object("restart_page")
-        self.label_summary = self.builder.get_object("label_summary")
+        self.stack: Gtk.Stack = self.builder.get_object("main_stack")
+        self.page: Gtk.Box = self.builder.get_object("restart_page")
+        self.label_summary: Gtk.Label = self.builder.get_object("label_summary")
 
         self.restart_list.connect("row-activated",
                                   self.on_checkbox_toggled)
-        self.app_vm_list = self.builder.get_object("restart_list_store")
-        restart_checkbox_column = self.builder.get_object(
+        self.app_vm_list: Gtk.ListStore = self.builder.get_object(
+            "restart_list_store")
+        restart_checkbox_column: Gtk.TreeViewColumn = self.builder.get_object(
             "restart_checkbox_column")
         restart_checkbox_column.connect("clicked",
                                         self.on_header_toggled)
         restart_header_button = restart_checkbox_column.get_button()
         restart_header_button.connect('realize', pass_through_event_window)
 
-        self.head_checkbox_button = self.builder.get_object(
+        self.head_checkbox_button: Gtk.CheckButton = self.builder.get_object(
             "restart_checkbox_header")
         self.head_checkbox_button.set_inconsistent(True)
         self.head_checkbox_button.connect(
@@ -90,7 +96,8 @@ class SummaryPage:
             callback_none=lambda *_args: self.next_button.set_label("_Finish"),
         )
 
-        self.summary_list = self.builder.get_object("summary_list")
+        self.summary_list: Gtk.TreeView = self.builder.get_object(
+            "summary_list")
         self.summary_list.connect("row-activated", back_by_row_selection)
 
     @disable_checkboxes

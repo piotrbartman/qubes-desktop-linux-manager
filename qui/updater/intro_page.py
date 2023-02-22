@@ -19,8 +19,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 import subprocess
+import gi
+
 from datetime import datetime, timedelta
 from typing import Union, Optional
+gi.require_version('Gtk', '3.0')  # isort:skip
+from gi.repository import Gtk  # isort:skip
 
 from qubes_config.widgets.gtk_utils import load_icon
 from qubesadmin import exc
@@ -45,18 +49,20 @@ class IntroPage:
         self.disable_checkboxes = False
         self.active = True
 
-        self.page  = self.builder.get_object("list_page")
-        self.stack = self.builder.get_object("main_stack")
-        self.vm_list = self.builder.get_object("vm_list")
+        self.page: Gtk.Box = self.builder.get_object("list_page")
+        self.stack: Gtk.Stack = self.builder.get_object("main_stack")
+        self.vm_list: Gtk.TreeView = self.builder.get_object("vm_list")
         self.list_store: Optional[ListWrapper] = None
 
-        checkbox_column = self.builder.get_object("checkbox_column")
+        checkbox_column: Gtk.TreeViewColumn = self.builder.get_object(
+            "checkbox_column")
         checkbox_column.connect("clicked", self.on_header_toggled)
         header_button = checkbox_column.get_button()
 
         header_button.connect('realize', pass_through_event_window)
 
-        self.checkbox_column_button = self.builder.get_object("checkbox_header")
+        self.checkbox_column_button: Gtk.CheckButton = self.builder.get_object(
+            "checkbox_header")
         self.checkbox_column_button.set_inconsistent(True)
         self.checkbox_column_button.connect("toggled", self.on_header_toggled)
         self.head_checkbox = HeaderCheckbox(
@@ -69,12 +75,14 @@ class IntroPage:
 
         self.vm_list.connect("row-activated", self.on_checkbox_toggled)
 
-        self.info_how_it_works = self.builder.get_object("info_how_it_works")
+        self.info_how_it_works: Gtk.Label = self.builder.get_object(
+            "info_how_it_works")
         self.info_how_it_works.set_label(
             self.info_how_it_works.get_label().format(
                 MAYBE='<span foreground="Orange"><b>MAYBE</b></span>'))
 
-        self.restart_button = self.builder.get_object("restart_button")
+        self.restart_button: Gtk.CheckButton = self.builder.get_object(
+            "restart_button")
 
     def populate_vm_list(self, qapp, settings):
         """Adds to list any updatable vms with a updates info."""

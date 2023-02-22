@@ -18,10 +18,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+import ast
 import functools
 
 from enum import Enum
-from typing import Callable
+from typing import Callable, List
 from gi.repository import Gtk
 
 
@@ -63,20 +64,10 @@ class HeaderCheckbox:
     ALL = 3
     SELECTED = 4
 
-    def __init__(
-            self,
-            header_button,
-            allowed: list,
-            callback_all: Callable,
-            callback_some: Callable,
-            callback_none: Callable
-    ):
+    def __init__(self, header_button, allowed):
         self.header_button = header_button
         self.state = HeaderCheckbox.SAFE
-        self._allowed = allowed
-        self.callback_all = callback_all
-        self.callback_some = callback_some
-        self.callback_none = callback_none
+        self._allowed: List = allowed
 
     @property
     def allowed(self):
@@ -89,24 +80,30 @@ class HeaderCheckbox:
         if self.state == HeaderCheckbox.NONE:
             return ()
 
-    def set_allowed(self, value, idx):
-        self._allowed[idx] = value
-
-    def set_buttons(self, *args):
+    def set_buttons(self, *args, **kwargs):
         if self.state == HeaderCheckbox.ALL:
             self.header_button.set_inconsistent(False)
             self.header_button.set_active(True)
-            self.callback_all(*args)
+            self.all_action(*args, **kwargs)
         elif self.state == HeaderCheckbox.NONE:
             self.header_button.set_inconsistent(False)
             self.header_button.set_active(False)
-            self.callback_none(*args)
+            self.none_action(*args, **kwargs)
         else:
             self.header_button.set_inconsistent(True)
-            self.callback_some(*args)
+            self.inconsistent_action(*args, **kwargs)
 
     def next_state(self):
         self.state = (self.state + 1) % 4  # SELECTED is skipped
+
+    def all_action(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def inconsistent_action(self, *args, **kwargs):
+        raise NotImplementedError()
+
+    def none_action(self, *args, **kwargs):
+        raise NotImplementedError()
 
 
 def on_head_checkbox_toggled(list_store, head_checkbox, select_rows):
@@ -121,8 +118,7 @@ def on_head_checkbox_toggled(list_store, head_checkbox, select_rows):
             select_rows()
             selected_num = sum(
                 row.selected for row in list_store)
-    plural = "s" if selected_num > 1 else ""
-    head_checkbox.set_buttons(plural, selected_num)
+    head_checkbox.set_buttons(selected_num)
 
 
 class QubeClass(Enum):
@@ -136,39 +132,22 @@ class QubeClass(Enum):
     DispVM = 4
 
 
-class QubeLabel(Enum):
-    """
-    Sorting order by label color.
-    """
-    black = 0
-    purple = 1
-    blue = 2
-    gray = 3
-    green = 4
-    yellow = 5
-    orange = 6
-    red = 7
-
-
-class Theme(Enum):
-    LIGHT = 0
-    DARK = 1
-
-
-def label_color_theme(theme: Theme, color: str) -> str:
-    if theme == Theme.DARK and color.lower() == "black":
-        return "white"
-    return color
+def label_color_theme(color: str) -> str:
+    widget = Gtk.Label()
+    widget.get_style_context().add_class(f'qube-box-{color}')
+    gtk_color = widget.get_style_context().get_color(Gtk.StateFlags.NORMAL)
+    color_rgb = ast.literal_eval(gtk_color.to_string()[3:])
+    color_hex = '#{:02x}{:02x}{:02x}'.format(*color_rgb)
+    return color_hex
 
 
 class QubeName:
-    def __init__(self, name, color, theme):
+    def __init__(self, name, color):
         self.name = name
         self.color = color
-        self.theme = theme
 
     def __str__(self):
-        return f'<span foreground="{label_color_theme(self.theme, self.color)}'\
+        return f'<span foreground="{label_color_theme(self.color)}'\
                '"><b>' + self.name + '</b></span>'
 
     def __eq__(self, other):
@@ -214,31 +193,24 @@ class UpdateStatus(Enum):
 
 
 class RowWrapper:
-    def __init__(self, list_store, vm, theme: Theme, raw_row: list):
+    def __init__(self, list_store, vm, raw_row: list):
         super().__init__()
         self.list_store = list_store
         self.vm = vm
-        self.theme = theme
 
         self.list_store.append([self, *raw_row])
         self.raw_row = self.list_store[-1]
 
     def __eq__(self, other):
-        self_class = QubeClass[self.vm.klass]
-        other_class = QubeClass[other.vm.klass]
-        if self_class == other_class:
-            self_label = QubeLabel[str(self.vm.label)]
-            other_label = QubeLabel[str(other.vm.label)]
-            return self_label.value == other_label.value
+        if self.vm.klass == other.vm.klass:
+            return self.vm.label.index == other.vm.label.index
         return False
 
     def __lt__(self, other):
         self_class = QubeClass[self.vm.klass]
         other_class = QubeClass[other.vm.klass]
         if self_class == other_class:
-            self_label = QubeLabel[str(self.vm.label)]
-            other_label = QubeLabel[str(other.vm.label)]
-            return self_label.value < other_label.value
+            return self.vm.label.index == other.vm.label.index
         return self_class.value < other_class.value
 
     @property
@@ -275,10 +247,9 @@ class UpdateListIter:
 
 
 class ListWrapper:
-    def __init__(self, row_type, list_store_raw, theme):
+    def __init__(self, row_type, list_store_raw):
         self.list_store_raw = list_store_raw
         self.list_store_wrapped: list = []
-        self.theme = theme
         self.row_type = row_type
         for idx in range(self.row_type.COLUMN_NUM):
             self.list_store_raw.set_sort_func(idx, self.sort_func, idx)
@@ -293,7 +264,7 @@ class ListWrapper:
         return len(self.list_store_wrapped)
 
     def append_vm(self, vm, state: bool = False):
-        qube_row = self.row_type(self.list_store_raw, vm, self.theme, state)
+        qube_row = self.row_type(self.list_store_raw, vm, state)
         self.list_store_wrapped.append(qube_row)
 
     def invert_selection(self, path):
@@ -306,7 +277,7 @@ class ListWrapper:
             self.list_store_raw.get_column_type(i)
             for i in range(self.list_store_raw.get_n_columns())
         ))
-        result = ListWrapper(self.row_type, empty_copy, self.theme)
+        result = ListWrapper(self.row_type, empty_copy)
         selected_rows = [row for row in self if row.selected]
         for row in selected_rows:
             result.append_vm(row.vm)

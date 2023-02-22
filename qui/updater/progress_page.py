@@ -41,13 +41,11 @@ class ProgressPage:
     def __init__(
             self,
             builder,
-            theme,
             header_label,
             next_button,
             cancel_button
     ):
         self.builder = builder
-        self.theme = theme
         self.header_label = header_label
         self.next_button = next_button
         self.cancel_button = cancel_button

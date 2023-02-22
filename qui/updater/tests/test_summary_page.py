@@ -21,8 +21,8 @@
 import pytest
 from unittest.mock import patch
 
-from qui.updater.summary_page import SummaryPage
-from qui.updater.utils import Theme, HeaderCheckbox, UpdateStatus
+from qui.updater.summary_page import SummaryPage, AppVMType
+from qui.updater.utils import HeaderCheckbox, UpdateStatus
 
 
 @patch('qui.updater.summary_page.SummaryPage.refresh_buttons')
@@ -35,7 +35,7 @@ def test_show(
     ] = b"0\x00" + "".encode()
 
     sut = SummaryPage(
-        real_builder, Theme.LIGHT, mock_next_button, mock_cancel_button,
+        real_builder, mock_next_button, mock_cancel_button,
         back_by_row_selection=lambda *args: None  # callback
     )
 
@@ -62,15 +62,15 @@ def test_on_header_toggled(
     ] = b"0\x00" + "".encode()
 
     sut = SummaryPage(
-        real_builder, Theme.LIGHT, mock_next_button, mock_cancel_button,
+        real_builder, mock_next_button, mock_cancel_button,
         back_by_row_selection=lambda *args: None  # callback
     )
 
     sut.list_store = appvms_list
     all_num = len(appvms_list)
-    sut.head_checkbox._allowed[0] = "SYS"
+    sut.head_checkbox._allowed[0] = AppVMType.SYS
     sys_num = 3
-    sut.head_checkbox._allowed[1] = "OTHER"
+    sut.head_checkbox._allowed[1] = AppVMType.NON_SYS
     non_excluded_num = 6
 
     sut.head_checkbox.state = HeaderCheckbox.NONE
@@ -93,13 +93,13 @@ def test_on_checkbox_toggled(
         mock_next_button, mock_cancel_button, mock_settings
 ):
     sut = SummaryPage(
-        real_builder, Theme.LIGHT, mock_next_button, mock_cancel_button,
+        real_builder, mock_next_button, mock_cancel_button,
         back_by_row_selection=lambda *args: None  # callback
     )
 
     sut.list_store = appvms_list
-    sut.head_checkbox._allowed[0] = "SYS"
-    sut.head_checkbox._allowed[1] = "OTHER"
+    sut.head_checkbox._allowed[0] = AppVMType.SYS
+    sut.head_checkbox._allowed[1] = AppVMType.NON_SYS
 
     sut.head_checkbox.state = HeaderCheckbox.NONE
     sut.head_checkbox.set_buttons()
@@ -172,7 +172,7 @@ def test_populate_restart_list(
         ] = b"0\x00" + "".encode()
 
     sut = SummaryPage(
-        real_builder, Theme.LIGHT, mock_next_button, mock_cancel_button,
+        real_builder, mock_next_button, mock_cancel_button,
         back_by_row_selection=lambda *args: None  # callback
     )
     sut.summary_list = mock_tree_view

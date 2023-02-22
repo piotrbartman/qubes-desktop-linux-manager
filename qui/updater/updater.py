@@ -13,7 +13,6 @@ from qui.updater.style import load_css
 from qui.updater.updater_settings import Settings
 from qui.updater.summary_page import SummaryPage
 from qui.updater.intro_page import IntroPage
-from qui.updater.utils import Theme
 
 gi.require_version('Gtk', '3.0')  # isort:skip
 from gi.repository import Gtk, Gdk, Gio  # isort:skip
@@ -67,23 +66,18 @@ class QubesUpdater(Gtk.Application):
                        'qui', 'qubes-updater-light.css'),
                    dark_theme_path=pkg_resources.resource_filename(
                        'qui', 'qubes-updater-dark.css'))
-        self.theme = Theme.LIGHT if is_theme_light(self.main_window) \
-            else Theme.DARK
 
         self.header_label: Gtk.Label = self.builder.get_object("header_label")
 
-        self.intro_page = IntroPage(
-            self.builder, self.theme, self.next_button)
+        self.intro_page = IntroPage(self.builder, self.next_button)
         self.progress_page = ProgressPage(
             self.builder,
-            self.theme,
             self.header_label,
             self.next_button,
             self.cancel_button
         )
         self.summary_page = SummaryPage(
             self.builder,
-            self.theme,
             self.next_button,
             self.cancel_button,
             self.progress_page.back_by_row_selection

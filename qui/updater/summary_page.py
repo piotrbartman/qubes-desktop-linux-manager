@@ -20,6 +20,8 @@
 # USA.
 import asyncio
 import threading
+from gettext import ngettext
+
 import gi
 
 gi.require_version('Gtk', '3.0')  # isort:skip
@@ -32,7 +34,7 @@ from qubesadmin.events.utils import wait_for_domain_shutdown
 from qubes_config.widgets.gtk_utils import load_icon
 from qubes_config.widgets.utils import get_boolean_feature
 from qui.updater.utils import disable_checkboxes, pass_through_event_window, \
-    HeaderCheckbox, QubeClass, QubeLabel, QubeName, Theme, \
+    HeaderCheckbox, QubeClass, QubeName, \
     RowWrapper, ListWrapper, on_head_checkbox_toggled
 
 from locale import gettext as l
@@ -48,13 +50,11 @@ class SummaryPage:
     def __init__(
             self,
             builder,
-            theme,
             next_button,
             cancel_button,
             back_by_row_selection
     ):
         self.builder = builder
-        self.theme = theme
         self.next_button = next_button
         self.cancel_button = cancel_button
         self.restart_thread = None
@@ -86,15 +86,8 @@ class SummaryPage:
         self.head_checkbox_button.set_inconsistent(True)
         self.head_checkbox_button.connect(
             "toggled", self.on_header_toggled)
-        self.head_checkbox = HeaderCheckbox(
-            self.head_checkbox_button,
-            allowed=["", "", "EXCLUDED"],
-            callback_all=lambda plural, num: self.next_button.set_label(
-                f"_Finish and restart {num} qube{plural}"),
-            callback_some=lambda plural, num: self.next_button.set_label(
-                f"_Finish and restart {num} qube{plural}"),
-            callback_none=lambda *_args: self.next_button.set_label("_Finish"),
-        )
+        self.head_checkbox = RestartHeaderCheckbox(
+            self.head_checkbox_button, self.next_button)
 
         self.summary_list: Gtk.TreeView = self.builder.get_object(
             "summary_list")
@@ -121,8 +114,7 @@ class SummaryPage:
             self.head_checkbox.state = HeaderCheckbox.ALL
         else:
             self.head_checkbox.state = HeaderCheckbox.SELECTED
-        plural = "s" if selected_num > 1 else ""
-        self.head_checkbox.set_buttons(plural, selected_num)
+        self.head_checkbox.set_buttons(selected_num)
 
     @disable_checkboxes
     def on_header_toggled(self, _emitter):
@@ -158,15 +150,19 @@ class SummaryPage:
     ):
         """Show this page and handle buttons."""
         self.stack.set_visible_child(self.page)
-        qube_updated_plural = "s" if qube_updated_num != 1 else ""
-        qube_no_updates_plural = "s" if qube_no_updates_num != 1 else ""
-        qube_failed_plural = "s" if qube_failed_num != 1 else ""
-        summary = f"{qube_updated_num} qube{qube_updated_plural} " + \
-                  l("updated successfully.") + "\n" \
-                  f"{qube_no_updates_num} qube{qube_no_updates_plural} " + \
-                  l("attempted to update but found no updates.") + "\n" \
-                  f"{qube_failed_num} qube{qube_failed_plural} " + \
-                  l("failed to update.")
+        summary_1 = ngettext(
+            "%(num)d qube updated successfully.",
+            "%(num)d qubes updated successfully.",
+            qube_updated_num) % {'num': qube_updated_num}
+        summary_2 = ngettext(
+            "%(num)d qube attempted to update but found no updates.",
+            "%(num)d qubes attempted to update but found no updates.",
+            qube_no_updates_num) % {'num': qube_no_updates_num}
+        summary_3 = ngettext(
+            "%(num)d qube failed to update.",
+            "%(num)d qubes failed to update.",
+            qube_failed_num) % {'num': qube_failed_num}
+        summary = "\n".join((summary_1, summary_2, summary_3))
         self.label_summary.set_label(summary)
         self.cancel_button.set_label(l("_Back"))
         self.cancel_button.show()
@@ -183,13 +179,13 @@ class SummaryPage:
         self.updated_tmpls = [
             row for row in vm_updated
             if bool(row.status)
-            and QubeClass[row.vm.klass] == QubeClass.TemplateVM
+               and QubeClass[row.vm.klass] == QubeClass.TemplateVM
         ]
         possibly_changed_vms = {appvm for template in self.updated_tmpls
                                 for appvm in template.vm.appvms
                                 }
         self.list_store = ListWrapper(
-            RestartRowWrapper, self.restart_list.get_model(), self.theme)
+            RestartRowWrapper, self.restart_list.get_model())
 
         for vm in possibly_changed_vms:
             if vm.is_running() \
@@ -197,9 +193,9 @@ class SummaryPage:
                 self.list_store.append_vm(vm)
 
         if settings.restart_system_vms:
-            self.head_checkbox.set_allowed("SYS", 0)
+            self.head_checkbox.allow_sys()
         if settings.restart_other_vms:
-            self.head_checkbox.set_allowed("OTHER", 1)
+            self.head_checkbox.allow_non_sys()
         if not restart:
             self.head_checkbox.state = HeaderCheckbox.NONE
         else:
@@ -214,13 +210,13 @@ class SummaryPage:
             row.selected = (
                     row.is_sys_qube
                     and not row.is_excluded
-                    and "SYS" in self.head_checkbox.allowed
+                    and AppVMType.SYS in self.head_checkbox.allowed
                     or
                     not row.is_sys_qube
                     and not row.is_excluded
-                    and "OTHER" in self.head_checkbox.allowed
+                    and AppVMType.NON_SYS in self.head_checkbox.allowed
                     or
-                    "EXCLUDED" in self.head_checkbox.allowed
+                    AppVMType.EXCLUDED in self.head_checkbox.allowed
             )
 
     def restart_selected_vms(self):
@@ -251,15 +247,14 @@ class RestartRowWrapper(RowWrapper):
     _NAME = 3
     _ADDITIONAL_INFO = 4
 
-    def __init__(self, list_store, vm, theme: Theme, _selection: Any):
-        label = QubeLabel[str(vm.label)]
+    def __init__(self, list_store, vm, _selection: Any):
         raw_row = [
             False,
             load_icon(vm.icon),
-            QubeName(vm.name, label.name, theme),
+            QubeName(vm.name, str(vm.label)),
             '',
         ]
-        super().__init__(list_store, vm, theme, raw_row)
+        super().__init__(list_store, vm, raw_row)
 
     @property
     def selected(self):
@@ -274,11 +269,11 @@ class RestartRowWrapper(RowWrapper):
         self.raw_row[4] = ''
         if self.selected and not self.is_sys_qube:
             self.raw_row[4] = 'Restarting an app ' \
-                               'qube will shut down all running applications'
+                              'qube will shut down all running applications'
         if self.selected and self.is_excluded:
             self.raw_row[4] = '<span foreground="red">This qube has been ' \
-                               'explicitly disabled from restarting in ' \
-                               'settings</span>'
+                              'explicitly disabled from restarting in ' \
+                              'settings</span>'
 
     @property
     def icon(self):
@@ -303,6 +298,43 @@ class RestartRowWrapper(RowWrapper):
     @property
     def is_excluded(self):
         return not get_boolean_feature(self.vm, 'restart-after-update', True)
+
+
+class AppVMType:
+    SYS = 0
+    NON_SYS = 1
+    EXCLUDED = 2
+
+
+class RestartHeaderCheckbox(HeaderCheckbox):
+    def __init__(self, checkbox_column_button, next_button):
+        super().__init__(checkbox_column_button,
+                         [None, None, AppVMType.EXCLUDED])
+        self.next_button = next_button
+
+    def allow_sys(self, value=True):
+        if value:
+            self._allowed[0] = AppVMType.SYS
+        else:
+            self._allowed[0] = None
+
+    def allow_non_sys(self, value=True):
+        if value:
+            self._allowed[1] = AppVMType.NON_SYS
+        else:
+            self._allowed[1] = None
+
+    def all_action(self, num, *args, **kwargs):
+        text = ngettext("_Finish and restart %(num)d qube",
+                        "_Finish and restart %(num)d qubes",
+                        num) % {'num': num}
+        self.next_button.set_label(text)
+
+    def inconsistent_action(self, *args, **kwargs):
+        self.all_action(*args, **kwargs)
+
+    def none_action(self, *args, **kwargs):
+        self.next_button.set_label("_Finish")
 
 
 # TODO: duplication

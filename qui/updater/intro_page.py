@@ -19,10 +19,13 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 import subprocess
+from enum import Enum
+
 import gi
 
 from datetime import datetime, timedelta
-from typing import Union, Optional
+from typing import Optional
+
 gi.require_version('Gtk', '3.0')  # isort:skip
 from gi.repository import Gtk  # isort:skip
 
@@ -30,7 +33,7 @@ from qubes_config.widgets.gtk_utils import load_icon
 from qubesadmin import exc
 
 from qui.updater.utils import disable_checkboxes, HeaderCheckbox, \
-    pass_through_event_window, QubeLabel, Theme, \
+    pass_through_event_window, \
     QubeName, label_color_theme, UpdateStatus, RowWrapper, \
     ListWrapper, on_head_checkbox_toggled
 
@@ -42,9 +45,8 @@ class IntroPage:
     Show the list of updatable vms with an update info.
     """
 
-    def __init__(self, builder, theme, next_button):
+    def __init__(self, builder, next_button):
         self.builder = builder
-        self.theme = theme
         self.next_button = next_button
         self.disable_checkboxes = False
         self.active = True
@@ -65,12 +67,8 @@ class IntroPage:
             "checkbox_header")
         self.checkbox_column_button.set_inconsistent(True)
         self.checkbox_column_button.connect("toggled", self.on_header_toggled)
-        self.head_checkbox = HeaderCheckbox(
-            self.checkbox_column_button,
-            allowed=["YES", "MAYBE", "NO"],
-            callback_all=lambda *_args: self.next_button.set_sensitive(True),
-            callback_some=lambda *_args: self.next_button.set_sensitive(True),
-            callback_none=lambda *_args: self.next_button.set_sensitive(False),
+        self.head_checkbox = UpdateHeaderCheckbox(
+            self.checkbox_column_button, self.next_button
         )
 
         self.vm_list.connect("row-activated", self.on_checkbox_toggled)
@@ -79,7 +77,8 @@ class IntroPage:
             "info_how_it_works")
         self.info_how_it_works.set_label(
             self.info_how_it_works.get_label().format(
-                MAYBE='<span foreground="Orange"><b>MAYBE</b></span>'))
+                MAYBE=f'<span foreground="{label_color_theme("orange")}">'
+                      '<b>MAYBE</b></span>'))
 
         self.restart_button: Gtk.CheckButton = self.builder.get_object(
             "restart_button")
@@ -87,7 +86,7 @@ class IntroPage:
     def populate_vm_list(self, qapp, settings):
         """Adds to list any updatable vms with a updates info."""
         self.list_store = ListWrapper(
-            UpdateRowWrapper, self.vm_list.get_model(), self.theme)
+            UpdateRowWrapper, self.vm_list.get_model())
 
         for vm in qapp.domains:
             if vm.klass == 'AdminVM':
@@ -117,7 +116,7 @@ class IntroPage:
         to_update = [
             vm_name.strip() for vm_name
             in output.decode().split("\n", maxsplit=1)[0]
-                .split(":", maxsplit=1)[1].split(",")]
+            .split(":", maxsplit=1)[1].split(",")]
 
         for row in self.list_store:
             row.updates_available = bool(row.vm.name in to_update)
@@ -170,7 +169,7 @@ class IntroPage:
 
     def select_rows(self):
         for row in self.list_store:
-            row.selected = row.updates_available.value \
+            row.selected = row.updates_available \
                            in self.head_checkbox.allowed
 
 
@@ -185,7 +184,7 @@ class UpdateRowWrapper(RowWrapper):
     _UPDATE_PROGRESS = 7
     _STATUS = 8
 
-    def __init__(self, list_store, vm, theme: Theme, to_update: bool):
+    def __init__(self, list_store, vm, to_update: bool):
         updates_available = bool(vm.features.get('updates-available', False))
         if to_update and not updates_available:
             updates_available = None
@@ -194,22 +193,21 @@ class UpdateRowWrapper(RowWrapper):
         last_updates_check = vm.features.get('last-updates-check', None)
         last_update = vm.features.get('last-update', None)
 
-        label = QubeLabel[str(vm.label)]
         icon = load_icon(vm.icon)
-        name = QubeName(vm.name, label.name, theme)
+        name = QubeName(vm.name, str(vm.label))
 
         raw_row = [
             selected,
             icon,
             name,
-            UpdatesAvailable(updates_available, theme),
+            UpdatesAvailable.from_bool(updates_available),
             Date(last_updates_check),
             Date(last_update),
             0,
             UpdateStatus.Undefined,
         ]
 
-        super().__init__(list_store, vm, theme, raw_row)
+        super().__init__(list_store, vm, raw_row)
 
         self.buffer: str = ""
 
@@ -247,7 +245,7 @@ class UpdateRowWrapper(RowWrapper):
         if value and not updates_available:
             updates_available = None
         self.raw_row[self._UPDATES_AVAILABLE] = \
-            UpdatesAvailable(updates_available, self.theme)
+            UpdatesAvailable.from_bool(updates_available)
 
     @property
     def last_updates_check(self):
@@ -271,12 +269,31 @@ class UpdateRowWrapper(RowWrapper):
         self.raw_row[self._UPDATE_PROGRESS] = progress
 
 
+class UpdateHeaderCheckbox(HeaderCheckbox):
+    def __init__(self, checkbox_column_button, next_button):
+        super().__init__(checkbox_column_button,
+                         [UpdatesAvailable.YES,
+                          UpdatesAvailable.MAYBE,
+                          UpdatesAvailable.NO])
+        self.next_button = next_button
+
+    def all_action(self, *args, **kwargs):
+        self.next_button.set_sensitive(True)
+
+    def inconsistent_action(self, *args, **kwargs):
+        self.next_button.set_sensitive(True)
+
+    def none_action(self, *args, **kwargs):
+        self.next_button.set_sensitive(False)
+
+
 class Date:
     """
     Prints Date in desired way: unknown, today, yesterday, normal date.
 
     Comparable.
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__()
         self.date_format_source = "%Y-%m-%d %H:%M:%S"
@@ -315,41 +332,40 @@ class Date:
         return self.datetime < other.datetime
 
 
-class UpdatesAvailable:
+class UpdatesAvailable(Enum):
     """
     Formatted info about updates.
 
     Comparable.
     """
-    def __init__(self, value: Union[Optional[bool], str], theme: Theme):
-        super().__init__()
-        if isinstance(value, str):
-            if value.upper() == "NO":
-                value = False
-            elif value.upper() == "YES":
-                value = True
-            else:
-                value = None
 
+    YES = 0
+    MAYBE = 1
+    NO = 2
+
+    @staticmethod
+    def from_bool(value: Optional[bool]) -> "UpdatesAvailable":
+        if value:
+            return UpdatesAvailable.YES
         if value is None:
-            self.value = "MAYBE"
-            self.order = 1
-            self.color = "orange"
-        elif value:
-            self.value = "YES"
-            self.order = 0
-            self.color = "green"
-        else:
-            self.value = "NO"
-            self.order = 2
-            self.color = label_color_theme(theme, "black")
+            return UpdatesAvailable.MAYBE
+        return UpdatesAvailable.NO
+
+    @property
+    def color(self):
+        if self is UpdatesAvailable.YES:
+            return label_color_theme("green")
+        if self is UpdatesAvailable.MAYBE:
+            return label_color_theme("orange")
+        if self is UpdatesAvailable.NO:
+            return label_color_theme("black")
 
     def __str__(self):
         return f'<span foreground="{self.color}"><b>' \
-               + self.value + '</b></span>'
+               + self.name + '</b></span>'
 
-    def __eq__(self, other):
-        return self.order == other.order
+    def __eq__(self, other: "UpdatesAvailable"):
+        return self.value == other.value
 
-    def __lt__(self, other):
-        return self.order < other.order
+    def __lt__(self, other: "UpdatesAvailable"):
+        return self.value < other.value

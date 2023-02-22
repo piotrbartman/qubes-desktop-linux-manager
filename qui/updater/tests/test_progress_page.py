@@ -30,7 +30,7 @@ from gi.repository import Gtk
 from qui.updater.intro_page import UpdateRowWrapper
 from qui.updater.progress_page import ProgressPage, QubeUpdateDetails
 from qui.updater.tests.conftest import mock_settings
-from qui.updater.utils import Theme, ListWrapper, UpdateStatus
+from qui.updater.utils import ListWrapper, UpdateStatus
 
 
 @patch('threading.Thread')
@@ -50,8 +50,7 @@ def test_init_update(
     mock_threading.return_value = mock_thread
 
     sut = ProgressPage(
-        real_builder, Theme.LIGHT,
-        mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_label, mock_next_button, mock_cancel_button
     )
 
     sut.progress_list = mock_tree_view
@@ -76,8 +75,7 @@ def test_perform_update(
         mock_next_button, mock_cancel_button, mock_label, updatable_vms_list
 ):
     sut = ProgressPage(
-        real_builder, Theme.LIGHT,
-        mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_label, mock_next_button, mock_cancel_button
     )
 
     sut.vms_to_update = updatable_vms_list
@@ -108,11 +106,10 @@ def test_update_admin_vm(
         mock_list_store
 ):
     sut = ProgressPage(
-        real_builder, Theme.LIGHT,
-        mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_label, mock_next_button, mock_cancel_button
     )
 
-    admins = ListWrapper(UpdateRowWrapper, mock_list_store, sut.theme)
+    admins = ListWrapper(UpdateRowWrapper, mock_list_store)
     for vm in test_qapp.domains:
         if vm.klass in ("AdminVM",):
             admins.append_vm(vm)
@@ -134,8 +131,7 @@ def test_update_templates(
         mock_next_button, mock_cancel_button, mock_label, mock_text_view
 ):
     sut = ProgressPage(
-        real_builder, Theme.LIGHT,
-        mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_label, mock_next_button, mock_cancel_button
     )
     sut.do_update_templates = lambda *_args, **_kwargs: None
     sut.set_statuses = lambda *_args, **_kwargs: None
@@ -170,13 +166,12 @@ def test_do_update_templates(
     mock_subprocess.return_value = MockPorc()
 
     sut = ProgressPage(
-        real_builder, Theme.LIGHT,
-        mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_label, mock_next_button, mock_cancel_button
     )
     sut.read_stderrs = lambda *_args, **_kwargs: None
     sut.read_stdouts = lambda *_args, **_kwargs: None
 
-    to_update = ListWrapper(UpdateRowWrapper, mock_list_store, Theme.LIGHT)
+    to_update = ListWrapper(UpdateRowWrapper, mock_list_store)
     for vm in test_qapp.domains:
         if vm.klass in ("TemplateVM", "StandaloneVM"):
             to_update.append_vm(vm)
@@ -200,8 +195,7 @@ def test_get_update_summary(
         mock_next_button, mock_cancel_button, mock_label, updatable_vms_list
 ):
     sut = ProgressPage(
-        real_builder, Theme.LIGHT,
-        mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_label, mock_next_button, mock_cancel_button
     )
 
     updatable_vms_list[0].set_status(UpdateStatus.NoUpdatesFound)

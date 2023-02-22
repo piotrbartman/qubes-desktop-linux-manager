@@ -31,7 +31,7 @@ import gi
 
 from qui.updater.intro_page import UpdateRowWrapper
 from qui.updater.summary_page import RestartRowWrapper
-from qui.updater.utils import ListWrapper, Theme
+from qui.updater.utils import ListWrapper
 
 gi.require_version('Gtk', '3.0')
 gi.require_version('GdkPixbuf', '2.0')
@@ -248,7 +248,7 @@ def mock_settings():
 
 @pytest.fixture
 def all_vms_list(test_qapp, mock_list_store):
-    result = ListWrapper(UpdateRowWrapper, mock_list_store, Theme.LIGHT)
+    result = ListWrapper(UpdateRowWrapper, mock_list_store)
     for vm in test_qapp.domains:
         result.append_vm(vm)
     return result
@@ -256,7 +256,7 @@ def all_vms_list(test_qapp, mock_list_store):
 
 @pytest.fixture
 def updatable_vms_list(test_qapp, mock_list_store):
-    result = ListWrapper(UpdateRowWrapper, mock_list_store, Theme.LIGHT)
+    result = ListWrapper(UpdateRowWrapper, mock_list_store)
     for vm in test_qapp.domains:
         if vm.klass in ("AdminVM", "TemplateVM", "StandaloneVM"):
             result.append_vm(vm)
@@ -265,7 +265,7 @@ def updatable_vms_list(test_qapp, mock_list_store):
 
 @pytest.fixture
 def appvms_list(test_qapp, mock_list_store):
-    result = ListWrapper(RestartRowWrapper, mock_list_store, Theme.LIGHT)
+    result = ListWrapper(RestartRowWrapper, mock_list_store)
     for vm in test_qapp.domains:
         if vm.klass == "AppVM":
             result.append_vm(vm)

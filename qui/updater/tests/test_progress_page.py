@@ -100,13 +100,13 @@ def test_perform_update(
     idle_add.assert_has_calls(calls, any_order=True)
 
 
-@patch('subprocess.check_output')
+@patch('gi.repository.GObject.idle_add')
+@patch('subprocess.check_output', return_value=b'')
 def test_update_admin_vm(
-        mock_subprocess, real_builder, test_qapp,
+        _mock_subprocess, idle_add,  real_builder, test_qapp,
         mock_next_button, mock_cancel_button, mock_label, mock_text_view,
         mock_list_store
 ):
-    mock_subprocess.return_value = b''
     sut = ProgressPage(
         real_builder, Theme.LIGHT,
         mock_label, mock_next_button, mock_cancel_button
@@ -124,7 +124,8 @@ def test_update_admin_vm(
 
     sut.update_admin_vm(admins=admins)
 
-    assert sut.update_details.progress_textview.widget.text == "Update details"
+    calls = [call(mock_text_view.buffer.set_text, "Update details")]
+    idle_add.assert_has_calls(calls)
 
 
 @patch('gi.repository.GObject.idle_add')
@@ -147,12 +148,13 @@ def test_update_templates(
 
     sut.update_templates(updatable_vms_list, mock_settings)
 
-    calls = [call(sut.set_total_progress, 100)]
-    idle_add.assert_has_calls(calls)
-
-    assert sut.update_details.progress_textview.widget.text == "Details 0"
     sut.update_details.set_active_row(updatable_vms_list[2])
-    assert sut.update_details.progress_textview.widget.text == "Details 2"
+
+    calls = [call(sut.set_total_progress, 100),
+             call(mock_text_view.buffer.set_text, "Details 0"),
+             call(mock_text_view.buffer.set_text, "Details 2"),
+             ]
+    idle_add.assert_has_calls(calls)
 
 
 @patch('subprocess.Popen')

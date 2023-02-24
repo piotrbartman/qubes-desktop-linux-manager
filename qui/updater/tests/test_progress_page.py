@@ -134,7 +134,6 @@ def test_update_templates(
         real_builder, mock_label, mock_next_button, mock_cancel_button
     )
     sut.do_update_templates = lambda *_args, **_kwargs: None
-    sut.set_statuses = lambda *_args, **_kwargs: None
 
     sut.update_details.progress_textview = mock_text_view
     # chose vm to show details
@@ -160,8 +159,21 @@ def test_do_update_templates(
         mock_settings
 ):
     class MockPorc:
+        def __init__(self, finish_after_n_polls=2):
+            self.polls = 0
+            self.finish_after_n_polls = finish_after_n_polls
+
         def wait(self):
+            """Mock  waiting."""
             pass
+
+        def poll(self):
+            """After several polls return 0 (process finished)."""
+            self.polls += 1
+            if self.polls < self.finish_after_n_polls:
+                return None
+            return 0
+
 
     mock_subprocess.return_value = MockPorc()
 

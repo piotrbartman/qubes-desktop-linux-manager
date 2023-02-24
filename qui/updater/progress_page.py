@@ -19,6 +19,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 import re
+import signal
 import subprocess
 import threading
 import time
@@ -31,7 +32,6 @@ from locale import gettext as l
 
 from qubes_config.widgets.gtk_utils import copy_to_global_clipboard, \
     load_icon_at_gtk_size
-from qubes_config.widgets.utils import get_feature
 from qui.updater.updater_settings import Settings
 from qui.updater.utils import UpdateStatus, RowWrapper
 
@@ -67,6 +67,7 @@ class ProgressPage:
 
         self.progress_list: Gtk.TreeView = self.builder.get_object(
             "progress_list")
+        self.selection: Gtk.TreeSelection = self.progress_list.get_selection()
         self.progress_list.connect("row-activated", self.row_selected)
         progress_column: Gtk.TreeViewColumn = self.builder.get_object(
             "progress_column")
@@ -172,7 +173,6 @@ class ProgressPage:
         try:
             rows = {row.name: row for row in to_update}
             self.do_update_templates(rows, settings)
-            self.set_statuses(rows)
             GObject.idle_add(self.set_total_progress, 100)
         except subprocess.CalledProcessError as ex:
             for row in to_update:
@@ -201,21 +201,26 @@ class ProgressPage:
              '--targets', targets],
             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
-        self.read_err_thread = threading.Thread(
+        read_err_thread = threading.Thread(
             target=self.read_stderrs,
             args=(proc, rows)
         )
-        # self.read_stderrs(proc, rows)
-        self.read_out_thread = threading.Thread(
+        read_out_thread = threading.Thread(
             target=self.read_stdouts,
             args=(proc, rows)
         )
-        # self.read_stdouts(proc, rows)
-        self.read_err_thread.start()
-        self.read_out_thread.start()
-        while proc.poll() is None or self.read_out_thread.is_alive() or self.read_err_thread.is_alive():
+        read_err_thread.start()
+        read_out_thread.start()
+
+        while proc.poll() is None \
+                or read_out_thread.is_alive() \
+                or read_err_thread.is_alive():
             time.sleep(1)
-        # proc.wait()
+            if self.exit_triggered and proc.poll() is None:
+                proc.send_signal(signal.SIGINT)
+                proc.wait()
+                read_err_thread.join()
+                read_out_thread.join()
 
     def read_stderrs(self, proc, rows):
         for untrusted_line in iter(proc.stderr.readline, ''):
@@ -229,19 +234,26 @@ class ProgressPage:
         ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
         line = ansi_escape.sub('', untrusted_line.decode().rstrip())
         try:
-            name, prog = line.split()
-            progress = int(float(prog))
+            name, status, info = line.split()
+            if status == "pending":
+                progress = int(float(info))
+                GObject.idle_add(
+                    rows[name].set_update_progress, progress)
+                total_progress = sum(
+                    row.get_update_progress()
+                    for row in rows.values()) / len(rows)
+                GObject.idle_add(
+                    self.set_total_progress, total_progress)
+
         except ValueError:
             return
 
-        GObject.idle_add(
-            rows[name].set_update_progress, progress)
-        total_progress = sum(
-            row.get_update_progress()
-            for row in rows.values()) / len(rows)
-
-        GObject.idle_add(
-            self.set_total_progress, total_progress)
+        try:
+            if status == "done":
+                update_status = UpdateStatus.from_name(info)
+                GObject.idle_add(rows[name].set_status, update_status)
+        except KeyError:
+            return
 
     def read_stdouts(self, proc, rows):
         curr_name_out = ""
@@ -252,28 +264,12 @@ class ProgressPage:
                 maybe_name, text = line.split(' ', 1)
                 if maybe_name[:-1] in rows.keys():
                     curr_name_out = maybe_name[:-1]
-                rows[curr_name_out].append_text_view(text)
+                if curr_name_out:
+                    rows[curr_name_out].append_text_view(text)
             else:
                 break
         self.update_details.update_buffer()
         proc.stdout.close()
-
-    @staticmethod
-    def set_statuses(rows):
-        for row in rows.values():
-            progress = row.get_update_progress()
-            if progress == 100.:
-                if get_feature(row.vm, "last-updates-check") \
-                        == get_feature(row.vm, "last-update"):
-                    GObject.idle_add(
-                        row.set_status, UpdateStatus.Success)
-                else:
-                    GObject.idle_add(
-                        row.set_status,
-                        UpdateStatus.NoUpdatesFound
-                    )
-            else:
-                GObject.idle_add(row.set_status, UpdateStatus.Error)
 
     def set_total_progress(self, progress):
         """Set the value of main big progressbar."""
@@ -286,6 +282,7 @@ class ProgressPage:
 
     def show(self):
         """Show this page and handle buttons."""
+        self.selection.unselect_all()
         self.update_details.set_active_row(None)
         self.stack.set_visible_child(self.page)
 
@@ -296,8 +293,11 @@ class ProgressPage:
         """Handle clicking on a row to show more info.
 
         Set updated details (name of vm and textview)."""
+        self.selection.unselect_all()
+        self.selection.select_path(path)
         self.update_details.set_active_row(
             self.vms_to_update[path.get_indices()[0]])
+
 
     def get_update_summary(self):
         """Returns update summary.

@@ -22,7 +22,7 @@ import ast
 import functools
 
 from enum import Enum
-from typing import Callable, List
+from typing import List
 from gi.repository import Gtk
 
 
@@ -33,6 +33,7 @@ def disable_checkboxes(func):
     Clicking on the header checkbox sets the value of the rows checkboxes, so it
     calls the connected method which sets the header checkbox, and so on...
     """
+
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
         if not hasattr(self, "disable_checkboxes"):
@@ -147,7 +148,7 @@ class QubeName:
         self.color = color
 
     def __str__(self):
-        return f'<span foreground="{label_color_theme(self.color)}'\
+        return f'<span foreground="{label_color_theme(self.color)}' \
                '"><b>' + self.name + '</b></span>'
 
     def __eq__(self, other):
@@ -190,6 +191,14 @@ class UpdateStatus(Enum):
 
     def __bool__(self):
         return self == UpdateStatus.Success
+
+    @staticmethod
+    def from_name(name):
+        names = {"success": UpdateStatus.Success,
+                 "error": UpdateStatus.Error,
+                 "no_updates": UpdateStatus.NoUpdatesFound,
+                 "cancelled": UpdateStatus.Cancelled}
+        return names[name]
 
 
 class RowWrapper:

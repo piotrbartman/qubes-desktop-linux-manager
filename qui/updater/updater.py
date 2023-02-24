@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position,import-error
-import time
 
 import pkg_resources
 import gi  # isort:skip
 
-from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, \
-    load_theme, is_theme_light
+from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, load_theme
 from qui.updater.progress_page import ProgressPage
 from qui.updater.style import load_css
 from qui.updater.updater_settings import Settings
@@ -108,8 +106,10 @@ class QubesUpdater(Gtk.Application):
             cell.set_property("markup", str(obj))
 
         for col, name in headers:
-            renderer: Gtk.CellRenderer = self.builder.get_object(name + "_renderer")
-            column: Gtk.TreeViewColumn = self.builder.get_object(name + "_column")
+            renderer: Gtk.CellRenderer = self.builder.get_object(
+                name + "_renderer")
+            column: Gtk.TreeViewColumn = self.builder.get_object(
+                name + "_column")
             column.set_cell_data_func(renderer, cell_data_func, col)
             renderer.props.ypad = 10
             if not name.endswith("name") and name != "summary_status":
@@ -163,11 +163,12 @@ class QubesUpdater(Gtk.Application):
                     "Waiting for current qube to finish updating."
                     " Updates for remaining qubes have been cancelled."))
             dialog.show()
-            while self.progress_page.update_thread.is_alive():
-                while Gtk.events_pending():
-                    Gtk.main_iteration()
-                time.sleep(1)
-            dialog.hide()
+            # while self.progress_page.update_thread.is_alive():
+            #     while Gtk.events_pending():
+            #         Gtk.main_iteration()
+            #     time.sleep(1)
+            # # self.progress_page.update_thread.join()
+            # dialog.hide()
         else:
             self.exit_updater()
 

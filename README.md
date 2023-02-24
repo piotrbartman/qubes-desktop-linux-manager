@@ -18,6 +18,21 @@ They are run (and restarted on crash) by systemd services:
 
 In case of problems, you can view system log with `journalctl --user -u qubes-widget@[widget_name]`.
 
+# Policy editor
+
+![policy_editor.png](images%2Fpolicy_editor.png)
+
+To run the policy editor, use
+```commandline
+$ qubes-policy-editor file_name
+```
+
+You can use an existing policy file name to edit an existing file (e.g. `90-default`),
+name an include file (e.g. `include/admin-ro`) to edit it, or name a new file to create it.
+
+The policy editor will not allow you to save a policy file with syntactic errors,
+so it's preferable to use it rather than directly editing the policy files.
+
 ## Translation
 
 To add more translation languages, add a directory in locales with a name corresponding to the target language code, with a subdirectory LC\_MESSAGES in it, copy the file locales/desktop-linux-manager.po into it, and edit its headers to reflect the translation details.

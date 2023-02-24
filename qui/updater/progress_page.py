@@ -94,7 +94,6 @@ class ProgressPage:
         self.header_label.set_text(l("Update in progress..."))
         self.header_label.set_halign(Gtk.Align.CENTER)
 
-        # pylint: disable=attribute-defined-outside-init
         self.update_thread = threading.Thread(
             target=self.perform_update,
             args=(settings,)
@@ -202,9 +201,21 @@ class ProgressPage:
              '--targets', targets],
             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
-        self.read_stderrs(proc, rows)
-        self.read_stdouts(proc, rows)
-        proc.wait()
+        self.read_err_thread = threading.Thread(
+            target=self.read_stderrs,
+            args=(proc, rows)
+        )
+        # self.read_stderrs(proc, rows)
+        self.read_out_thread = threading.Thread(
+            target=self.read_stdouts,
+            args=(proc, rows)
+        )
+        # self.read_stdouts(proc, rows)
+        self.read_err_thread.start()
+        self.read_out_thread.start()
+        while proc.poll() is None or self.read_out_thread.is_alive() or self.read_err_thread.is_alive():
+            time.sleep(1)
+        # proc.wait()
 
     def read_stderrs(self, proc, rows):
         for untrusted_line in iter(proc.stderr.readline, ''):

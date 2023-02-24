@@ -179,7 +179,7 @@ class SummaryPage:
         self.updated_tmpls = [
             row for row in vm_updated
             if bool(row.status)
-               and QubeClass[row.vm.klass] == QubeClass.TemplateVM
+            and QubeClass[row.vm.klass] == QubeClass.TemplateVM
         ]
         possibly_changed_vms = {appvm for template in self.updated_tmpls
                                 for appvm in template.vm.appvms
@@ -266,14 +266,14 @@ class RestartRowWrapper(RowWrapper):
         self.refresh_additional_info()
 
     def refresh_additional_info(self):
-        self.raw_row[4] = ''
+        self.raw_row[RestartRowWrapper._ADDITIONAL_INFO] = ''
         if self.selected and not self.is_sys_qube:
-            self.raw_row[4] = 'Restarting an app ' \
-                              'qube will shut down all running applications'
+            self.raw_row[RestartRowWrapper._ADDITIONAL_INFO] = \
+                'Restarting an app qube will shut down all running applications'
         if self.selected and self.is_excluded:
-            self.raw_row[4] = '<span foreground="red">This qube has been ' \
-                              'explicitly disabled from restarting in ' \
-                              'settings</span>'
+            self.raw_row[RestartRowWrapper._ADDITIONAL_INFO] = \
+                '<span foreground="red">This qube has been explicitly ' \
+                'disabled from restarting in settings</span>'
 
     @property
     def icon(self):

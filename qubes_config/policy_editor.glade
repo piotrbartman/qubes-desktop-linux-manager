@@ -45,6 +45,7 @@
     <property name="hexpand">False</property>
     <property name="vexpand">False</property>
     <property name="window-position">center</property>
+    <property name="icon-name">qubes-policy-editor</property>
     <child>
       <object class="GtkBox">
         <property name="visible">True</property>
@@ -376,6 +377,7 @@
                       <object class="GtkListBox" id="open_policy_list">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="activate-on-single-click">False</property>
                         <child type="placeholder">
                           <object class="GtkLabel">
                             <property name="visible">True</property>

@@ -62,7 +62,7 @@
         </context>
 
         <context id="argument" style-ref="argument">
-          <match>\+\w+</match>
+          <match>\+[\w\.\_\-]+</match>
         </context>
 
         <context id="token" style-ref="token">

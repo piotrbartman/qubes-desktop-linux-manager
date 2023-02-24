@@ -45,7 +45,7 @@ HEADER_NORMAL = ' service_name\targument\tsource_qube' \
 class FileListBoxRow(Gtk.ListBoxRow):
     def __init__(self, filename):
         super().__init__()
-        label = Gtk.Label()
+        label = Gtk.Label(xalign=0)
         label.set_text(filename)
         self.add(label)
         self.show_all()
@@ -63,6 +63,8 @@ class OpenDialogHandler:
         self.ok_button: Gtk.Button = builder.get_object('open_button_ok')
         self.cancel_button: Gtk.Button = \
             builder.get_object('open_button_cancel')
+
+        self.file_list.connect('row-activated', self._ok)
 
         # populate dialog
         for file in self.policy_client.policy_list():
@@ -246,6 +248,7 @@ class PolicyEditor(Gtk.Application):
             "undo": self._undo,
             "copy": self._copy,
             "paste": self._paste,
+            "reset": self._reset,
             "about": self._about,
             "help": self._toggle_help,
             "save_exit": self._save_exit}
@@ -283,6 +286,8 @@ class PolicyEditor(Gtk.Application):
             "_Copy", "win.copy", Gdk.KEY_c))
         edit_menu.add(self._get_menu_item_with_ac(
             "_Paste", "win.paste", Gdk.KEY_v))
+        edit_menu.add(self._get_menu_item_with_ac(
+            "Re_set", "win.reset", None))
         self.menu_bar.add(edit_item)
 
         # About
@@ -369,6 +374,10 @@ class PolicyEditor(Gtk.Application):
         entry = Gtk.Entry()
         ask_dialog.get_content_area().pack_end(entry, False, False, 0)
 
+        # manually connect Enter to closing the window
+        entry.connect('activate', lambda *_args:
+            ask_dialog.response(Gtk.ResponseType.OK))
+
         ask_dialog.show_all()
         response = ask_dialog.run()
         if response == Gtk.ResponseType.CANCEL:
@@ -390,7 +399,7 @@ class PolicyEditor(Gtk.Application):
                        f"Policy file: {new_name} already exists.")
             return
 
-        self.token = "any"
+        self.token = "new"
         self._set_policy_file(new_name, "")
 
 
@@ -433,13 +442,29 @@ class PolicyEditor(Gtk.Application):
     def _paste(self, *_args):
         self.source_buffer.paste_clipboard(self.clipboard, None, True)
 
+    def _reset(self, *_args):
+        if self.token != "new":
+            self.open_policy_file(self.filename)
+        else:
+            self._set_policy_file(self.filename, "")
+
     def _about(self, *_args):
         self.about_window.show()
 
     def _toggle_help(self, *_args):
         self.help_window.set_visible(not self.help_window.get_visible())
 
-    def _set_policy_file(self, name, contents):
+    def _set_policy_file(self, name,
+                         contents=''):
+        """If name is an empty string, disable all available edit buttons
+         and ignore contents to show a generic error message"""
+        if not name:
+            contents = "Create new file or open an existing one."
+            self.source_view.set_sensitive(False)
+            self.error_info.set_visible(False)
+        else:
+            self.source_view.set_sensitive(True)
+            self.error_info.set_visible(True)
         self.filename = name
         self.source_buffer.set_text(contents)
         self.window_title = 'Qubes OS Policy Editor - ' + self.filename
@@ -449,32 +474,40 @@ class PolicyEditor(Gtk.Application):
         self.action_items['save_exit'].set_enabled(False)
 
     def open_policy_file(self, name: Optional[str]):
+        """Open file of provided name.
+        If name is None, nothing will happen.
+        If name is an empty string, do not open a file and show information
+        about that.
+        If name is a non-empty string, try to open provided file. If failed,
+        ask user what to do.
+        """
         if name is None:
             return
-        self.source_view.set_sensitive(True)
-        self.error_info.set_visible(True)
         if name == '':
-            text = "Create new file or open an existing one."
             self.token = None
-            self.source_view.set_sensitive(False)
-            self.error_info.set_visible(False)
+            text = ''
         else:
             try:
                 text, self.token = self.policy_client.policy_get(name)
-            except subprocess.CalledProcessError:
-                response = ask_question(
-                    self.main_window, "Policy file not found",
-                    "File {} not found. Do you want to create a "
-                    "new policy file?".format(name))
+            except subprocess.CalledProcessError as ex:
+                if ex.returncode == 126:
+                    show_error(self.main_window, "Access denied",
+                               "Access denied to file {}.".format(name))
+                    response = Gtk.ResponseType.NO
+                else:
+                    response = ask_question(
+                        self.main_window, "Policy file not found",
+                        "File {} not found. Do you want to create a "
+                        "new policy file?".format(name))
                 if response == Gtk.ResponseType.YES:
                     # make new file
                     text = ""
-                    self.token = "any"
+                    self.token = "new"
                 elif response == Gtk.ResponseType.NO:
                     # make no file
-                    text = "Create new file or open an existing one."
+                    name = ""
+                    text = ""
                     self.token = None
-                    self.source_view.set_sensitive(False)
                 else:
                     # quit
                     self._quit()

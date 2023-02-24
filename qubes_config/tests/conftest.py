@@ -413,7 +413,10 @@ Test * test-red test-blue deny"""
 
     def policy_replace(self, filename, policy_text, token='any'):
         """Replace file contents with provided contents."""
-        if token != 'any':
+        if token == 'new':
+            if filename in self.file_tokens:
+                raise subprocess.CalledProcessError(2, 'test')
+        elif token != 'any':
             if token != self.file_tokens.get(filename, ''):
                 raise subprocess.CalledProcessError(2, 'test')
         self.files[filename] = policy_text

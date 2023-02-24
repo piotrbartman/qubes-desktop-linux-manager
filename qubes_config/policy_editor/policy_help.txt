@@ -6,7 +6,7 @@ Each policy file consists of one or more policy lines:
 
 <b>Service</b> corresponds to a Qubes OS RPC service.
 
-<b>>Argument</b> is the argument the service is called with; it can be empty (represented by a single +), match any argument (represented by *), or be a specific argument, for example in the following line:
+<b>>Argument</b> is the argument the service is called with; it can be empty (represented by a single +), match any argument (represented by *), or match a specific argument (always prefixed with a +), for example in the following line:
 
 <tt>qubes.StartApp  +firefox    work    @dispvm allow</tt>
 
@@ -15,7 +15,7 @@ the argument to StartApp service is firefox.
 Each Qubes RPC call is made from a specific qube (source qube) to another qube (destination qube). To specify a qube, you can use one of the following:
 - a literal qube name (e.g. work, sys-net, fedora-37 )
 - <b>@adminvm</b> - the admin qube (aka dom0)
-- <b>@anyvm</b> - any qube (this cannot be used as the value of a <b>target=</b> parameter)
+- <b>@anyvm</b> - any qube
 - <b>@default</b> - default target, matches when the service was invoked without specifying a target, e.g. when you invoke <tt>qvm-copy</tt> without specifying a qube (this can only be used as a destination qube or a value for parameters like target=)
 - <b>@dispvm</b> - a new disposable qube based on the source qube's default disposable vm template (cannot be used as source qube)
 - <b>@dispvm:QUBENAME</b> - a new disposable qube based on the specified disposable qube template (or, if used as a source qube, any disposable qube based on the specified disposable qube template)
@@ -30,6 +30,7 @@ If the action is <b>deny</b>, no further parameters are possible - the service w
 If the action is <b>ask</b>, the user will get a policy confirmation window, asking if they want to allow the service to be performed and to chose the service target. It is not possible to select a qube that policy would deny. By default no qube is selected, even if the caller provided some, but policy can specify default value using <b>default_target=</b> parameter.
 
 If the action is <b>allow</b>, the service will just be executed. <b>allow</b> can have a <b>target=</b> parameter that overrides the user-provided target with the target specified in the parameter (which can be very useful for services like <tt>qubes.Gpg</tt>, where you know you only want to use a certain target, such as your key qube).
+<b>target=</b> can be a literal qube name or one of the following tokens: @adminvm, @dispvm (new disposable qube based on source's default disposable template) or @dispvm:QUBENAME (new disposable qube based on specified template)
 
 For example, in the case of <tt>qubes.Filecopy</tt> service, if you have the following policy:
 

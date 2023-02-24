@@ -24,7 +24,6 @@ import sys
 from typing import Dict, Optional, List, Union
 from html import escape
 import pkg_resources
-import subprocess
 import logging
 
 import qubesadmin
@@ -380,13 +379,6 @@ class GlobalConfig(Gtk.Application):
     def _activate_link(self, _widget, url):
         open_url_in_disposable(url, self.qapp)
         return True
-
-    def _open_url_in_dvm(self, url):
-        default_dvm = self.qapp.default_dispvm
-        subprocess.run(
-            ['qvm-run', '-p', '--service', f'--dispvm={default_dvm}',
-             'qubes.OpenURL'], input=url.encode(), check=False,
-            stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
     def get_current_page(self) -> Optional[PageHandler]:
         """Get currently visible page."""

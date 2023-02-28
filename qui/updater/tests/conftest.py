@@ -145,6 +145,7 @@ def real_builder():
         'qui', 'updater.glade'))
     return builder
 
+
 class MockWidget:
     def __init__(self):
         self.sensitive = None

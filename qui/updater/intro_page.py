@@ -84,7 +84,7 @@ class IntroPage:
             "restart_button")
 
     def populate_vm_list(self, qapp, settings):
-        """Adds to list any updatable vms with a updates info."""
+        """Adds to list any updatable vms with an update info."""
         self.list_store = ListWrapper(
             UpdateRowWrapper, self.vm_list.get_model())
 

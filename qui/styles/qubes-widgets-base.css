@@ -34,7 +34,7 @@ label {
 }
 
 .qube-box-blue {
-    color: @bluelabel;
+    color: @blue-label;
 }
 
 .qube-box-purple {

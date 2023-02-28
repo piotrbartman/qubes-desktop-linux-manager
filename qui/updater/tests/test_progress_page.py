@@ -134,6 +134,8 @@ def test_update_templates(
         real_builder, mock_label, mock_next_button, mock_cancel_button
     )
     sut.do_update_templates = lambda *_args, **_kwargs: None
+    total_progress = []
+    sut.set_total_progress = lambda prog: total_progress.append(prog)
 
     sut.update_details.progress_textview = mock_text_view
     # chose vm to show details
@@ -145,8 +147,8 @@ def test_update_templates(
 
     sut.update_details.set_active_row(updatable_vms_list[2])
 
-    calls = [call(sut.set_total_progress, 100),
-             call(mock_text_view.buffer.set_text, "Details 0"),
+    assert total_progress[-1] == 100
+    calls = [call(mock_text_view.buffer.set_text, "Details 0"),
              call(mock_text_view.buffer.set_text, "Details 2"),
              ]
     idle_add.assert_has_calls(calls)

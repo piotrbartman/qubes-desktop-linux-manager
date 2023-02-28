@@ -21,7 +21,9 @@
 from typing import Optional, Union, Callable
 
 import pkg_resources
+import gi
 
+gi.require_version('Gtk', '3.0')  # isort:skip
 from gi.repository import Gtk, GObject
 
 from qubes_config.global_config.vm_flowbox import VMFlowboxHandler

@@ -312,6 +312,7 @@
                                     <style>
                                       <class name="button_text"/>
                                       <class name="button_highlighted"/>
+                                      <class name="flat"/>
                                     </style>
                                   </object>
                                   <packing>
@@ -516,6 +517,7 @@
             <style>
               <class name="ok_button"/>
               <class name="button_highlighted"/>
+              <class name="flat"/>
               <class name="settings_bottom_button"/>
             </style>
           </object>

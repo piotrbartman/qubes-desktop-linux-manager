@@ -107,6 +107,7 @@ class ProgressPage:
                   if row.vm.klass == 'AdminVM']
         templs = [row for row in self.vms_to_update
                   if row.vm.klass != 'AdminVM']
+        self.set_total_progress(0)
 
         if admins:
             self.update_admin_vm(admins)
@@ -136,12 +137,11 @@ class ProgressPage:
 
         try:
             with Ticker(admin):
-                output = subprocess.check_output(
+                untrusted_output = subprocess.check_output(
                     ['sudo', 'qubesctl', '--dom0-only', '--no-color',
                      'pkg.upgrade', 'refresh=True'],
-                    stderr=subprocess.STDOUT).decode()
-                ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
-                output = ansi_escape.sub('', output)
+                    stderr=subprocess.STDOUT)
+                output = self._sanitize_line(untrusted_output)
 
                 GObject.idle_add(admin.append_text_view, output)
                 GObject.idle_add(admin.set_status, UpdateStatus.Success)
@@ -173,7 +173,7 @@ class ProgressPage:
         try:
             rows = {row.name: row for row in to_update}
             self.do_update_templates(rows, settings)
-            GObject.idle_add(self.set_total_progress, 100)
+            self.set_total_progress(100)
         except subprocess.CalledProcessError as ex:
             for row in to_update:
                 GObject.idle_add(
@@ -231,19 +231,16 @@ class ProgressPage:
         proc.stderr.close()
 
     def handle_err_line(self, untrusted_line, rows):
-        ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
-        line = ansi_escape.sub('', untrusted_line.decode().rstrip())
+        line = self._sanitize_line(untrusted_line)
         try:
             name, status, info = line.split()
-            if status == "pending":
+            if status == "updating":
                 progress = int(float(info))
-                GObject.idle_add(
-                    rows[name].set_update_progress, progress)
+                rows[name].set_update_progress(progress)
                 total_progress = sum(
                     row.get_update_progress()
                     for row in rows.values()) / len(rows)
-                GObject.idle_add(
-                    self.set_total_progress, total_progress)
+                self.set_total_progress(total_progress)
 
         except ValueError:
             return
@@ -259,17 +256,23 @@ class ProgressPage:
         curr_name_out = ""
         for untrusted_line in iter(proc.stdout.readline, ''):
             if untrusted_line:
-                ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
-                line = ansi_escape.sub('', untrusted_line.decode())
+                line = self._sanitize_line(untrusted_line)
                 maybe_name, text = line.split(' ', 1)
-                if maybe_name[:-1] in rows.keys():
-                    curr_name_out = maybe_name[:-1]
+                suffix = len(":out:")
+                if maybe_name[:-suffix] in rows.keys():
+                    curr_name_out = maybe_name[:-suffix]
                 if curr_name_out:
                     rows[curr_name_out].append_text_view(text)
             else:
                 break
         self.update_details.update_buffer()
         proc.stdout.close()
+
+    @staticmethod
+    def _sanitize_line(untrusted_line: bytes) -> str:
+        ansi_escape = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
+        line = ansi_escape.sub('', untrusted_line.decode())
+        return line
 
     def set_total_progress(self, progress):
         """Set the value of main big progressbar."""
@@ -297,7 +300,6 @@ class ProgressPage:
         self.selection.select_path(path)
         self.update_details.set_active_row(
             self.vms_to_update[path.get_indices()[0]])
-
 
     def get_update_summary(self):
         """Returns update summary.

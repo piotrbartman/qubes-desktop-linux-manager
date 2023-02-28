@@ -2,13 +2,17 @@
     font-family: 'Source Sans Pro';
     font-style: normal;
     font-weight: 700;
-    font-size: 16px;
+    font-size: 1.3em;
 
     color: @light-gray;
 }
 
 .ok_button:disabled {
     color: @medium-gray;
+}
+
+.ok_button:hover {
+    border: 0.8px solid @light-gray;
 }
 
 .bottom_button {
@@ -59,7 +63,7 @@
     font-family: 'Source Sans Pro';
     font-style: normal;
     font-weight: 400;
-    font-size: 16px;
+    font-size: 1.3em;
 
     border: 0.4px solid @dark-gray-2;
     border-radius: 3px;
@@ -81,7 +85,7 @@
     font-family: 'Source Sans Pro';
     font-style: normal;
     font-weight: 700;
-    font-size: 13px;
+    font-size: 1.1em;
 
     border: 0.4px solid @dark-gray-2;
     border-radius: 3px;
@@ -99,7 +103,7 @@
     font-family: 'Source Sans Pro';
     font-style: normal;
     font-weight: 400;
-    font-size: 13px;
+    font-size: 1.1em;
 
     border: 0.4px solid @dark-gray-2;
     border-radius: 3px;
@@ -108,14 +112,14 @@
 }
 
 .copy_button {
-    font-size: 13px;
+    font-size: 1.1em;
 }
 
 .section_title {
     font-family: 'Source Sans Pro';
     font-style: normal;
     font-weight: 300;
-    font-size: 15px;
+    font-size: 1.25em;
 
     color: @text-color;
 }
@@ -124,7 +128,7 @@
     font-family: 'Source Sans Pro';
     font-style: normal;
     font-weight: 400;
-    font-size: 12px;
+    font-size: 1em;
 
     color: @text-color;
 }
@@ -181,14 +185,14 @@ checkbutton check {
 }
 
 .text_container {
-    padding-left: 18px;
+    padding-left: 0px;
     padding-top: 18px;
     padding-bottom: 16px;
 
     font-family: 'Source Sans Pro';
     font-style: normal;
     font-weight: 400;
-    font-size: 12px;
+    font-size: 1em;
 
     color: @text-color;
 }
@@ -206,7 +210,7 @@ treeview.view
   font-family: 'Source Sans Pro';
   font-style: normal;
   font-weight: 400;
-  font-size: 12px;
+  font-size: 1em;
 
   color: @text-color;
 }

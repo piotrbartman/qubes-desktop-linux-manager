@@ -78,8 +78,12 @@ class SummaryPage:
             "restart_checkbox_column")
         restart_checkbox_column.connect("clicked",
                                         self.on_header_toggled)
-        restart_header_button = restart_checkbox_column.get_button()
+        restart_header_button: Gtk.Button = restart_checkbox_column.get_button()
         restart_header_button.connect('realize', pass_through_event_window)
+        self.restart_header: Gtk.Label = self.builder.get_object(
+            "restart_header")
+        self.restart_scrolled_window: Gtk.ScrolledWindow = \
+            self.builder.get_object("restart_scrolled_window")
 
         self.head_checkbox_button: Gtk.CheckButton = self.builder.get_object(
             "restart_checkbox_header")
@@ -142,6 +146,7 @@ class SummaryPage:
         """Returns True if page is shown by stack."""
         return self.stack.get_visible_child() == self.page
 
+    @disable_checkboxes
     def show(
             self,
             qube_updated_num: int,
@@ -167,6 +172,9 @@ class SummaryPage:
         self.cancel_button.set_label(l("_Back"))
         self.cancel_button.show()
         self.refresh_buttons()
+        if len(self.list_store) == 0:
+            self.restart_scrolled_window.set_visible(False)
+            self.restart_header.set_text(l("No qubes need to be restarted."))
 
     @disable_checkboxes
     def populate_restart_list(self, restart, vm_updated, settings):

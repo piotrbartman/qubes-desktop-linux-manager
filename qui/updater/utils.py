@@ -20,9 +20,12 @@
 # USA.
 import ast
 import functools
+import gi
 
 from enum import Enum
 from typing import List
+
+gi.require_version('Gtk', '3.0')  # isort:skip
 from gi.repository import Gtk
 
 

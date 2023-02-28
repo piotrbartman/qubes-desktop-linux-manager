@@ -123,6 +123,9 @@ class QubesUpdater(Gtk.Application):
 
         self.intro_page.populate_vm_list(self.qapp, self.settings)
         self.main_window.show_all()
+        width = self.intro_page.vm_list.get_preferred_width().natural_width
+        self.main_window.resize(width + 50, int(width * 1.2))
+        self.main_window.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
 
     def open_settings_window(self, _emitter):
         self.settings.show()
@@ -163,12 +166,10 @@ class QubesUpdater(Gtk.Application):
                     "Waiting for current qube to finish updating."
                     " Updates for remaining qubes have been cancelled."))
             dialog.show()
-            # while self.progress_page.update_thread.is_alive():
-            #     while Gtk.events_pending():
-            #         Gtk.main_iteration()
-            #     time.sleep(1)
-            # # self.progress_page.update_thread.join()
-            # dialog.hide()
+            while self.progress_page.update_thread.is_alive():
+                while Gtk.events_pending():
+                    Gtk.main_iteration()
+            dialog.hide()
         else:
             self.exit_updater()
 

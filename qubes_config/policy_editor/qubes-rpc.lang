@@ -54,7 +54,7 @@
         </context>
 
         <context id="service" style-ref="service">
-          <match>\w*\.\w*</match>
+          <match>^\S+</match>
         </context>
 
         <context id="wildcard" style-ref="wildcard">

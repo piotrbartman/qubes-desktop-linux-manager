@@ -17,6 +17,7 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with this program; if not, see <http://www.gnu.org/licenses/>.
+import html
 import subprocess
 import sys
 import re
@@ -212,7 +213,7 @@ class PolicyEditor(Gtk.Application):
 
         self.menu_bar: Gtk.MenuBar = self.builder.get_object('menubar')
 
-        self.main_window.connect('delete-event', self._quit)
+        self.main_window.connect('delete-event', self._ask_to_quit)
 
         self.setup_actions()
         self.setup_menu()
@@ -336,7 +337,7 @@ class PolicyEditor(Gtk.Application):
             self.source_buffer.set_style_scheme(scheme)
 
     def _ask_to_quit(self, *_args):
-        if self.action_items['save'].get_enabled():
+        if self.source_buffer.get_modified():
             # changes can be saved
             response = ask_question(
                 self.main_window,
@@ -344,10 +345,11 @@ class PolicyEditor(Gtk.Application):
                 "Do you want to save changes before exiting?")
             if response == Gtk.ResponseType.YES:
                 if not self._save():
-                    return
+                    return True
             elif response == Gtk.ResponseType.CANCEL:
-                return
+                return True
         self._quit()
+        return False
 
     def _quit(self, *_args):
         self.quit()
@@ -459,7 +461,7 @@ class PolicyEditor(Gtk.Application):
         """If name is an empty string, disable all available edit buttons
          and ignore contents to show a generic error message"""
         if not name:
-            contents = "Create new file or open an existing one."
+            contents = "# Create new file or open an existing one."
             self.source_view.set_sensitive(False)
             self.error_info.set_visible(False)
         else:
@@ -524,6 +526,7 @@ class PolicyEditor(Gtk.Application):
                 StringPolicy(policy={'__main__': line}).rules
             except PolicySyntaxError as ex:
                 msg = str(ex).split(':', 2)[-1]
+                msg = html.escape(msg, quote=True)
                 errors.append('<b>Line ' + str(lineno + 1) + '</b>:' + msg)
 
         if errors:

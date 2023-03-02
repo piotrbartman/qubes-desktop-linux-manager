@@ -1,3 +1,18 @@
+qubes-desktop-linux-manager (4.2.5-1) unstable; urgency=medium
+
+  [ Marta Marczykowska-Górecka ]
+  * Improve sizing and fix window size
+  * Implement policy editor
+  * Pylint update
+  * Add include/ dir to policy editor
+  * Add Policy editor to menu
+  * Add icon + code review fixes for policy editor
+  * Add readme to policy editor
+  * Improve service highlighting and fix error msg
+  * Fix asking for new file name in policy editor
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Thu, 02 Mar 2023 15:46:07 +0100
+
 qubes-desktop-linux-manager (4.2.4-1) unstable; urgency=medium
 
   [ Marta Marczykowska-Górecka ]

@@ -4,8 +4,6 @@
   <requires lib="gtk+" version="3.24"/>
   <!-- interface-css-provider-path qubes-global-config-light.css -->
   <object class="GtkWindow" id="main_window">
-    <property name="width-request">1800</property>
-    <property name="height-request">1200</property>
     <property name="can-focus">False</property>
     <property name="title" translatable="yes">Qubes OS Global Config</property>
     <property name="window-position">center</property>
@@ -298,6 +296,7 @@
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">Those options are used as default for all qubes, except for those with connected PCI devices.</property>
+                            <property name="wrap">True</property>
                             <property name="xalign">0</property>
                             <style>
                               <class name="explanation"/>
@@ -353,7 +352,7 @@
                           <object class="GtkComboBoxText" id="basics_kernel_combo">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="margin-end">100</property>
+                            <property name="margin-end">50</property>
                           </object>
                           <packing>
                             <property name="left-attach">0</property>
@@ -379,6 +378,7 @@
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">This is the default kernel for Linux qubes. It can also be changed per-qube in Qube Settings.</property>
+                            <property name="wrap">True</property>
                             <property name="xalign">0</property>
                             <style>
                               <class name="explanation"/>
@@ -479,6 +479,7 @@
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
                                 <property name="label" translatable="yes">Default disposable qube template:</property>
+                                <property name="wrap">True</property>
                                 <property name="xalign">0</property>
                               </object>
                               <packing>
@@ -515,6 +516,7 @@
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">Settings related to window management. You will need to restart the affected qubes to see changes made here.</property>
+                            <property name="wrap">True</property>
                             <property name="xalign">0</property>
                             <style>
                               <class name="explanation"/>
@@ -751,7 +753,6 @@ Documentation will open in a disposable qube.</property>
                 <property name="name">usb</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="hscrollbar-policy">never</property>
                 <property name="shadow-type">in</property>
                 <child>
                   <object class="GtkViewport">
@@ -1057,6 +1058,7 @@ Documentation will open in a disposable qube.</property>
                                 <property name="label" translatable="yes">To learn more about Qubes U2F Proxy service and its uses, you can check the &lt;a href="https://www.qubes-os.org/doc/u2f-proxy/"&gt;online documentation&lt;/a&gt;. 
 Documentation will open in a disposable qube.</property>
                                 <property name="use-markup">True</property>
+                                <property name="wrap">True</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -1484,6 +1486,7 @@ Documentation will open in a disposable qube.</property>
                                     <property name="halign">start</property>
                                     <property name="label" translatable="yes">Enable &lt;b&gt;registering new keys&lt;/b&gt; with U2F Proxy service</property>
                                     <property name="use-markup">True</property>
+                                    <property name="wrap">True</property>
                                   </object>
                                 </child>
                               </object>
@@ -1839,6 +1842,7 @@ Documentation will open in a disposable qube.</property>
                                         <property name="can-focus">False</property>
                                         <property name="label" translatable="yes">Allow some qubes to access &lt;b&gt;ALL&lt;/b&gt; keys stored on your U2F device</property>
                                         <property name="use-markup">True</property>
+                                        <property name="wrap">True</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -2139,7 +2143,6 @@ Documentation will open in a disposable qube.</property>
                 <property name="name">updates</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="hscrollbar-policy">never</property>
                 <property name="shadow-type">in</property>
                 <child>
                   <object class="GtkViewport">
@@ -2330,6 +2333,7 @@ Documentation will open in a disposable qube.</property>
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">Enable &lt;b&gt;security-related testing&lt;/b&gt; updates only</property>
                                     <property name="use-markup">True</property>
+                                    <property name="wrap">True</property>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -3541,7 +3545,6 @@ Documentation will open in a disposable qube.</property>
                 <property name="name">splitgpg</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="hscrollbar-policy">never</property>
                 <property name="shadow-type">in</property>
                 <child>
                   <object class="GtkViewport">
@@ -3617,6 +3620,7 @@ Documentation will open in a disposable qube.</property>
                                 <property name="label" translatable="yes">To learn more about Split GPG and its uses, you can check the &lt;a href="https://www.qubes-os.org/doc/split-gpg/"&gt;online documentation&lt;/a&gt;. 
 Documentation will open in a disposable qube.</property>
                                 <property name="use-markup">True</property>
+                                <property name="wrap">True</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -3745,6 +3749,7 @@ Documentation will open in a disposable qube.</property>
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">Each qube that uses GPG will needs its own local keyring.</property>
+                                    <property name="wrap">True</property>
                                     <style>
                                       <class name="explanation_text"/>
                                     </style>
@@ -3796,6 +3801,7 @@ Documentation will open in a disposable qube.</property>
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">to allow designated qubes to access GPG keys from one or more key qubes.</property>
+                                    <property name="wrap">True</property>
                                     <style>
                                       <class name="explanation_text"/>
                                     </style>
@@ -4002,7 +4008,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkBox" id="splitgpg_add_select_box">
                                 <property name="can-focus">False</property>
-                                <property name="margin-end">200</property>
+                                <property name="margin-end">50</property>
                                 <property name="spacing">10</property>
                                 <child>
                                   <object class="GtkLabel">
@@ -4398,7 +4404,6 @@ Documentation will open in a disposable qube.</property>
                 <property name="name">clipboard</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="hscrollbar-policy">never</property>
                 <property name="shadow-type">in</property>
                 <child>
                   <object class="GtkViewport">
@@ -4458,6 +4463,7 @@ Documentation will open in a disposable qube.</property>
                                 <property name="can-focus">False</property>
                                 <property name="label" translatable="yes">&lt;b&gt;Copy&lt;/b&gt; keyboard shortcut: </property>
                                 <property name="use-markup">True</property>
+                                <property name="wrap">True</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -4484,6 +4490,7 @@ Documentation will open in a disposable qube.</property>
                                 <property name="margin-start">40</property>
                                 <property name="label" translatable="yes">&lt;b&gt;Paste&lt;/b&gt; keyboard shortcut: </property>
                                 <property name="use-markup">True</property>
+                                <property name="wrap">True</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -4655,6 +4662,7 @@ Documentation will open in a disposable qube.</property>
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">Qubes OS will allow you to paste content from any qube to any other qube, except dom0.</property>
+                                    <property name="wrap">True</property>
                                     <style>
                                       <class name="explanation_text"/>
                                     </style>
@@ -4707,6 +4715,7 @@ Documentation will open in a disposable qube.</property>
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">Qubes OS will restrict which qubes are allowed to paste content into the clipboards of other qubes.</property>
+                                    <property name="wrap">True</property>
                                     <style>
                                       <class name="explanation_text"/>
                                     </style>
@@ -5128,7 +5137,6 @@ Documentation will open in a disposable qube.</property>
                 <property name="name">file</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="hscrollbar-policy">never</property>
                 <property name="shadow-type">in</property>
                 <child>
                   <object class="GtkViewport">
@@ -5287,6 +5295,7 @@ Documentation will open in a disposable qube.</property>
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">You will always be asked for permission when moving files between qubes. 
 Files cannot be copied to dom0.</property>
+                                    <property name="wrap">True</property>
                                     <style>
                                       <class name="explanation_text"/>
                                     </style>
@@ -5807,6 +5816,7 @@ Files cannot be copied to dom0.</property>
                                 <property name="label" translatable="yes">To learn more about Open in VM policy and its uses, you can check the &lt;a href="https://github.com/Qubes-Community/Contents/blob/master/docs/common-tasks/opening-urls-in-vms.md"&gt;online documentation&lt;/a&gt;. 
 Documentation will open in a disposable qube.</property>
                                 <property name="use-markup">True</property>
+                                <property name="wrap">True</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -5916,6 +5926,7 @@ Documentation will open in a disposable qube.</property>
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
                                 <property name="label" translatable="yes">Curent Default Disposable Template:</property>
+                                <property name="wrap">True</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -6013,6 +6024,7 @@ Documentation will open in a disposable qube.</property>
                                 <property name="halign">start</property>
                                 <property name="label" translatable="yes">&lt;b&gt;Disposable Qube Template&lt;/b&gt;</property>
                                 <property name="use-markup">True</property>
+                                <property name="wrap">True</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -6285,7 +6297,6 @@ Documentation will open in a disposable qube.</property>
                 <property name="name">url</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
-                <property name="hscrollbar-policy">never</property>
                 <property name="shadow-type">in</property>
                 <child>
                   <object class="GtkViewport">
@@ -6358,10 +6369,10 @@ Documentation will open in a disposable qube.</property>
                               <object class="GtkLabel" id="url_info">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="halign">start</property>
                                 <property name="label" translatable="yes">To learn more about Open URL policy and its uses, you can check the &lt;a href="https://github.com/Qubes-Community/Contents/blob/master/docs/common-tasks/opening-urls-in-vms.md"&gt;online documentation&lt;/a&gt;. 
 Documentation will open in a disposable qube.</property>
                                 <property name="use-markup">True</property>
+                                <property name="wrap">True</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -6471,6 +6482,7 @@ Documentation will open in a disposable qube.</property>
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
                                 <property name="label" translatable="yes">Curent Default Disposable Template:</property>
+                                <property name="wrap">True</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -6568,6 +6580,7 @@ Documentation will open in a disposable qube.</property>
                                 <property name="halign">start</property>
                                 <property name="label" translatable="yes">&lt;b&gt;Disposable Qube Template&lt;/b&gt;</property>
                                 <property name="use-markup">True</property>
+                                <property name="wrap">True</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>
@@ -6894,7 +6907,8 @@ Documentation will open in a disposable qube.</property>
                         </child>
                         <child>
                           <object class="GtkButton" id="thisdevice_copy_button">
-                            <property name="label" translatable="yes">Copy system information to Global Clipboard</property>
+                            <property name="label" translatable="yes">Copy system information 
+to Global Clipboard</property>
                             <property name="name">copy_button</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
@@ -6926,7 +6940,8 @@ Documentation will open in a disposable qube.</property>
                         </child>
                         <child>
                           <object class="GtkButton" id="thisdevice_copy_hcl_button">
-                            <property name="label" translatable="yes">Copy HCL report to Global Clipboard</property>
+                            <property name="label" translatable="yes">Copy HCL report
+to Global Clipboard</property>
                             <property name="name">copy_hcl_button</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
@@ -7132,6 +7147,7 @@ Documentation will open in a disposable qube.</property>
 For more information, &lt;a href="https://www.qubes-os.org/doc/certified-hardware/"&gt;click here&lt;/a&gt;.</property>
                                     <property name="use-markup">True</property>
                                     <property name="justify">center</property>
+                                    <property name="wrap">True</property>
                                   </object>
                                   <packing>
                                     <property name="expand">False</property>
@@ -7267,10 +7283,10 @@ For more information, &lt;a href="https://www.qubes-os.org/doc/certified-hardwar
                               <object class="GtkLabel" id="thisdevice_security_info">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
-                                <property name="halign">start</property>
                                 <property name="label" translatable="yes">To learn more about Qubes OS Security Report, you can check the &lt;a href="https://github.com/Qubes-Community/Contents/blob/master/docs/common-tasks/opening-urls-in-vms.md"&gt;online documentation&lt;/a&gt;. 
 Documentation will open in a disposable qube.</property>
                                 <property name="use-markup">True</property>
+                                <property name="wrap">True</property>
                               </object>
                               <packing>
                                 <property name="expand">False</property>

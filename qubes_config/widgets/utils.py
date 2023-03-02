@@ -18,6 +18,8 @@
 # You should have received a copy of the GNU Lesser General Public License along
 # with this program; if not, see <http://www.gnu.org/licenses/>.
 """Qubes helper functions"""
+import subprocess
+import threading
 import qubesadmin
 import qubesadmin.exc
 import qubesadmin.vm
@@ -105,3 +107,18 @@ def compare_rule_lists(rule_list_1: List[Rule],
         if str(rule) != str(rule_2):
             return False
     return True
+
+def _open_url_in_dvm(url, default_dvm: qubesadmin.vm.QubesVM):
+    subprocess.run(
+        ['qvm-run', '-p', '--service', f'--dispvm={default_dvm}',
+         'qubes.OpenURL'], input=url.encode(), check=False,
+        stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+
+def open_url_in_disposable(url: str, qapp: qubesadmin.Qubes):
+    """Open provided url in disposable qube based on default disposable
+    template"""
+    default_dvm = qapp.default_dispvm
+    open_thread = threading.Thread(group=None,
+                                   target=_open_url_in_dvm,
+                                   args=[url, default_dvm])
+    open_thread.start()

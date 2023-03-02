@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Exec=qubes-policy-editor
+Icon=qubes-global-config
+Terminal=false
+Name=Qubes Policy Editor
+GenericName=Qubes Policy Editor
+StartupNotify=false
+Categories=Settings;X-XFCE-SettingsDialog

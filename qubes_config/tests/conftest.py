@@ -383,6 +383,15 @@ Test * test-red test-blue deny"""
         self.service_to_files = {
             'Test': ['a-test', 'b-test']
         }
+        self.include_file_tokens = {
+            'include-1': 'c',
+            'include-2': 'd'
+        }
+
+        self.include_files = {
+            'include-1': """!include include/include-2""",
+            'include-2': """Test.Test +argument @anyvm @anyvm allow"""
+        }
 
     def policy_get_files(self, service_name):
         """Get files connected to a given service; does not
@@ -395,13 +404,42 @@ Test * test-red test-blue deny"""
             return self.files[file_name], self.file_tokens[file_name]
         raise subprocess.CalledProcessError(2, 'test')
 
+    def policy_include_get(self, file_name):
+        """Get file contents; takes into account policy_replace."""
+        if file_name in self.include_files:
+            return self.include_files[file_name], \
+                   self.include_file_tokens[file_name]
+        raise subprocess.CalledProcessError(2, 'test')
+
     def policy_replace(self, filename, policy_text, token='any'):
         """Replace file contents with provided contents."""
-        if token != 'any':
+        if token == 'new':
+            if filename in self.file_tokens:
+                raise subprocess.CalledProcessError(2, 'test')
+        elif token != 'any':
             if token != self.file_tokens.get(filename, ''):
                 raise subprocess.CalledProcessError(2, 'test')
         self.files[filename] = policy_text
         self.file_tokens[filename] = str(len(policy_text))
+
+    def policy_include_replace(self, filename, policy_text, token='any'):
+        """Replace file contents with provided contents."""
+        if token != 'any':
+            if token != self.include_file_tokens.get(filename, ''):
+                raise subprocess.CalledProcessError(2, 'test')
+        self.include_files[filename] = policy_text
+        self.include_file_tokens[filename] = str(len(policy_text))
+
+    def policy_list(self):
+        return list(self.files.keys())
+
+    def policy_include_list(self):
+        return list(self.include_files.keys())
+
+@pytest.fixture
+def test_policy_client():
+    """Policy client fixture"""
+    return TestPolicyClient()
 
 
 @pytest.fixture

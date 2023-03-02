@@ -50,6 +50,7 @@ install-icons:
 	cp icons/scalable/check_no.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/check_no.svg
 	cp icons/scalable/check_yes.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/check_yes.svg
 	cp icons/scalable/check_maybe.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/check_maybe.svg
+	cp icons/scalable/qubes_policy_editor.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-policy-editor.svg
 
 install-autostart:
 	mkdir -p $(DESTDIR)/etc/xdg/autostart
@@ -66,8 +67,13 @@ install-autostart:
 	cp linux-systemd/qubes-widget@.service $(DESTDIR)/lib/systemd/user/
 	cp desktop/qubes-global-config.desktop $(DESTDIR)/usr/share/applications/
 	cp desktop/qubes-new-qube.desktop $(DESTDIR)/usr/share/applications/
+	cp desktop/qubes-policy-editor.desktop $(DESTDIR)/usr/share/applications/
 
-install: install-autostart install-icons
+install-lang:
+	mkdir -p $(DESTDIR)/usr/share/gtksourceview-4/language-specs/
+	cp qubes_config/policy_editor/qubes-rpc.lang $(DESTDIR)/usr/share/gtksourceview-4/language-specs/
+
+install: install-autostart install-icons install-lang
 
 .PHONY: clean
 clean:

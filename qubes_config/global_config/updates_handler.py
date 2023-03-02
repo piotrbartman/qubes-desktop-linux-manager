@@ -113,7 +113,7 @@ class RepoHandler:
                 repo_name = lst[0]
                 self.repos[repo_name] = {}
                 self.repos[repo_name]['prettyname'] = lst[1]
-                self.repos[repo_name]['enabled'] = (lst[2] == 'enabled')
+                self.repos[repo_name]['enabled'] = lst[2] == 'enabled'
         except RuntimeError as ex:
             # disable all repo-related stuff
             self.dom0_stable_radio.set_sensitive(False)

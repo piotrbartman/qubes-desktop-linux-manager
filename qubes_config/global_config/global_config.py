@@ -21,11 +21,9 @@
 # pylint: disable=import-error
 """Global Qubes Config tool."""
 import sys
-import threading
 from typing import Dict, Optional, List, Union
 from html import escape
 import pkg_resources
-import subprocess
 import logging
 
 import qubesadmin
@@ -34,6 +32,7 @@ import qubesadmin.exc
 import qubesadmin.vm
 from ..widgets.gtk_utils import show_error, show_dialog, load_theme
 from ..widgets.gtk_widgets import ProgressBarDialog, ViewportHandler
+from ..widgets.utils import open_url_in_disposable
 from .page_handler import PageHandler
 from .policy_handler import PolicyHandler, VMSubsetPolicyHandler
 from .policy_rules import RuleSimple, \
@@ -393,17 +392,8 @@ class GlobalConfig(Gtk.Application):
             label.connect("activate-link", self._activate_link)
 
     def _activate_link(self, _widget, url):
-        open_thread = threading.Thread(group=None,
-                                       target=self._open_url_in_dvm, args=[url])
-        open_thread.start()
+        open_url_in_disposable(url, self.qapp)
         return True
-
-    def _open_url_in_dvm(self, url):
-        default_dvm = self.qapp.default_dispvm
-        subprocess.run(
-            ['qvm-run', '-p', '--service', f'--dispvm={default_dvm}',
-             'qubes.OpenURL'], input=url.encode(), check=False,
-            stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
 
     def get_current_page(self) -> Optional[PageHandler]:
         """Get currently visible page."""

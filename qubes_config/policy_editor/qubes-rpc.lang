@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+# The Qubes OS Project, http://www.qubes-os.org
+#
+# Copyright (C) 2023 Marta Marczykowska-Górecka
+#                               <marmarta@invisiblethingslab.com>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation; either version 2.1 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License along
+# with this program; if not, see <http://www.gnu.org/licenses/>.
+
+-->
+<language id="qubes-rpc" name="Qubes OS RPC Policy" version="2.0" _section="Other">
+  <metadata>
+    <property name="globs">*.policy</property>
+    <property name="line-comment-start">#</property>
+  </metadata>
+
+  <styles>
+    <style id="comment" name="Comment" map-to="def:comment"/>
+    <style id="include" name="Include" map-to="def:preprocessor"/>
+    <style id="service" name="Service" map-to="def:function"/>
+    <style id="wildcard" name="Wildcard" map-to="def:special-char"/>
+    <style id="argument" name="Argument" map-to="def:function"/>
+    <style id="token" name="Token" map-to="def:string"/>
+    <style id="keyword" name="Keyword" map-to="def:keyword"/>
+    <style id="param" name="Parameter" map-to="def:statement"/>
+  </styles>
+
+  <definitions>
+    <context id="qubes-rpc">
+      <include>
+        <context id="comment" end-at-line-end="true" style-ref="comment">
+          <start>#</start>
+        </context>
+
+        <context id="include" style-ref="include">
+          <start>(!include|!include-dir|!include-service|!compat-4.0)</start>
+          <end>$</end>
+          <include>
+            <context ref="service"/>
+            <context ref="argument"/>
+          </include>
+        </context>
+
+        <context id="service" style-ref="service">
+          <match>^\S+</match>
+        </context>
+
+        <context id="wildcard" style-ref="wildcard">
+          <match>\*</match>
+        </context>
+
+        <context id="argument" style-ref="argument">
+          <match>\+[\w\.\_\-]+</match>
+        </context>
+
+        <context id="token" style-ref="token">
+          <prefix>@</prefix>
+          <keyword>adminvm</keyword>
+          <keyword>anyvm</keyword>
+          <keyword>default</keyword>
+          <keyword>dispvm</keyword>
+          <keyword>dispvm\:</keyword>
+          <keyword>tag\:</keyword>
+          <keyword>type\:</keyword>
+        </context>
+
+        <context id="keyword" style-ref="keyword">
+          <keyword>allow</keyword>
+          <keyword>ask</keyword>
+          <keyword>deny</keyword>
+        </context>
+
+        <context id="param" style-ref="param">
+          <keyword>target</keyword>
+          <keyword>default_target</keyword>
+          <keyword>user</keyword>
+        </context>
+      </include>
+</context>
+  </definitions>
+</language>

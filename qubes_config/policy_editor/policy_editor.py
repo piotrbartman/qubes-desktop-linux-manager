@@ -381,11 +381,13 @@ class PolicyEditor(Gtk.Application):
             ask_dialog.response(Gtk.ResponseType.OK))
 
         ask_dialog.show_all()
-        response = ask_dialog.run()
-        if response == Gtk.ResponseType.CANCEL:
-            return
-        new_name = entry.get_text()
-        ask_dialog.destroy()
+        try:
+            response = ask_dialog.run()
+            if response != Gtk.ResponseType.OK:
+                return
+            new_name = entry.get_text()
+        finally:
+            ask_dialog.destroy()
 
         # validation - only alphanumerics and - _
         if not re.compile(r'[\w-]+').match(new_name):

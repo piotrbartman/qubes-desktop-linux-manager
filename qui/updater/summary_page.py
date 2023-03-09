@@ -228,10 +228,6 @@ class SummaryPage:
             )
 
     def restart_selected_vms(self):
-        self.restart_thread = threading.Thread(target=self.perform_restart)
-        self.restart_thread.start()
-
-    def perform_restart(self):
         tmpls_to_shutdown = [row.vm
                              for row in self.updated_tmpls
                              if row.vm.is_running()]

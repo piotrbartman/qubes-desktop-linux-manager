@@ -146,6 +146,9 @@ class QubesUpdater(Gtk.Application):
             self.summary_page.show(*self.progress_page.get_update_summary())
         elif self.summary_page.is_visible:
             self.main_window.hide()
+            # ensuring that main_window will be hidden
+            while Gtk.events_pending():
+                Gtk.main_iteration()
             self.summary_page.restart_selected_vms()
             self.exit_updater()
 
@@ -168,19 +171,19 @@ class QubesUpdater(Gtk.Application):
             dialog.show()
             while self.progress_page.update_thread.is_alive():
                 while Gtk.events_pending():
-                    Gtk.main_iteration()
+                    Gtk.main_iteration()  # blocked
             dialog.hide()
-        else:
-            self.exit_updater()
 
     def check_escape(self, _widget, event, _data=None):
         if event.keyval == Gdk.KEY_Escape:
-            self.cancel_updates()
+            self.window_close()
 
     def window_close(self, *_args, **_kwargs):
-        if self.progress_page.is_visible:
+        if self.progress_page.exit_triggered:
             self.cancel_updates()
-        self.exit_updater()
+        else:
+            self.cancel_updates()
+            self.exit_updater()
 
     def exit_updater(self, _emitter=None):
         if self.primary:

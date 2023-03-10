@@ -1,7 +1,7 @@
-@import "qubes-colors-dark.css";
+@import "../qui/styles/qubes-colors-dark.css";
 @define-color error-background #f0806e;
 @define-color ok-background #76b885;
-@import "qubes-widgets-base.css";
+@import "../qui/styles/qubes-widgets-base.css";
 @import "qubes-policy-editor-base.css";
 
 .help_label {

@@ -2,7 +2,6 @@
 """ Setup.py file """
 import os
 import subprocess
-import setuptools
 import setuptools.command.install
 
 
@@ -70,21 +69,18 @@ setuptools.setup(
                           "styles/qubes-widgets-base.css",
                           ],
                   'qubes_config': ["new_qube.glade",
-                                     "global_config.glade",
-                                     "qubes-new-qube-base.css",
-                                     "qubes-new-qube-light.css",
-                                     "qubes-new-qube-dark.css",
-                                     "qubes-global-config-base.css",
-                                     "qubes-global-config-light.css",
-                                     "qubes-global-config-dark.css",
-                                     "qubes-policy-editor-base.css",
-                                     "qubes-policy-editor-light.css",
-                                     "qubes-policy-editor-dark.css",
-                                     "qubes-colors-dark.css",
-                                     "qubes-colors-light.css",
-                                     "qubes-widgets-base.css",
-                                     "policy_editor.glade",
-                                     "policy_editor/policy_help.txt"]},
+                                   "global_config.glade",
+                                   "qubes-new-qube-base.css",
+                                   "qubes-new-qube-light.css",
+                                   "qubes-new-qube-dark.css",
+                                   "qubes-global-config-base.css",
+                                   "qubes-global-config-light.css",
+                                   "qubes-global-config-dark.css",
+                                   "qubes-policy-editor-base.css",
+                                   "qubes-policy-editor-light.css",
+                                   "qubes-policy-editor-dark.css",
+                                   "policy_editor.glade",
+                                   "policy_editor/policy_help.txt"]},
     cmdclass={
         'install': InstallWithLocale
     },

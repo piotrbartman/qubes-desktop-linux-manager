@@ -19,7 +19,6 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 import asyncio
-import threading
 from gettext import ngettext
 
 import gi
@@ -328,6 +327,7 @@ class RestartHeaderCheckbox(HeaderCheckbox):
         else:
             self._allowed[1] = None
 
+    # pylint: disable=arguments-differ
     def all_action(self, num, *args, **kwargs):
         text = ngettext("_Finish and restart %(num)d qube",
                         "_Finish and restart %(num)d qubes",
@@ -341,7 +341,6 @@ class RestartHeaderCheckbox(HeaderCheckbox):
         self.next_button.set_label("_Finish")
 
 
-# TODO: duplication
 def shutdown_domains(to_shutdown):
     """
     Try to shut down vms and wait to finish.
@@ -359,7 +358,6 @@ def shutdown_domains(to_shutdown):
     return wait_for
 
 
-# TODO: duplication
 def restart_vms(to_restart):
     """
     Try to restart vms.

@@ -193,6 +193,8 @@ class ProgressPage:
             args.extend(
                 ('--max-concurrency',
                  str(settings.max_concurrency)))
+
+        # pylint: disable=consider-using-with
         proc = subprocess.Popen(
             ['qubes-vm-update',
              '--show-output',
@@ -413,6 +415,7 @@ class CellRendererProgressWithResult(
     def status(self, value):
         self._status = value
 
+    # pylint: disable=arguments-differ
     def do_render(self, context, widget, background_area, cell_area, flags):
         status: UpdateStatus = self.get_property('status')
         if status == UpdateStatus.Success:
@@ -430,6 +433,7 @@ class CellRendererProgressWithResult(
                 self, context, widget, background_area, cell_area, flags)
 
     def draw_icon(self, icon_name: str, context, cell_area):
+        # pylint: disable=no-member
         pixbuf = load_icon_at_gtk_size(icon_name, Gtk.IconSize.SMALL_TOOLBAR)
         Gdk.cairo_set_source_pixbuf(
             context,

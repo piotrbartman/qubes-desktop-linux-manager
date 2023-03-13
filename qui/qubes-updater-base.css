@@ -71,6 +71,10 @@
     color: @text-color;
 }
 
+.button_text_smaller {
+    font-size: 1em;
+}
+
 .button_text:disabled {
     color: @medium-gray;
 }

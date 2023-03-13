@@ -121,7 +121,6 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 %{python3_sitelib}/qui/updater/intro_page.py
 %{python3_sitelib}/qui/updater/progress_page.py
 %{python3_sitelib}/qui/updater/summary_page.py
-%{python3_sitelib}/qui/updater/style.py
 %{python3_sitelib}/qui/updater/updater.py
 %{python3_sitelib}/qui/updater/updater_settings.py
 %{python3_sitelib}/qui/updater/utils.py

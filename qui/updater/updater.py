@@ -7,7 +7,6 @@ import gi  # isort:skip
 
 from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, load_theme
 from qui.updater.progress_page import ProgressPage
-from qui.updater.style import load_css
 from qui.updater.updater_settings import Settings
 from qui.updater.summary_page import SummaryPage
 from qui.updater.intro_page import IntroPage
@@ -81,7 +80,6 @@ class QubesUpdater(Gtk.Application):
             self.progress_page.back_by_row_selection
         )
 
-
         self.button_settings: Gtk.Button = self.builder.get_object(
             "button_settings")
         self.button_settings.connect("clicked", self.open_settings_window)
@@ -119,8 +117,6 @@ class QubesUpdater(Gtk.Application):
         self.main_window.connect("delete-event", self.window_close)
         self.main_window.connect("key-press-event", self.check_escape)
 
-        load_css()
-
         self.intro_page.populate_vm_list(self.qapp, self.settings)
         self.main_window.show_all()
         width = self.intro_page.vm_list.get_preferred_width().natural_width
@@ -155,8 +151,10 @@ class QubesUpdater(Gtk.Application):
     def cancel_clicked(self, _emitter):
         if self.summary_page.is_visible:
             self.progress_page.show()
-        else:
+        elif self.progress_page.is_visible:
             self.cancel_updates()
+        else:
+            self.exit_updater()
 
     def cancel_updates(self, *_args, **_kwargs):
         # pylint: disable=attribute-defined-outside-init

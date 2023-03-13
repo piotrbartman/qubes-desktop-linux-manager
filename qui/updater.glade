@@ -481,6 +481,7 @@ CAUTION: this may cause data loss if you are currently running programs in those
                         <property name="hexpand">False</property>
                         <style>
                           <class name="button_text"/>
+                          <class name="button_text_smaller"/>
                           <class name="button_common"/>
                         </style>
                       </object>

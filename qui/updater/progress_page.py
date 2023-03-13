@@ -128,9 +128,13 @@ class ProgressPage:
                 admin.append_text_view,
                 l("Canceled update for {}\n").format(admin.vm.name))
 
+        info = f"Updating {admin.name}...\n" \
+               "Detailed information will be displayed after update.\n" \
+               f"{admin.name} does not support in-progress update " \
+               "information.\n"
         GObject.idle_add(
             admin.append_text_view,
-            l("Updating {}\n").format(admin.name))
+            l(info).format(admin.name))
         GObject.idle_add(admin.set_status, UpdateStatus.ProgressUnknown)
 
         self.update_details.update_buffer()

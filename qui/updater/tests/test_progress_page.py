@@ -69,7 +69,7 @@ def test_init_update(
     assert sut.progress_list.model == all_vms_list.list_store_raw
 
 
-@patch('gi.repository.GObject.idle_add')
+@patch('gi.repository.GLib.idle_add')
 def test_perform_update(
         idle_add, real_builder,
         mock_next_button, mock_cancel_button, mock_label, updatable_vms_list
@@ -98,7 +98,7 @@ def test_perform_update(
     idle_add.assert_has_calls(calls, any_order=True)
 
 
-@patch('gi.repository.GObject.idle_add')
+@patch('gi.repository.GLib.idle_add')
 @patch('subprocess.check_output', return_value=b'')
 def test_update_admin_vm(
         _mock_subprocess, idle_add,  real_builder, test_qapp,
@@ -125,7 +125,7 @@ def test_update_admin_vm(
     idle_add.assert_has_calls(calls)
 
 
-@patch('gi.repository.GObject.idle_add')
+@patch('gi.repository.GLib.idle_add')
 def test_update_templates(
         idle_add, real_builder, updatable_vms_list,
         mock_next_button, mock_cancel_button, mock_label, mock_text_view
@@ -147,8 +147,8 @@ def test_update_templates(
 
     sut.update_details.set_active_row(updatable_vms_list[2])
 
-    assert total_progress[-1] == 100
-    calls = [call(mock_text_view.buffer.set_text, "Details 0"),
+    calls = [call(sut.set_total_progress, 100),
+             call(mock_text_view.buffer.set_text, "Details 0"),
              call(mock_text_view.buffer.set_text, "Details 2"),
              ]
     idle_add.assert_has_calls(calls)

@@ -27,7 +27,7 @@ import gi
 from typing import Dict
 
 gi.require_version('Gtk', '3.0')  # isort:skip
-from gi.repository import Gtk, Gdk, GObject  # isort:skip
+from gi.repository import Gtk, Gdk, GLib, GObject  # isort:skip
 from locale import gettext as l
 
 from qubes_config.widgets.gtk_utils import copy_to_global_clipboard, \
@@ -107,7 +107,7 @@ class ProgressPage:
                   if row.vm.klass == 'AdminVM']
         templs = [row for row in self.vms_to_update
                   if row.vm.klass != 'AdminVM']
-        self.set_total_progress(0)
+        GLib.idle_add(self.set_total_progress, 0)
 
         if admins:
             self.update_admin_vm(admins)
@@ -115,16 +115,16 @@ class ProgressPage:
         if templs:
             self.update_templates(templs, settings)
 
-        GObject.idle_add(self.next_button.set_sensitive, True)
-        GObject.idle_add(self.header_label.set_text, l("Update finished"))
-        GObject.idle_add(self.cancel_button.set_visible, False)
+        GLib.idle_add(self.next_button.set_sensitive, True)
+        GLib.idle_add(self.header_label.set_text, l("Update finished"))
+        GLib.idle_add(self.cancel_button.set_visible, False)
 
     def update_admin_vm(self, admins):
         """Runs command to update dom0."""
         admin = admins[0]
         if self.exit_triggered:
-            GObject.idle_add(admin.set_status, UpdateStatus.Cancelled)
-            GObject.idle_add(
+            GLib.idle_add(admin.set_status, UpdateStatus.Cancelled)
+            GLib.idle_add(
                 admin.append_text_view,
                 l("Canceled update for {}\n").format(admin.vm.name))
 
@@ -132,10 +132,10 @@ class ProgressPage:
                "Detailed information will be displayed after update.\n" \
                f"{admin.name} does not support in-progress update " \
                "information.\n"
-        GObject.idle_add(
+        GLib.idle_add(
             admin.append_text_view,
             l(info).format(admin.name))
-        GObject.idle_add(admin.set_status, UpdateStatus.ProgressUnknown)
+        GLib.idle_add(admin.set_status, UpdateStatus.ProgressUnknown)
 
         self.update_details.update_buffer()
 
@@ -147,14 +147,14 @@ class ProgressPage:
                     stderr=subprocess.STDOUT)
                 output = self._sanitize_line(untrusted_output)
 
-                GObject.idle_add(admin.append_text_view, output)
-                GObject.idle_add(admin.set_status, UpdateStatus.Success)
+                GLib.idle_add(admin.append_text_view, output)
+                GLib.idle_add(admin.set_status, UpdateStatus.Success)
         except subprocess.CalledProcessError as ex:
-            GObject.idle_add(
+            GLib.idle_add(
                 admin.append_text_view,
                 l("Error on updating {}: {}\n{}").format(
                     admin.vm.name, str(ex), ex.output.decode()))
-            GObject.idle_add(admin.set_status, UpdateStatus.Error)
+            GLib.idle_add(admin.set_status, UpdateStatus.Error)
 
         self.update_details.update_buffer()
 
@@ -162,29 +162,29 @@ class ProgressPage:
         """Updates templates and standalones and then sets update statuses."""
         if self.exit_triggered:
             for row in to_update:
-                GObject.idle_add(row.set_status, UpdateStatus.Cancelled)
-                GObject.idle_add(
+                GLib.idle_add(row.set_status, UpdateStatus.Cancelled)
+                GLib.idle_add(
                     row.append_text_view,
                     l("Canceled update for {}\n").format(row.vm.name))
 
         for row in to_update:
-            GObject.idle_add(
+            GLib.idle_add(
                 row.append_text_view,
                 l("Updating {}\n").format(row.name))
-            GObject.idle_add(row.set_status, UpdateStatus.InProgress)
+            GLib.idle_add(row.set_status, UpdateStatus.InProgress)
         self.update_details.update_buffer()
 
         try:
             rows = {row.name: row for row in to_update}
             self.do_update_templates(rows, settings)
-            self.set_total_progress(100)
+            GLib.idle_add(self.set_total_progress, 100)
         except subprocess.CalledProcessError as ex:
             for row in to_update:
-                GObject.idle_add(
+                GLib.idle_add(
                     row.append_text_view,
                     l("Error on updating {}: {}\n{}").format(
                         row.name, str(ex), ex.output.decode()))
-                GObject.idle_add(row.set_status, UpdateStatus.Error)
+                GLib.idle_add(row.set_status, UpdateStatus.Error)
         self.update_details.update_buffer()
 
     def do_update_templates(
@@ -242,11 +242,11 @@ class ProgressPage:
             name, status, info = line.split()
             if status == "updating":
                 progress = int(float(info))
-                rows[name].set_update_progress(progress)
+                GLib.idle_add(rows[name].set_update_progress, progress)
                 total_progress = sum(
                     row.get_update_progress()
                     for row in rows.values()) / len(rows)
-                self.set_total_progress(total_progress)
+                GLib.idle_add(self.set_total_progress, total_progress)
 
         except ValueError:
             return
@@ -254,7 +254,7 @@ class ProgressPage:
         try:
             if status == "done":
                 update_status = UpdateStatus.from_name(info)
-                GObject.idle_add(rows[name].set_status, update_status)
+                GLib.idle_add(rows[name].set_status, update_status)
         except KeyError:
             return
 
@@ -343,7 +343,7 @@ class Ticker:
     def tick(self, row):
         while not self.ticker_done:
             new_value = (row.get_update_progress()) % 96 + 1
-            row.set_update_progress(new_value)
+            GLib.idle_add(row.set_update_progress, new_value)
             time.sleep(1 / 12)
 
 
@@ -398,7 +398,7 @@ class QubeUpdateDetails:
     def update_buffer(self):
         if self.active_row is not None:
             buffer_ = self.progress_textview.get_buffer()
-            GObject.idle_add(buffer_.set_text, self.active_row.buffer)
+            GLib.idle_add(buffer_.set_text, self.active_row.buffer)
 
 
 class CellRendererProgressWithResult(

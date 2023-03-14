@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position,import-error
+import time
 
 import pkg_resources
 import gi  # isort:skip
 
-from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, load_theme
+from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, load_theme, \
+    show_dialog, RESPONSES_OK
 from qui.updater.progress_page import ProgressPage
 from qui.updater.updater_settings import Settings
 from qui.updater.summary_page import SummaryPage
@@ -161,16 +163,15 @@ class QubesUpdater(Gtk.Application):
         if self.progress_page.update_thread \
                 and self.progress_page.update_thread.is_alive():
             self.progress_page.exit_triggered = True
-            dialog = Gtk.MessageDialog(
-                self.main_window, Gtk.DialogFlags.MODAL, Gtk.MessageType.OTHER,
-                Gtk.ButtonsType.NONE, l(
+            show_dialog(self.main_window, l("Updating cancelled"), l(
                     "Waiting for current qube to finish updating."
-                    " Updates for remaining qubes have been cancelled."))
-            dialog.show()
+                    " Updates for remaining qubes have been cancelled."),
+                        buttons=RESPONSES_OK, icon_name="qubes-info")
+
             while self.progress_page.update_thread.is_alive():
                 while Gtk.events_pending():
-                    Gtk.main_iteration()  # blocked
-            dialog.hide()
+                    Gtk.main_iteration()
+                time.sleep(0.1)
 
     def check_escape(self, _widget, event, _data=None):
         if event.keyval == Gdk.KEY_Escape:

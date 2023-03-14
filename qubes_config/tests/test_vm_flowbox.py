@@ -72,6 +72,7 @@ def test_simple_flowbox_init_not_empty(test_qapp, test_builder):
     assert sorted(visible_vms) == sorted(initial_vms)
     assert sorted(initial_vms) == flowbox_handler.selected_vms
 
+
 @patch('qubes_config.global_config.vm_flowbox.ask_question',
        return_value=Gtk.ResponseType.YES)
 def test_flowbox_remove_button(mock_question, test_qapp, test_builder):
@@ -187,6 +188,8 @@ def test_save_reset(_mock_question, test_qapp, test_builder):
     assert flowbox_handler.selected_vms == [blue_vm, test_vm]
     assert get_visible_vms(flowbox_handler) == [blue_vm, test_vm]
     assert flowbox_handler.is_changed()
+    assert flowbox_handler.added_vms == [blue_vm]
+    assert not flowbox_handler.removed_vms
 
     # remove added qube
     for child in flowbox_handler.flowbox.get_children():
@@ -196,6 +199,8 @@ def test_save_reset(_mock_question, test_qapp, test_builder):
     assert flowbox_handler.selected_vms == [test_vm]
     assert get_visible_vms(flowbox_handler) == [test_vm]
     assert not flowbox_handler.is_changed()
+    assert not flowbox_handler.added_vms
+    assert not flowbox_handler.removed_vms
 
     # remove more
     for child in flowbox_handler.flowbox.get_children():
@@ -205,13 +210,16 @@ def test_save_reset(_mock_question, test_qapp, test_builder):
     assert not flowbox_handler.selected_vms
     assert not get_visible_vms(flowbox_handler)
     assert flowbox_handler.is_changed()
+    assert not flowbox_handler.added_vms
+    assert flowbox_handler.removed_vms == [test_vm]
 
     # reset to start
     flowbox_handler.reset()
     assert flowbox_handler.selected_vms == [test_vm]
     assert get_visible_vms(flowbox_handler) == [test_vm]
     assert not flowbox_handler.is_changed()
-
+    assert not flowbox_handler.added_vms
+    assert not flowbox_handler.removed_vms
 
     # add something and save
     flowbox_handler.add_selected_vm(blue_vm)
@@ -219,6 +227,8 @@ def test_save_reset(_mock_question, test_qapp, test_builder):
     assert flowbox_handler.selected_vms == [blue_vm, test_vm]
     assert get_visible_vms(flowbox_handler) == [blue_vm, test_vm]
     assert not flowbox_handler.is_changed()
+    assert not flowbox_handler.added_vms
+    assert not flowbox_handler.removed_vms
 
     # remove all and save
     for child in flowbox_handler.flowbox.get_children():
@@ -229,6 +239,8 @@ def test_save_reset(_mock_question, test_qapp, test_builder):
     assert not flowbox_handler.selected_vms
     assert not get_visible_vms(flowbox_handler)
     assert not flowbox_handler.is_changed()
+    assert not flowbox_handler.added_vms
+    assert not flowbox_handler.removed_vms
 
     # add something and reset to none
     flowbox_handler.add_selected_vm(blue_vm)
@@ -236,6 +248,9 @@ def test_save_reset(_mock_question, test_qapp, test_builder):
     assert not flowbox_handler.selected_vms
     assert not get_visible_vms(flowbox_handler)
     assert not flowbox_handler.is_changed()
+    assert not flowbox_handler.added_vms
+    assert not flowbox_handler.removed_vms
+
 
 def test_flowbox_verify(test_qapp, test_builder):
     test_vm = test_qapp.domains['test-vm']

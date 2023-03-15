@@ -271,3 +271,23 @@ def appvms_list(test_qapp, mock_list_store):
         if vm.klass == "AppVM":
             result.append_vm(vm)
     return result
+
+
+@pytest.fixture
+def mock_thread():
+    class MockThread:
+        def __init__(self):
+            self.started = False
+            self.alive_requests_max: int = 3
+            self.alive_request = 0
+
+        def start(self):
+            self.started = True
+
+        def is_alive(self):
+            self.alive_request += 1
+            if self.alive_request > self.alive_requests_max:
+                return False
+            return True
+
+    return MockThread()

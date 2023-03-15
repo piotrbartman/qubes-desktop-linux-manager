@@ -35,17 +35,9 @@ from qui.updater.utils import ListWrapper, UpdateStatus
 
 @patch('threading.Thread')
 def test_init_update(
-        mock_threading, real_builder, test_qapp,
+        mock_threading, mock_thread, real_builder, test_qapp,
         mock_next_button, mock_cancel_button, mock_label, mock_tree_view,
         all_vms_list):
-    class MockThread:
-        def __init__(self):
-            self.started = False
-
-        def start(self):
-            self.started = True
-
-    mock_thread = MockThread()
 
     mock_threading.return_value = mock_thread
 

@@ -19,10 +19,19 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, call
 
-from qui.updater.summary_page import SummaryPage, AppVMType
-from qui.updater.utils import HeaderCheckbox, UpdateStatus
+import gi
+
+from qubes_config.widgets.gtk_utils import RESPONSES_OK
+from qui.updater.intro_page import UpdateRowWrapper
+
+gi.require_version('Gtk', '3.0')  # isort:skip
+from gi.repository import Gtk  # isort:skip
+
+from qui.updater.summary_page import SummaryPage, AppVMType, RestartStatus, \
+    RestartRowWrapper
+from qui.updater.utils import HeaderCheckbox, UpdateStatus, ListWrapper
 
 
 @patch('qui.updater.summary_page.SummaryPage.refresh_buttons')
@@ -190,3 +199,141 @@ def test_populate_restart_list(
 
     assert len(sut.list_store) == UP_VMS
     assert sum(row.selected for row in sut.list_store) == expected
+
+
+@patch('qubes_config.widgets.gtk_utils.show_dialog')
+@patch('qui.updater.summary_page.show_dialog')
+@patch('gi.repository.Gtk.Image.new_from_pixbuf')
+@patch('threading.Thread')
+@pytest.mark.parametrize(
+    "alive_requests_max, status",
+    (pytest.param(3, RestartStatus.OK),
+     pytest.param(0, RestartStatus.OK),
+     pytest.param(1, RestartStatus.ERROR),
+     pytest.param(1, RestartStatus.NOTHING_TO_DO),
+     ),
+)
+def test_restart_selected_vms(
+        mock_threading, mock_new_from_pixbuf, mock_show_dialog_qui,
+        mock_show_dialog, alive_requests_max, status, mock_thread, test_qapp,
+        real_builder, mock_next_button, mock_cancel_button
+):
+    # ARRANGE
+    sut = SummaryPage(
+        real_builder, mock_next_button, mock_cancel_button,
+        back_by_row_selection=lambda *args: None  # callback
+    )
+    mock_thread.alive_requests_max = alive_requests_max
+    mock_threading.return_value = mock_thread
+    icon = "icon"
+    mock_new_from_pixbuf.return_value = icon
+
+    class MockDialog:
+        def __init__(self):
+            self.run_calls = 0
+            self.destroy_calls = 0
+            self.show_calls = 0
+            self.deletable = True
+
+        def run(self):
+            self.run_calls += 1
+            return Gtk.ResponseType.DELETE_EVENT
+
+        def destroy(self):
+            self.destroy_calls += 1
+
+        def show(self):
+            self.show_calls += 1
+
+        def set_deletable(self, deletable):
+            self.deletable = deletable
+
+    mock_final_dialog = MockDialog()
+    mock_waiting_dialog = MockDialog()
+    mock_show_dialog.return_value = mock_final_dialog
+    mock_show_dialog_qui.return_value = mock_waiting_dialog
+    sut.status = status
+
+    # ACT
+    sut.restart_selected_vms()
+
+    # ASSERT
+
+    # waiting dialog cannot be closed
+    if alive_requests_max:
+        assert mock_waiting_dialog.run_calls == 0
+        assert mock_waiting_dialog.show_calls == 1
+        assert mock_waiting_dialog.destroy_calls == 1
+        assert not mock_waiting_dialog.deletable
+    else:
+        assert mock_waiting_dialog.run_calls == 0
+        assert mock_waiting_dialog.show_calls == 0
+        assert mock_waiting_dialog.destroy_calls == 0
+
+    if status == RestartStatus.NOTHING_TO_DO:
+        mock_show_dialog.assert_not_called()
+    else:
+        # final dialog is blocking (run)
+        assert mock_final_dialog.run_calls == 1
+        assert mock_final_dialog.show_calls == 0
+        assert mock_final_dialog.destroy_calls == 1
+        assert mock_final_dialog.deletable
+
+        calls = []
+        if status == RestartStatus.OK:
+            calls = [call(None, "Success",
+                          "All qubes were restarted/shutdown successfully.",
+                          RESPONSES_OK, icon)]
+        if status == RestartStatus.ERROR:
+            calls = [call(None, "Failure",
+                          "During restarting following errors occurs: " + sut.err,
+                          RESPONSES_OK, icon)]
+        mock_show_dialog.assert_has_calls(calls)
+
+
+@patch("qui.updater.summary_page.wait_for_domain_shutdown")
+def test_perform_restart(
+        _mock_wait_for_domain_shutdown, test_qapp,
+        real_builder, mock_next_button, mock_cancel_button, mock_list_store
+):
+    # ARRANGE
+
+    expected_state_calls = [(tmpl, 'admin.vm.CurrentState', None, None)
+                            for tmpl in ('fedora-35', 'fedora-36')]
+    for call_ in expected_state_calls:
+        test_qapp.expected_calls[call_] = b'0\x00power_state=Running mem=1024'
+
+    to_shutdown = ('fedora-35', 'fedora-36', 'sys-firewall', 'sys-net',
+                   'sys-usb', 'test-blue', 'test-red', 'test-vm', 'vault')
+    expected_shutdown_calls = [(tmpl, 'admin.vm.Shutdown', 'force', None)
+                               for tmpl in to_shutdown]
+    for call_ in expected_shutdown_calls:
+        test_qapp.expected_calls[call_] = b'0\x00'
+
+    to_start = ('sys-firewall', 'sys-net', 'sys-usb',)
+    expected_start_calls = [(tmpl, 'admin.vm.Start', None, None)
+                               for tmpl in to_start]
+    for call_ in expected_start_calls:
+        test_qapp.expected_calls[call_] = b'0\x00'
+
+    sut = SummaryPage(
+        real_builder, mock_next_button, mock_cancel_button,
+        back_by_row_selection=lambda *args: None  # callback
+    )
+
+    sut.updated_tmpls = ListWrapper(UpdateRowWrapper, mock_list_store)
+    sut.list_store = ListWrapper(RestartRowWrapper, mock_list_store)
+    for vm in test_qapp.domains:
+        if vm.klass in ("TemplateVM",):
+            sut.updated_tmpls.append_vm(vm)
+        if vm.klass in ("AppVM",):
+            sut.list_store.append_vm(vm)
+            sut.list_store[-1].selected = True
+
+    # ACT
+    sut.perform_restart()
+
+    # ASSERT
+    assert all(item in test_qapp.actual_calls
+               for item in expected_state_calls + expected_shutdown_calls
+               + expected_start_calls)

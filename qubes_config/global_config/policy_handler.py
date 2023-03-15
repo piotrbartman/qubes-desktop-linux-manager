@@ -28,7 +28,7 @@ from qrexec.policy.parser import Rule
 from qrexec.exc import PolicySyntaxError
 
 from ..widgets.gtk_widgets import VMListModeler, ExpanderHandler
-from ..widgets.gtk_utils import show_error, ask_question, show_dialog
+from ..widgets.gtk_utils import show_error, ask_question, show_dialog_with_icon
 from .page_handler import PageHandler
 from .policy_rules import AbstractRuleWrapper, AbstractVerbDescription
 from .policy_manager import PolicyManager
@@ -328,7 +328,7 @@ class PolicyHandler(PageHandler):
                 if not row.is_changed():
                     row.set_edit_mode(False)
                     continue
-                response = show_dialog(
+                response = show_dialog_with_icon(
                     parent=row.get_toplevel(), title=_("Unsaved changes"),
                     text=_("A rule is currently being edited. \n"
                          "Do you want to save changes to the following"

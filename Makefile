@@ -54,6 +54,7 @@ install-icons:
 	cp icons/scalable/check_yes.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/check_yes.svg
 	cp icons/scalable/check_maybe.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/check_maybe.svg
 	cp icons/scalable/qubes_policy_editor.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qubes-policy-editor.svg
+	cp icons/scalable/qui-domains-scalable.svg $(DESTDIR)/usr/share/icons/hicolor/scalable/apps/qui-domains-scalable.svg
 
 install-autostart:
 	mkdir -p $(DESTDIR)/etc/xdg/autostart

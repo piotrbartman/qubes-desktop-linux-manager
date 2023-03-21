@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# pylint: disable=wrong-import-position,import-error
+# pylint: disable=wrong-import-position,import-error,superfluous-parens
 ''' A menu listing domains '''
 import abc
 import asyncio
@@ -271,6 +271,23 @@ class OpenFileManagerItem(Gtk.ImageMenuItem):
                            self.vm.name, str(ex)))
 
 
+class InternalInfoItem(Gtk.MenuItem):
+    ''' Restart menu Item. When activated shutdowns the domain and
+    then starts it again. '''
+
+    def __init__(self):
+        super().__init__()
+        self.label = Gtk.Label(xalign=0)
+        self.label.set_markup(_(
+                '<b>Internal qube</b>'))
+        self.set_tooltip_text(
+            'Internal qubes are used by the operating system. Do not modify'
+            ' them or run programs in them unless you really '
+            'know what you are doing.')
+        self.add(self.label)
+        self.set_sensitive(False)
+
+
 class StartedMenu(Gtk.Menu):
     ''' The sub-menu for a started domain'''
 
@@ -325,6 +342,39 @@ class DebugMenu(Gtk.Menu):
                 self.add(LogItem(name, path))
 
         self.add(KillItem(self.vm, icon_cache))
+
+        self.show_all()
+
+
+class InternalMenu(Gtk.Menu):
+    """Sub-menu for Internal qubes"""
+    def __init__(self, vm, icon_cache, working_correctly=True):
+        """
+        :param vm: relevant Internal qube
+        :param icon_cache: IconCache object
+        :param working_correctly: if True, the VM should have a Shutdown
+        option; otherwise, have a Kill option
+        """
+        super().__init__()
+        self.vm = vm
+
+        self.add(InternalInfoItem())
+
+        logs = [
+            (_("Console Log"),
+             "/var/log/xen/console/guest-" + vm.name + ".log"),
+            (_("QEMU Console Log"),
+             "/var/log/xen/console/guest-" + vm.name + "-dm.log"),
+            ]
+
+        for name, path in logs:
+            if os.path.isfile(path):
+                self.add(LogItem(name, path))
+
+        if working_correctly:
+            self.add(ShutdownItem(self.vm, icon_cache))
+        else:
+            self.add(KillItem(self.vm, icon_cache))
 
         self.show_all()
 
@@ -400,7 +450,10 @@ class DomainMenuItem(Gtk.ImageMenuItem):
         self.set_image(self.decorator.icon())
 
     def _set_submenu(self, state):
-        if state == 'Running':
+        if self.vm.features.get('internal', False):
+            submenu = InternalMenu(self.vm, self.icon_cache,
+                                   working_correctly=(state == 'Running'))
+        elif state == 'Running':
             submenu = StartedMenu(self.vm, self.app, self.icon_cache)
         elif state == 'Paused':
             submenu = PausedMenu(self.vm, self.icon_cache)
@@ -470,8 +523,8 @@ class DomainTray(Gtk.Application):
         self.dispatcher = dispatcher
         self.stats_dispatcher = stats_dispatcher
 
-        self.widget_icon = Gtk.StatusIcon()
-        self.widget_icon.set_from_icon_name('qui-domains')
+        self.widget_icon: Gtk.StatusIcon = Gtk.StatusIcon()
+        self.widget_icon.set_from_icon_name('qui-domains-scalable')
         self.widget_icon.connect('button-press-event', self.show_menu)
         self.widget_icon.set_tooltip_markup(
             _('<b>Qubes Domains</b>\nView and manage running domains.'))

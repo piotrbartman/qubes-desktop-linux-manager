@@ -79,6 +79,8 @@ class Settings:
 
         self.restart_system_checkbox: Gtk.CheckButton = self.builder.get_object(
             "restart_system")
+        self.restart_system_checkbox.connect(
+            "toggled", self._show_restart_exceptions)
 
         self.restart_other_checkbox: Gtk.CheckButton = self.builder.get_object(
             "restart_other")

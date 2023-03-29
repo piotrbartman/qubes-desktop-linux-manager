@@ -113,15 +113,7 @@ def show_dialog_with_icon(
         icon_name: str
 ) -> Gtk.ResponseType:
     """
-    Show a dialog.
-    :param parent: parent widget, preferably the top level window
-    :param title: title of the prompt
-    :param text: prompt text (can use pango markup)
-    :param
-    :param buttons: dict of button-text: response type to use
-    :param icon_name: name of the icon to be show on the right side of
-    the question
-    :return: which button was pressed
+    Helper function to show a dialog with icon given by name.
     """
     icon = Gtk.Image.new_from_pixbuf(load_icon(icon_name, 48, 48))
     dialog = show_dialog(parent, title, text, buttons, icon)
@@ -145,7 +137,15 @@ def show_dialog(
         widget: Gtk.Widget
 ) -> Gtk.ResponseType:
     """
-    TODO
+    Show a dialog.
+    :param parent: parent widget, preferably the top level window
+    :param title: title of the prompt
+    :param text: prompt text (can use pango markup)
+    :param
+    :param buttons: dict of button-text: response type to use
+    :param widget: widget to be show on the right side of
+    the question
+    :return: which button was pressed
     """
     dialog: Gtk.Dialog = Gtk.Dialog.new()
     dialog.set_modal(True)

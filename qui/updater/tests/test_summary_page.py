@@ -22,12 +22,11 @@ import pytest
 from unittest.mock import patch, call
 
 import gi
+gi.require_version('Gtk', '3.0')  # isort:skip
+from gi.repository import Gtk  # isort:skip
 
 from qubes_config.widgets.gtk_utils import RESPONSES_OK
 from qui.updater.intro_page import UpdateRowWrapper
-
-gi.require_version('Gtk', '3.0')  # isort:skip
-from gi.repository import Gtk  # isort:skip
 
 from qui.updater.summary_page import SummaryPage, AppVMType, RestartStatus, \
     RestartRowWrapper

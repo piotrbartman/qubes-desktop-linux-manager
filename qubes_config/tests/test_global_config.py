@@ -39,6 +39,11 @@ from gi.repository import Gtk
 # a test_builder fixture is requested because it will try to register
 # signals in "test" mode
 
+
+show_dialog_with_icon_path = \
+    'qubes_config.global_config.global_config.show_dialog_with_icon'
+
+
 @patch('subprocess.check_output')
 @patch('qubes_config.global_config.global_config.show_error')
 def test_global_config_init(mock_error, mock_subprocess,
@@ -70,8 +75,7 @@ def test_global_config_init(mock_error, mock_subprocess,
     handler.copy_combo.set_active_id('Ctrl+Win+C')
 
     # try to move away from page, we should get a warning
-    with patch('qubes_config.global_config.global_config.show_dialog') \
-            as mock_ask:
+    with patch(show_dialog_with_icon_path) as mock_ask:
         mock_ask.return_value = Gtk.ResponseType.NO
         app.main_notebook.set_current_page(clipboard_page_num + 1)
 
@@ -82,8 +86,8 @@ def test_global_config_init(mock_error, mock_subprocess,
     handler.copy_combo.set_active_id('Ctrl+Win+C')
 
     # try to move away from page, we should get a warning
-    with patch('qubes_config.global_config.global_config.show_dialog') \
-            as mock_ask, patch('qubes_config.global_config.basics_handler.'
+    with patch(show_dialog_with_icon_path) as mock_ask, \
+            patch('qubes_config.global_config.basics_handler.'
                'apply_feature_change') as mock_apply:
         mock_ask.return_value = Gtk.ResponseType.YES
         app.main_notebook.set_current_page(clipboard_page_num + 1)
@@ -214,8 +218,7 @@ def test_global_config_page_change(mock_error, mock_subprocess,
         assert False  # didn't find the change
 
     # try to switch pages but refuse to save changes
-    with patch('qubes_config.global_config.global_config.show_dialog') \
-        as mock_ask:
+    with patch(show_dialog_with_icon_path) as mock_ask:
         mock_ask.return_value = Gtk.ResponseType.NO
         app.main_notebook.next_page()
         mock_ask.assert_called()
@@ -241,8 +244,7 @@ def test_global_config_page_change(mock_error, mock_subprocess,
         handler.filecopy_handler.policy_file_name]
 
     # save changes
-    with patch('qubes_config.global_config.global_config.show_dialog') \
-        as mock_ask:
+    with patch(show_dialog_with_icon_path) as mock_ask:
         mock_ask.return_value = Gtk.ResponseType.YES
         app.main_notebook.next_page()
         mock_ask.assert_called()
@@ -275,10 +277,9 @@ def test_global_config_failure(mock_error, mock_subprocess,
     handler.fullscreen_combo.set_active_id('disallow')
 
     # try to switch pages, error will occur on saving
-    with patch('qubes_config.global_config.global_config.show_dialog') \
-        as mock_ask, \
-            patch('qubes_config.global_config.global_config.'
-                  'GLib.timeout_add') as mock_timeout:
+    with patch(show_dialog_with_icon_path) as mock_ask, \
+            patch('qubes_config.global_config.global_config.GLib.timeout_add') \
+                    as mock_timeout:
         mock_ask.return_value = Gtk.ResponseType.YES
         app.main_notebook.next_page()
         mock_ask.assert_called()

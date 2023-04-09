@@ -32,6 +32,11 @@ from gi.repository import Gtk
 # policyexctest  -> missing tests!
 # dispvmexctest
 
+
+show_dialog_with_icon_path = \
+    'qubes_config.global_config.policy_handler.show_dialog_with_icon'
+
+
 def test_policy_exc_handler_empty(test_builder, test_qapp, test_policy_manager):
     handler = DispvmExceptionHandler(
         qapp=test_qapp,
@@ -272,8 +277,7 @@ TestService * test-red @dispvm ask default_target=@dispvm:default-dvm"""
             assert row.target_widget.combobox.get_visible()
             row.target_widget.model.select_value('@dispvm')
             # second activation cannot cause the changes to be discarded
-            with patch('qubes_config.global_config.policy_handler.'
-                       'show_dialog') as mock_ask:
+            with patch(show_dialog_with_icon_path) as mock_ask:
                 row.activate()
                 row.activate()
                 assert not mock_ask.mock_calls
@@ -324,8 +328,7 @@ TestService * test-red @dispvm ask default_target=@dispvm:default-dvm"""
                               current_policy_rules)
 
     # click another row, dismiss message
-    with patch('qubes_config.global_config.policy_handler.show_dialog') as \
-            mock_ask:
+    with patch(show_dialog_with_icon_path) as mock_ask:
         mock_ask.return_value = Gtk.ResponseType.NO
         for row in handler.list_handler.current_rows:
             if row != found_row:
@@ -350,8 +353,7 @@ TestService * test-red @dispvm ask default_target=@dispvm:default-dvm"""
     else:
         assert False # expected rule to edit not found!
 
-    with patch('qubes_config.global_config.policy_handler.show_dialog') as \
-            mock_ask:
+    with patch(show_dialog_with_icon_path) as mock_ask:
         mock_ask.return_value = Gtk.ResponseType.YES
         for row in handler.list_handler.current_rows:
             if row != found_row:
@@ -398,9 +400,9 @@ TestService * test-red @dispvm ask default_target=@dispvm:default-dvm"""
         assert False # expected rule to edit not found!
 
     # click another row, but, say you want to save changes, fail
-    with patch('qubes_config.global_config.policy_handler.show_dialog') as \
-            mock_ask, patch('qubes_config.global_config.rule_list_widgets'
-                            '.show_error') as mock_error:
+    with patch(show_dialog_with_icon_path) as mock_ask, \
+            patch('qubes_config.global_config.rule_list_widgets.show_error') \
+                    as mock_error:
         mock_ask.return_value = Gtk.ResponseType.YES
         for row in handler.list_handler.current_rows:
             if row != found_row:

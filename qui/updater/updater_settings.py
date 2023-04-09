@@ -38,6 +38,13 @@ GObject.signal_new('child-removed',
 
 
 class Settings:
+    DEFAULT_CONCURRENCY = 4
+    MAX_CONCURRENCY = 16
+    DEFAULT_UPDATE_IF_STALE = 7
+    MAX_UPDATE_IF_STALE = 99
+    DEFAULT_RESTART_SYSTEM_VMS = True
+    DEFAULT_RESTART_OTHER_VMS = False
+
     def __init__(self, main_window, qapp, refresh_callback: Callable):
         self.qapp = qapp
         self.refresh_callback = refresh_callback
@@ -64,11 +71,16 @@ class Settings:
 
         self.days_without_update_button: Gtk.SpinButton = \
             self.builder.get_object("days_without_update")
-        adj = Gtk.Adjustment(7, 1, 100, 1, 1, 1)
+        adj = Gtk.Adjustment(
+            Settings.DEFAULT_UPDATE_IF_STALE, 1, Settings.MAX_UPDATE_IF_STALE,
+            1, 1, 1
+        )
         self.days_without_update_button.configure(adj, 1, 0)
 
         self.restart_system_checkbox: Gtk.CheckButton = self.builder.get_object(
             "restart_system")
+        self.restart_system_checkbox.connect(
+            "toggled", self._show_restart_exceptions)
 
         self.restart_other_checkbox: Gtk.CheckButton = self.builder.get_object(
             "restart_other")
@@ -94,7 +106,10 @@ class Settings:
             "toggled", self._limit_concurrency_toggled)
         self.max_concurrency_button: Gtk.SpinButton = \
             self.builder.get_object("max_concurrency")
-        adj = Gtk.Adjustment(4, 1, 17, 1, 1, 1)
+        adj = Gtk.Adjustment(
+            Settings.DEFAULT_CONCURRENCY, 1, Settings.MAX_CONCURRENCY + 1,
+            1, 1, 1
+        )
         self.max_concurrency_button.configure(adj, 1, 0)
 
         self._init_update_if_stale: Optional[int] = None
@@ -106,19 +121,22 @@ class Settings:
     @property
     def update_if_stale(self) -> int:
         """Return the current (set by this window or manually) option value."""
-        return int(get_feature(self.vm, "qubes-vm-update-update-if-stale", 7))
+        return int(get_feature(self.vm, "qubes-vm-update-update-if-stale",
+                               Settings.DEFAULT_UPDATE_IF_STALE))
 
     @property
     def restart_system_vms(self) -> bool:
         """Return the current (set by this window or manually) option value."""
         return get_boolean_feature(
-            self.vm, "qubes-vm-update-restart-system", True)
+            self.vm, "qubes-vm-update-restart-system",
+            Settings.DEFAULT_RESTART_SYSTEM_VMS)
 
     @property
     def restart_other_vms(self) -> bool:
         """Return the current (set by this window or manually) option value."""
         return get_boolean_feature(
-            self.vm, "qubes-vm-update-restart-other", False)
+            self.vm, "qubes-vm-update-restart-other",
+            Settings.DEFAULT_RESTART_OTHER_VMS)
 
     @property
     def max_concurrency(self) -> Optional[int]:
@@ -173,21 +191,21 @@ class Settings:
             name="update-if-stale",
             value=int(self.days_without_update_button.get_value()),
             init=self._init_update_if_stale,
-            default=7
+            default=Settings.DEFAULT_UPDATE_IF_STALE
         )
 
         self._save_option(
             name="restart-system",
             value=self.restart_system_checkbox.get_active(),
             init=self._init_restart_system_vms,
-            default=True
+            default=Settings.DEFAULT_RESTART_SYSTEM_VMS
         )
 
         self._save_option(
             name="restart-other",
             value=self.restart_other_checkbox.get_active(),
             init=self._init_restart_other_vms,
-            default=False
+            default=Settings.DEFAULT_RESTART_OTHER_VMS
         )
 
         limit_concurrency = self.limit_concurrency_checkbox.get_active()

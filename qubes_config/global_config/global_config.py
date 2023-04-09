@@ -30,7 +30,7 @@ import qubesadmin
 import qubesadmin.events
 import qubesadmin.exc
 import qubesadmin.vm
-from ..widgets.gtk_utils import show_error, show_dialog, load_theme
+from ..widgets.gtk_utils import show_error, show_dialog_with_icon, load_theme
 from ..widgets.gtk_widgets import ProgressBarDialog, ViewportHandler
 from ..widgets.utils import open_url_in_disposable
 from .page_handler import PageHandler
@@ -366,7 +366,7 @@ class GlobalConfig(Gtk.Application):
 
 
     def _usbvm_changed(self, *_args):
-        response = show_dialog(
+        response = show_dialog_with_icon(
             parent=self.main_window, title=_("USB qube change"),
             text=_("Changing USB qube requires restarting Global Settings to"
                    "correctly initialize all defaults. "
@@ -458,7 +458,7 @@ class GlobalConfig(Gtk.Application):
         box.pack_start(label_2, False, False, 10)
         box.pack_start(label_3, False, False, 10)
 
-        response = show_dialog(
+        response = show_dialog_with_icon(
             parent=self.main_window, title=_("Unsaved changes"), text=box,
             buttons={
                 _("_Save changes"): Gtk.ResponseType.YES,

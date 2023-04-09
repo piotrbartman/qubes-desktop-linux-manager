@@ -19,6 +19,9 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 import asyncio
+import threading
+import time
+from enum import Enum
 from gettext import ngettext
 
 import gi
@@ -30,7 +33,8 @@ from typing import Optional, Any
 from qubesadmin import exc
 from qubesadmin.events.utils import wait_for_domain_shutdown
 
-from qubes_config.widgets.gtk_utils import load_icon
+from qubes_config.widgets.gtk_utils import load_icon, show_dialog, \
+    show_dialog_with_icon, show_error, RESPONSES_OK
 from qubes_config.widgets.utils import get_boolean_feature
 from qui.updater.utils import disable_checkboxes, pass_through_event_window, \
     HeaderCheckbox, QubeClass, QubeName, \
@@ -58,6 +62,8 @@ class SummaryPage:
         self.cancel_button = cancel_button
         self.restart_thread = None
         self.disable_checkboxes = False
+        self.status = RestartStatus.NONE
+        self.err = ""
 
         self.updated_tmpls: Optional[list] = None
 
@@ -227,6 +233,40 @@ class SummaryPage:
             )
 
     def restart_selected_vms(self):
+        self.restart_thread = threading.Thread(
+            target=self.perform_restart
+        )
+
+        self.restart_thread.start()
+
+        spinner = None
+        dialog = None
+        # wait a little to check if waiting dialog is needed at all
+        time.sleep(0.01)
+
+        if self.restart_thread.is_alive():
+            # show wainting dialog
+            spinner = Gtk.Spinner()
+            spinner.start()
+            dialog = show_dialog(None, l("Restarting qubes"), l(
+                "Waiting for qubes to be restarted/shutdown."),
+                                 {}, spinner)
+            dialog.set_deletable(False)
+            dialog.show()
+
+        # wait for thread and spin spinner
+        while self.restart_thread.is_alive():
+            while Gtk.events_pending():
+                Gtk.main_iteration()
+            time.sleep(0.1)
+
+        # cleanup
+        if dialog:
+            spinner.stop()
+            dialog.destroy()
+        self._show_status_dialog()
+
+    def perform_restart(self):
         tmpls_to_shutdown = [row.vm
                              for row in self.updated_tmpls
                              if row.vm.is_running()]
@@ -238,9 +278,65 @@ class SummaryPage:
                        for qube_row in self.list_store
                        if qube_row.selected
                        and not qube_row.is_sys_qube]
-        shutdown_domains(tmpls_to_shutdown)
-        restart_vms(to_restart)
-        shutdown_domains(to_shutdown)
+
+        if not any([tmpls_to_shutdown, to_restart, to_shutdown]):
+            self.status = RestartStatus.NOTHING_TO_DO
+            return
+
+        # clear err and perform shutdown/start
+        self.err = ''
+        self.shutdown_domains(tmpls_to_shutdown)
+        self.restart_vms(to_restart)
+        self.shutdown_domains(to_shutdown)
+
+        if not self.err:
+            self.status = RestartStatus.OK
+        else:
+            self.status = RestartStatus.ERROR
+
+    def shutdown_domains(self, to_shutdown):
+        """
+        Try to shut down vms and wait to finish.
+        """
+        wait_for = []
+        for vm in to_shutdown:
+            try:
+                vm.shutdown(force=True)
+                wait_for.append(vm)
+            except exc.QubesVMError as err:
+                self.err += vm.name + " cannot shutdown: " + str(err) + '\n'
+
+        asyncio.run(wait_for_domain_shutdown(wait_for))
+
+        return wait_for
+
+    def restart_vms(self, to_restart):
+        """
+        Try to restart vms.
+        """
+        shutdowns = self.shutdown_domains(to_restart)
+
+        # restart shutdown qubes
+        for vm in shutdowns:
+            try:
+                vm.start()
+            except exc.QubesVMError as err:
+                self.err += vm.name + " cannot start: " + str(err) + '\n'
+
+    def _show_status_dialog(self):
+        if self.status == RestartStatus.OK:
+            show_dialog_with_icon(
+                None,
+                l("Success"),
+                l("All qubes were restarted/shutdown successfully."),
+                buttons=RESPONSES_OK,
+                icon_name="qubes-check-yes"
+            )
+        elif self.status == RestartStatus.ERROR:
+            show_error(None, "Failure",
+                       l("During restarting following errors occurs: ")
+                       + self.err
+                       )
 
 
 class RestartRowWrapper(RowWrapper):
@@ -309,6 +405,13 @@ class AppVMType:
     EXCLUDED = 2
 
 
+class RestartStatus(Enum):
+    ERROR = 0
+    OK = 1
+    NOTHING_TO_DO = 2
+    NONE = 3
+
+
 class RestartHeaderCheckbox(HeaderCheckbox):
     def __init__(self, checkbox_column_button, next_button):
         super().__init__(checkbox_column_button,
@@ -339,34 +442,3 @@ class RestartHeaderCheckbox(HeaderCheckbox):
 
     def none_action(self, *args, **kwargs):
         self.next_button.set_label("_Finish")
-
-
-def shutdown_domains(to_shutdown):
-    """
-    Try to shut down vms and wait to finish.
-    """
-    wait_for = []
-    for vm in to_shutdown:
-        try:
-            vm.shutdown(force=True)
-            wait_for.append(vm)
-        except exc.QubesVMError:
-            pass
-
-    asyncio.run(wait_for_domain_shutdown(wait_for))
-
-    return wait_for
-
-
-def restart_vms(to_restart):
-    """
-    Try to restart vms.
-    """
-    shutdowns = shutdown_domains(to_restart)
-
-    # restart shutdown qubes
-    for vm in shutdowns:
-        try:
-            vm.start()
-        except exc.QubesVMError:
-            pass

@@ -23,7 +23,7 @@ import os
 
 import fcntl
 
-from typing import Dict, Union
+from typing import Dict, Union, Optional
 
 import gi
 gi.require_version('Gtk', '3.0')
@@ -88,20 +88,54 @@ def show_error(parent, title, text):
     """
     Helper function to display error messages.
     """
-    return show_dialog(parent=parent, title=title, text=text,
-                       buttons=RESPONSES_OK, icon_name="qubes-info")
+    return show_dialog_with_icon(parent=parent, title=title, text=text,
+                                 buttons=RESPONSES_OK, icon_name="qubes-info")
 
 
 def ask_question(parent, title: str, text: str):
     """
     Helper function to show question dialogs.
     """
-    return show_dialog(parent=parent, title=title, text=text,
-                       buttons=RESPONSES_YES_NO_CANCEL, icon_name="qubes-ask")
+    return show_dialog_with_icon(
+        parent=parent,
+        title=title,
+        text=text,
+        buttons=RESPONSES_YES_NO_CANCEL,
+        icon_name="qubes-ask"
+    )
 
-def show_dialog(parent: Gtk.Widget, title: str, text: Union[str, Gtk.Widget],
-                buttons: Dict[str, Gtk.ResponseType],
-                icon_name: str) -> Gtk.ResponseType:
+
+def show_dialog_with_icon(
+        parent: Optional[Gtk.Widget],
+        title: str,
+        text: Union[str, Gtk.Widget],
+        buttons: Dict[str, Gtk.ResponseType],
+        icon_name: str
+) -> Gtk.ResponseType:
+    """
+    Helper function to show a dialog with icon given by name.
+    """
+    icon = Gtk.Image.new_from_pixbuf(load_icon(icon_name, 48, 48))
+    dialog = show_dialog(parent, title, text, buttons, icon)
+    response = dialog.run()
+    dialog.destroy()
+    if response == Gtk.ResponseType.DELETE_EVENT:
+        if Gtk.ResponseType.CANCEL in buttons.values():
+        # treat exiting from the window as cancel if it's one of the
+        # available responses, then no if it's one of the available responses
+            return Gtk.ResponseType.CANCEL
+        if Gtk.ResponseType.NO in buttons.values():
+            return Gtk.ResponseType.NO
+    return response
+
+
+def show_dialog(
+        parent: Gtk.Widget,
+        title: str,
+        text: Union[str, Gtk.Widget],
+        buttons: Dict[str, Gtk.ResponseType],
+        widget: Gtk.Widget
+) -> Gtk.ResponseType:
     """
     Show a dialog.
     :param parent: parent widget, preferably the top level window
@@ -109,7 +143,7 @@ def show_dialog(parent: Gtk.Widget, title: str, text: Union[str, Gtk.Widget],
     :param text: prompt text (can use pango markup)
     :param
     :param buttons: dict of button-text: response type to use
-    :param icon_name: name of the icon to be show on the right side of
+    :param widget: widget to be show on the right side of
     the question
     :return: which button was pressed
     """
@@ -136,8 +170,7 @@ def show_dialog(parent: Gtk.Widget, title: str, text: Union[str, Gtk.Widget],
     box.get_style_context().add_class('modal_contents')
     content_area.pack_start(box, False, False, 0)
 
-    icon = Gtk.Image.new_from_pixbuf(load_icon(icon_name, 48, 48))
-    box.pack_start(icon, False, False, 0)
+    box.pack_start(widget, False, False, 0)
 
     if isinstance(text, str):
         label: Gtk.Label = Gtk.Label()
@@ -151,18 +184,7 @@ def show_dialog(parent: Gtk.Widget, title: str, text: Union[str, Gtk.Widget],
         box.pack_start(text, False, False, 40)
 
     dialog.show_all()
-
-    response = dialog.run()
-    dialog.destroy()
-
-    if response == Gtk.ResponseType.DELETE_EVENT:
-        if Gtk.ResponseType.CANCEL in buttons.values():
-        # treat exiting from the window as cancel if it's one of the
-        # available responses, then no if it's one of the available responses
-            return Gtk.ResponseType.CANCEL
-        if Gtk.ResponseType.NO in buttons.values():
-            return Gtk.ResponseType.NO
-    return response
+    return dialog
 
 
 def load_theme(widget: Gtk.Widget, light_theme_path: str, dark_theme_path: str):

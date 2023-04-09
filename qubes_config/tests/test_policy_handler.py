@@ -32,6 +32,10 @@ gi.require_version('GdkPixbuf', '2.0')
 from gi.repository import Gtk
 
 
+show_dialog_with_icon_path = \
+    'qubes_config.global_config.policy_handler.show_dialog_with_icon'
+
+
 def add_rule(handler, source = None, target = None,
              action = None, expect_error: bool = False):
     # attempt to add a new rule
@@ -371,8 +375,7 @@ TestService * @anyvm @anyvm deny"""
             assert row.target_widget.combobox.get_visible()
             row.target_widget.model.select_value('test-red')
             # second activation cannot cause the changes to be discarded
-            with patch('qubes_config.global_config.policy_handler.'
-                       'show_dialog') as mock_ask:
+            with patch(show_dialog_with_icon_path) as mock_ask:
                 row.activate()
                 row.activate()
                 assert not mock_ask.mock_calls
@@ -420,8 +423,7 @@ TestService * @anyvm @anyvm deny"""
     assert compare_rule_lists(handler.current_rules, default_policy_rules)
 
     # click another row, dismiss message
-    with patch('qubes_config.global_config.policy_handler.show_dialog') as \
-            mock_ask:
+    with patch(show_dialog_with_icon_path) as mock_ask:
         mock_ask.return_value = Gtk.ResponseType.NO
         for row in handler.current_rows:
             if row != found_row:
@@ -445,8 +447,7 @@ TestService * @anyvm @anyvm deny"""
     else:
         assert False # expected rule to edit not found!
 
-    with patch('qubes_config.global_config.policy_handler.show_dialog') as \
-            mock_ask:
+    with patch(show_dialog_with_icon_path) as mock_ask:
         mock_ask.return_value = Gtk.ResponseType.YES
         for row in handler.current_rows:
             if row != found_row:
@@ -494,9 +495,9 @@ TestService * @anyvm @anyvm deny"""
         assert False # expected rule to edit not found!
 
     # click another row, but, say you want to save changes, fail
-    with patch('qubes_config.global_config.policy_handler.show_dialog') as \
-            mock_ask, patch('qubes_config.global_config.rule_list_widgets'
-                            '.show_error') as mock_error:
+    with patch(show_dialog_with_icon_path) as mock_ask, \
+            patch('qubes_config.global_config.rule_list_widgets.show_error') \
+                    as mock_error:
         mock_ask.return_value = Gtk.ResponseType.YES
         for row in handler.current_rows:
             if row != found_row:

@@ -3280,7 +3280,7 @@
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">You can use Qubes Template Manager to install new templates from repositories selected here.</property>
+                            <property name="label" translatable="yes">The Qubes Template Manager will be able to install templates from these repositories.</property>
                             <property name="wrap">True</property>
                             <property name="xalign">0</property>
                             <style>
@@ -3302,12 +3302,12 @@
                             <property name="column-spacing">10</property>
                             <child>
                               <object class="GtkCheckButton" id="updates_template_official">
-                                <property name="label" translatable="yes">Official Qubes OS templates</property>
+                                <property name="label" translatable="yes">Official templates</property>
                                 <property name="visible">True</property>
                                 <property name="sensitive">False</property>
                                 <property name="can-focus">True</property>
                                 <property name="receives-default">False</property>
-                                <property name="tooltip-text" translatable="yes">Qubes OS official templates are always enabled.</property>
+                                <property name="tooltip-text" translatable="yes">The official template repositories are always enabled.</property>
                                 <property name="active">True</property>
                                 <property name="draw-indicator">True</property>
                               </object>
@@ -3330,7 +3330,7 @@
                                       <object class="GtkLabel">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
-                                        <property name="label" translatable="yes">Enable testing official templates</property>
+                                        <property name="label" translatable="yes">Official testing templates</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -3342,7 +3342,7 @@
                                       <object class="GtkImage">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
-                                        <property name="tooltip-text" translatable="yes">Templates in testing may contain bugs, but you can get to use templates earlier with them.</property>
+                                        <property name="tooltip-text" translatable="yes">Templates that are still in testing may contain bugs. Recommended for testers only.</property>
                                         <property name="xalign">0.5</property>
                                         <property name="yalign">0.6000000238418579</property>
                                         <property name="pixel-size">20</property>
@@ -3389,7 +3389,7 @@
                                       <object class="GtkImage">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
-                                        <property name="tooltip-text" translatable="yes">Templates maintained by the Qubes OS community</property>
+                                        <property name="tooltip-text" translatable="yes">This repository contains templates maintained by the Qubes community.</property>
                                         <property name="xalign">0.5</property>
                                         <property name="yalign">0.6000000238418579</property>
                                         <property name="pixel-size">20</property>
@@ -3425,7 +3425,7 @@
                                       <object class="GtkLabel">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
-                                        <property name="label" translatable="yes">Enable testing community templates</property>
+                                        <property name="label" translatable="yes">Community testing templates</property>
                                       </object>
                                       <packing>
                                         <property name="expand">False</property>
@@ -3437,7 +3437,7 @@
                                       <object class="GtkImage">
                                         <property name="visible">True</property>
                                         <property name="can-focus">False</property>
-                                        <property name="tooltip-text" translatable="yes">Templates in testing may contain bugs, but you can get to use templates earlier with them.</property>
+                                        <property name="tooltip-text" translatable="yes">Templates that are still in testing may contain bugs. Recommended for testers only.</property>
                                         <property name="xalign">0.5</property>
                                         <property name="yalign">0.6000000238418579</property>
                                         <property name="pixel-size">20</property>
@@ -3529,7 +3529,7 @@
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">Isolate your GPG encryption keys in their own qubes, separate from the qubes with the apps that need to access them. Qubes OS can proxy your GPG keys through this feature to protect your keys.</property>
+                            <property name="label" translatable="yes">This feature protects your PGP keys by "splitting" GNU Privacy Guard (GnuPG or GPG) into two halves: one or more backend "key" qubes that securely store your PGP keys and one or more frontend "access" qubes with the ability to use those keys according to rules you specify. &lt;a href="https://www.qubes-os.org/doc/split-gpg/"&gt;Learn more.&lt;/a&gt;</property>
                             <property name="wrap">True</property>
                             <property name="xalign">0</property>
                             <style>
@@ -3543,61 +3543,13 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkBox">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="halign">center</property>
-                            <property name="margin-bottom">20</property>
-                            <property name="spacing">20</property>
-                            <child>
-                              <object class="GtkImage">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="halign">start</property>
-                                <property name="valign">center</property>
-                                <property name="pixel-size">48</property>
-                                <property name="icon-name">qubes-info</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLabel" id="splitgpg_info">
-                                <property name="visible">True</property>
-                                <property name="can-focus">True</property>
-                                <property name="halign">start</property>
-                                <property name="label" translatable="yes">To learn more about Split GPG and its uses, you can check the &lt;a href="https://www.qubes-os.org/doc/split-gpg/"&gt;online documentation&lt;/a&gt;.
-Documentation will open in a disposable qube.</property>
-                                <property name="use-markup">True</property>
-                                <property name="wrap">True</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
-                            <style>
-                              <class name="info_box"/>
-                            </style>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">False</property>
-                            <property name="position">2</property>
-                          </packing>
-                        </child>
-                        <child>
                           <object class="GtkBox" id="splitgpg_problem_box">
                             <property name="can-focus">False</property>
                             <property name="orientation">vertical</property>
                             <child>
                               <object class="GtkLabel" id="splitgpg_problem_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Custom policy changes found. The changes below might be overwritten by existing custom policy changes. You can view the files below to adjust existing policy, or move their contents to raw policy file below to enable graphical edit.</property>
+                                <property name="label" translatable="yes">Custom policy changes found. The changes below may be overwritten by existing custom policy changes. View the files listed below to verify the existing policy.</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -3638,7 +3590,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="splitgpg_error_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. These rules will be discarded on save. The following rules were affected:</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct but are too complicated for this tool to handle. These rules will be discarded on save. The following rules were affected:</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -3687,7 +3639,7 @@ Documentation will open in a disposable qube.</property>
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;Not enabled.&lt;/b&gt;</property>
+                                    <property name="label" translatable="yes">&lt;b&gt;Disabled.&lt;/b&gt;</property>
                                     <property name="use-markup">True</property>
                                   </object>
                                   <packing>
@@ -3700,7 +3652,7 @@ Documentation will open in a disposable qube.</property>
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Each qube that uses GPG will needs its own local keyring.</property>
+                                    <property name="label" translatable="yes">Each instance of GPG in a qube is confined to that qube.</property>
                                     <property name="wrap">True</property>
                                     <style>
                                       <class name="explanation_text"/>
@@ -3739,7 +3691,7 @@ Documentation will open in a disposable qube.</property>
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;Enable Split GPG&lt;/b&gt;</property>
+                                    <property name="label" translatable="yes">&lt;b&gt;Enabled.&lt;/b&gt;</property>
                                     <property name="use-markup">True</property>
                                   </object>
                                   <packing>
@@ -3752,7 +3704,7 @@ Documentation will open in a disposable qube.</property>
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">to allow designated qubes to access GPG keys from one or more key qubes.</property>
+                                    <property name="label" translatable="yes">Split GPG is enabled according to the rules below.</property>
                                     <property name="wrap">True</property>
                                     <style>
                                       <class name="explanation_text"/>
@@ -3913,7 +3865,7 @@ Documentation will open in a disposable qube.</property>
                                   <object class="GtkBox">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">Key qubes store your GPG keys for use with other qubes.</property>
+                                    <property name="tooltip-text" translatable="yes">Key qubes store your PGP keys so that other qubes can access them via Split GPG.</property>
                                     <child>
                                       <object class="GtkLabel">
                                         <property name="visible">True</property>
@@ -4388,9 +4340,11 @@ Documentation will open in a disposable qube.</property>
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">Clipboard is an extremely vulnerable part of any system, so Qubes OS disables seamless copy-and-paste between different qubes. To paste-and-copy between qubes, you need to use the following keyboard shortcuts.
+                            <property name="label" translatable="yes">Qubes OS features a secure "inter-qube" or "global" clipboard that allows you to copy and paste between qubes while preventing any qube other than your selected target from stealing content from the clipboard. Without such a system, any content copied to the global clipboard, such as a password, would instantly be exposed to every other running qube, including qubes you don't trust. By giving you precise control over exactly which qube receives inter-qube clipboard content, then immediately wiping the inter-qube clipboard afterward, Qubes OS protects the confidentiality of the text being copied.
 
-&lt;b&gt;Note:&lt;/b&gt; to see the effects of changing this setting, you need to restart a qube in which you're using the copy/paste.</property>
+Inter-qube copy and paste actions are performed via special keyboard shortcuts, as specified below. These keyboard shortcuts are always intercepted by dom0 (so that rogue qubes can't perform global copy/paste actions on their own).
+
+&lt;b&gt;Note:&lt;/b&gt; Changes below require a qube restart to take effect.</property>
                             <property name="use-markup">True</property>
                             <property name="wrap">True</property>
                             <property name="xalign">0</property>
@@ -4510,7 +4464,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="clipboard_problem_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Custom policy changes found. The changes below might be overwritten by existing custom policy changes. You can view the files below to adjust existing policy, or move their contents to raw policy file below to enable graphical edit.</property>
+                                <property name="label" translatable="yes">Custom policy changes found. The changes below may be overwritten by existing custom policy changes. View the files listed below to verify the existing policy.</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -4551,7 +4505,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="clipboard_error_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. These rules will be discarded on save. The following rules were affected:</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct but are too complicated for this tool to handle. These rules will be discarded on save. The following rules were affected:</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -4613,7 +4567,7 @@ Documentation will open in a disposable qube.</property>
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Qubes OS will allow you to paste content from any qube to any other qube, except dom0.</property>
+                                    <property name="label" translatable="yes">Allow any qube to copy/paste into any other qube, except dom0.</property>
                                     <property name="wrap">True</property>
                                     <style>
                                       <class name="explanation_text"/>
@@ -4666,7 +4620,7 @@ Documentation will open in a disposable qube.</property>
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">Qubes OS will restrict which qubes are allowed to paste content into the clipboards of other qubes.</property>
+                                    <property name="label" translatable="yes">Specify which qubes are allowed to copy/paste into which other qubes.</property>
                                     <property name="wrap">True</property>
                                     <style>
                                       <class name="explanation_text"/>
@@ -5142,7 +5096,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="filecopy_problem_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Custom policy changes found. The changes below might be overwritten by existing custom policy changes. You can view the files below to adjust existing policy, or move their contents to raw policy file below to enable graphical edit.</property>
+                                <property name="label" translatable="yes">Custom policy changes found. The changes below may be overwritten by existing custom policy changes. View the files listed below to verify the existing policy.</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -5183,7 +5137,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="filecopy_error_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. These rules will be discarded on save. The following rules were affected:</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct but are too complicated for this tool to handle. These rules will be discarded on save. The following rules were affected:</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -5793,7 +5747,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="openinvm_problem_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Custom policy changes found. The changes below might be overwritten by existing custom policy changes. You can view the files below to adjust existing policy, or move their contents to raw policy file below to enable graphical edit.</property>
+                                <property name="label" translatable="yes">Custom policy changes found. The changes below may be overwritten by existing custom policy changes. View the files listed below to verify the existing policy.</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -5834,7 +5788,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="openinvm_error_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. These rules will be discarded on save. The following rules were affected:</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct but are too complicated for this tool to handle. These rules will be discarded on save. The following rules were affected:</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -6349,7 +6303,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="url_problem_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Custom policy changes found. The changes below might be overwritten by existing custom policy changes. You can view the files below to adjust existing policy, or move their contents to raw policy file below to enable graphical edit.</property>
+                                <property name="label" translatable="yes">Custom policy changes found. The changes below may be overwritten by existing custom policy changes. View the files listed below to verify the existing policy.</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -6390,7 +6344,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="url_error_label">
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct, but too complicated to be handled by this tool. These rules will be discarded on save. The following rules were affected:</property>
+                                <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct but are too complicated for this tool to handle. These rules will be discarded on save. The following rules were affected:</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>

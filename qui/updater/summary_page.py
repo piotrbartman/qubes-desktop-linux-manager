@@ -30,7 +30,7 @@ gi.require_version('Gtk', '3.0')  # isort:skip
 from gi.repository import Gtk  # isort:skip
 from typing import Optional, Any
 
-from qubesadmin import exc
+import qubesadmin
 from qubesadmin.events.utils import wait_for_domain_shutdown
 
 from qubes_config.widgets.gtk_utils import load_icon, show_dialog, \
@@ -194,15 +194,16 @@ class SummaryPage:
             if bool(row.status)
             and QubeClass[row.vm.klass] == QubeClass.TemplateVM
         ]
-        possibly_changed_vms = {appvm for template in self.updated_tmpls
-                                for appvm in template.vm.appvms
-                                }
+        possibly_changed_vms = set()
+        for template in self.updated_tmpls:
+            possibly_changed_vms.update(template.vm.derived_vms)
+
         self.list_store = ListWrapper(
             RestartRowWrapper, self.restart_list.get_model())
 
         for vm in possibly_changed_vms:
-            if vm.is_running() \
-                    and (vm.klass != 'DispVM' or not vm.auto_cleanup):
+            if vm.is_running() and (
+                    vm.klass != 'DispVM' or not vm.auto_cleanup):
                 self.list_store.append_vm(vm)
 
         if settings.restart_system_vms:
@@ -303,7 +304,7 @@ class SummaryPage:
             try:
                 vm.shutdown(force=True)
                 wait_for.append(vm)
-            except exc.QubesVMError as err:
+            except qubesadmin.exc.QubesVMError as err:
                 self.err += vm.name + " cannot shutdown: " + str(err) + '\n'
 
         asyncio.run(wait_for_domain_shutdown(wait_for))
@@ -320,7 +321,7 @@ class SummaryPage:
         for vm in shutdowns:
             try:
                 vm.start()
-            except exc.QubesVMError as err:
+            except qubesadmin.exc.QubesVMError as err:
                 self.err += vm.name + " cannot start: " + str(err) + '\n'
 
     def _show_status_dialog(self):

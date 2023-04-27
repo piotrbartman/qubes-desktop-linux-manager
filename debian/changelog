@@ -1,3 +1,52 @@
+qubes-desktop-linux-manager (4.2.6-1) unstable; urgency=medium
+
+  [ Piotr Bartman ]
+  * qubes-vm-update: draft
+  * qubes-vm-update: parallel
+  * qubes-vm-update: use features to choose vms
+  * qubes-vm-update: style
+  * qubes-vm-update: change never to unknown
+  * qubes-vm-update: move common styles to qui/styles
+  * qubes-vm-update: pylint & minor fixes
+  * qubes-vm-update: more descriptive name for gradient colors
+  * qubes-vm-update: idle buffer update
+  * qubes-vm-update: define vm label colors in qubes-colors-*.css
+  * qubes-vm-update: fix test_progress_page.py
+  * qubes-vm-update: add type hints and move load_css to new style.py
+  * qubes-vm-update: refactor
+  * qubes-vm-update: parallel reading
+  * qubes-vm-update: gracefully cancel
+  * qubes-vm-update: @marmarta comments
+  * qubes-vm-update: controlled shutdown
+  * fix style paths
+  * qubes-vm-update: pylint
+  * qubes-vm-update: @marmarta comments
+  * qubes-vm-update: add test for modified vms
+  * qubes-vm-update: fix dialog css & parallel issues
+
+  [ Marta Marczykowska-Górecka ]
+  * Modify submenu for internal qubes in qui-domains
+
+  [ Piotr Bartman ]
+  * qubes-vm-update: restart dialog
+  * qubes-vm-update: updater settings tests
+  * qubes-vm-update: clicking restart sys-vms shows exception flowbox
+  * qubes-vm-update: fix mocking after changing name of method + remove
+    unused imports
+  * qubes-vm-update: import order
+  * qubes-vm-update: include all derived vms in restarting
+
+  [ Marta Marczykowska-Górecka ]
+  * Fix keyboard nav on the Updates page
+  * Fix scrolling to currently-focused widget in Global Config
+  * Fix discard changes on page switch in Global Config
+  * Fix uncaught exception in Global Config
+
+  [ Marek Marczykowski-Górecki ]
+  * Bump required python-qubesadmin version
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Thu, 27 Apr 2023 17:35:08 +0200
+
 qubes-desktop-linux-manager (4.2.5-1) unstable; urgency=medium
 
   [ Marta Marczykowska-Górecka ]

@@ -429,6 +429,7 @@ class GlobalConfig(Gtk.Application):
                     return self.save_page(page)
                 if response == Gtk.ResponseType.NO:
                     page.reset()
+                    return True
                 return False
         return True
 

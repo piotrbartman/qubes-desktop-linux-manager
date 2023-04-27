@@ -2511,6 +2511,7 @@ Documentation will open in a disposable qube.</property>
                         <child>
                           <object class="GtkSeparator">
                             <property name="visible">True</property>
+                            <property name="sensitive">False</property>
                             <property name="can-focus">False</property>
                             <property name="valign">center</property>
                             <property name="hexpand">True</property>
@@ -2545,7 +2546,7 @@ Documentation will open in a disposable qube.</property>
                             <child>
                               <object class="GtkLabel" id="splitgpg_info1">
                                 <property name="visible">True</property>
-                                <property name="can-focus">True</property>
+                                <property name="can-focus">False</property>
                                 <property name="halign">start</property>
                                 <property name="label" translatable="yes">The setting below will be applied only to &lt;b&gt;existing&lt;/b&gt; qubes. New qubes have checking for updates &lt;b&gt;enabled&lt;/b&gt; by default.</property>
                                 <property name="use-markup">True</property>

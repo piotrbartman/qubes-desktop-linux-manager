@@ -45,7 +45,10 @@ class PolicyManager:
 
     def get_all_policy_files(self, service: str) -> List[str]:
         """Just get a straightforward list of all relevant policy files."""
-        return self.policy_client.policy_get_files(service)
+        try:
+            return self.policy_client.policy_get_files(service)
+        except subprocess.CalledProcessError:
+            return []
 
     def get_conflicting_policy_files(self, service: str,
                                      own_file: str) -> List[str]:

@@ -17,11 +17,11 @@
 #
 # You should have received a copy of the GNU Lesser General Public License along
 # with this program; if not, see <http://www.gnu.org/licenses/>.
-
 # pylint: disable=missing-module-docstring
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
 # pylint: disable=protected-access
+import time
 from unittest.mock import patch, ANY
 
 from ..global_config.global_config import GlobalConfig, ClipboardHandler,\
@@ -223,6 +223,11 @@ def test_global_config_page_change(mock_error, mock_subprocess,
         app.main_notebook.next_page()
         mock_ask.assert_called()
 
+    # wait to make sure we don't accidentally catch the pre-corrected page
+    while Gtk.events_pending():
+        Gtk.main_iteration()
+    time.sleep(1)
+
     assert app.main_notebook.get_current_page() == file_page_num + 1
     app.main_notebook.prev_page()
 
@@ -248,6 +253,10 @@ def test_global_config_page_change(mock_error, mock_subprocess,
         mock_ask.return_value = Gtk.ResponseType.YES
         app.main_notebook.next_page()
         mock_ask.assert_called()
+
+    while Gtk.events_pending():
+        Gtk.main_iteration()
+    time.sleep(0.1)
 
     # changes should have been done
     assert old_text != test_policy_manager.policy_client.files[

@@ -219,6 +219,7 @@ class GlobalConfig(Gtk.Application):
         else:
             height = self.main_window.get_allocated_height()
         self.main_window.resize(width, height)
+
         self.hold()
 
     @staticmethod
@@ -348,6 +349,10 @@ class GlobalConfig(Gtk.Application):
 
         self._handle_urls()
 
+        self.progress_bar_dialog.update_progress(1)
+        self.progress_bar_dialog.hide()
+        self.progress_bar_dialog.destroy()
+
         self.viewport_handler = ViewportHandler(
             self.main_window,
             [self.builder.get_object('basics_scrolled_window'),
@@ -359,11 +364,6 @@ class GlobalConfig(Gtk.Application):
              self.builder.get_object('url_scrolled_window'),
              self.builder.get_object('thisdevice_scrolled_window'),
              ])
-
-        self.progress_bar_dialog.update_progress(1)
-        self.progress_bar_dialog.hide()
-        self.progress_bar_dialog.destroy()
-
 
     def _usbvm_changed(self, *_args):
         response = show_dialog_with_icon(
@@ -429,6 +429,7 @@ class GlobalConfig(Gtk.Application):
                     return self.save_page(page)
                 if response == Gtk.ResponseType.NO:
                     page.reset()
+                    return True
                 return False
         return True
 

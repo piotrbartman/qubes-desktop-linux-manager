@@ -385,8 +385,9 @@ class GlobalConfig(Gtk.Application):
 
     def _handle_urls(self):
         url_label_ids = ["url_info", "openinvm_info", "splitgpg_info",
-                         "usb_info", "basics_info", "thisdevice_security_info",
-                         "thisdevice_certified_yes_info"]
+                         "splitgpg_info2", "usb_info", "basics_info",
+                         "thisdevice_security_info", "copymove_info"
+                         "thisdevice_certified_yes_info", "u2fproxy_info"]
         for url_label_id in url_label_ids:
             label: Gtk.Label = self.builder.get_object(url_label_id)
             label.connect("activate-link", self._activate_link)

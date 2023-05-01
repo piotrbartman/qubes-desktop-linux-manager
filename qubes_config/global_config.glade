@@ -1009,7 +1009,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel">
+                          <object class="GtkLabel" id="u2fproxy_info">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">Qubes U2F Proxy allows you to use Universal 2nd Factor (U2F) two-factor authentication (2FA) devices without exposing the whole device and all of its contents to every qube. &lt;a href="https://www.qubes-os.org/doc/u2f-proxy/"&gt;Learn more.&lt;/a&gt;
@@ -3526,7 +3526,7 @@
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkLabel">
+                          <object class="GtkLabel" id="splitgpg_info2">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
                             <property name="label" translatable="yes">This feature protects your PGP keys by "splitting" GNU Privacy Guard (GnuPG or GPG) into two halves: one or more backend "key" qubes that securely store your PGP keys and one or more frontend "access" qubes with the ability to use those keys according to rules you specify. &lt;a href="https://www.qubes-os.org/doc/split-gpg/"&gt;Learn more.&lt;/a&gt;</property>
@@ -5196,7 +5196,7 @@ Inter-qube copy and paste actions are performed via special keyboard shortcuts, 
                                   </packing>
                                 </child>
                                 <child>
-                                  <object class="GtkLabel">
+                                  <object class="GtkLabel" id="copymove_info">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
                                     <property name="label" translatable="yes">You will always be asked for permission when copying and moving files between qubes, except for dom0, which is handled differently. &lt;a href="https://www.qubes-os.org/doc/how-to-copy-from-dom0/"&gt;Learn about copying to and from dom0.&lt;/a&gt;</property>

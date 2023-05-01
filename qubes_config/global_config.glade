@@ -5075,7 +5075,7 @@ Inter-qube copy and paste actions are performed via special keyboard shortcuts, 
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">Control access for moving and copying files between qubes using &lt;tt&gt;qvm-copy&lt;/tt&gt;, &lt;tt&gt;qvm-move&lt;/tt&gt; and file manager commands such as Move/Copy to VM</property>
+                            <property name="label" translatable="yes">Control access for moving and copying files between qubes using &lt;tt&gt;qvm-copy&lt;/tt&gt;, &lt;tt&gt;qvm-move&lt;/tt&gt;, and file manager actions such as &lt;b&gt;Copy/Move to other qube...&lt;/b&gt;.</property>
                             <property name="use-markup">True</property>
                             <property name="wrap">True</property>
                             <property name="xalign">0</property>
@@ -5186,7 +5186,7 @@ Inter-qube copy and paste actions are performed via special keyboard shortcuts, 
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;Default policy.&lt;/b&gt;</property>
+                                    <property name="label" translatable="yes">&lt;b&gt;Default policy&lt;/b&gt;</property>
                                     <property name="use-markup">True</property>
                                   </object>
                                   <packing>
@@ -5199,8 +5199,7 @@ Inter-qube copy and paste actions are performed via special keyboard shortcuts, 
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">You will always be asked for permission when moving files between qubes.
-Files cannot be copied to dom0.</property>
+                                    <property name="label" translatable="yes">You will always be asked for permission when copying and moving files between qubes, except for dom0, which is handled differently. &lt;a href="https://www.qubes-os.org/doc/how-to-copy-from-dom0/"&gt;Learn about copying to and from dom0.&lt;/a&gt;</property>
                                     <property name="wrap">True</property>
                                     <style>
                                       <class name="explanation_text"/>
@@ -5239,7 +5238,7 @@ Files cannot be copied to dom0.</property>
                                   <object class="GtkLabel">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;Custom policy.&lt;/b&gt;</property>
+                                    <property name="label" translatable="yes">&lt;b&gt;Custom policy&lt;/b&gt;</property>
                                     <property name="use-markup">True</property>
                                   </object>
                                   <packing>
@@ -5678,7 +5677,7 @@ Files cannot be copied to dom0.</property>
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">This policy governs Qubes OS behavior when using &lt;tt&gt;qubes-open-in-dvm&lt;/tt&gt; with files. It is also used by various extensions, such as &lt;tt&gt;Edit in Disposable VM&lt;/tt&gt; in File Managers.</property>
+                            <property name="label" translatable="yes">This policy governs Qubes OS behavior when using &lt;tt&gt;qvm-open-in-dvm&lt;/tt&gt; with file arguments on the command line and &lt;b&gt;Edit/View in disposable&lt;/b&gt; in file managers.</property>
                             <property name="use-markup">True</property>
                             <property name="wrap">True</property>
                             <property name="xalign">0</property>
@@ -5831,7 +5830,7 @@ Documentation will open in a disposable qube.</property>
                               <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Curent Default Disposable Template:</property>
+                                <property name="label" translatable="yes">Current Default Disposable Template:</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -6218,7 +6217,7 @@ Documentation will open in a disposable qube.</property>
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">Open URL in Disposable Qube</property>
+                            <property name="label" translatable="yes">Open URL in Disposable</property>
                             <property name="xalign">0</property>
                             <style>
                               <class name="group_title"/>
@@ -6235,7 +6234,7 @@ Documentation will open in a disposable qube.</property>
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">This policy governs Qubes OS behavior when using &lt;tt&gt;qubes-open-in-dvm&lt;/tt&gt; with URLs.</property>
+                            <property name="label" translatable="yes">This policy governs Qubes OS behavior when using &lt;tt&gt;qvm-open-in-dvm&lt;/tt&gt; with URL arguments on the command line.</property>
                             <property name="use-markup">True</property>
                             <property name="wrap">True</property>
                             <property name="xalign">0</property>
@@ -6387,7 +6386,7 @@ Documentation will open in a disposable qube.</property>
                               <object class="GtkLabel">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Curent Default Disposable Template:</property>
+                                <property name="label" translatable="yes">Current Default Disposable Template:</property>
                                 <property name="wrap">True</property>
                               </object>
                               <packing>
@@ -6814,7 +6813,7 @@ Documentation will open in a disposable qube.</property>
                         <child>
                           <object class="GtkButton" id="thisdevice_copy_button">
                             <property name="label" translatable="yes">Copy system information
-to Global Clipboard</property>
+to global clipboard</property>
                             <property name="name">copy_button</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
@@ -6847,7 +6846,7 @@ to Global Clipboard</property>
                         <child>
                           <object class="GtkButton" id="thisdevice_copy_hcl_button">
                             <property name="label" translatable="yes">Copy HCL report
-to Global Clipboard</property>
+to global clipboard</property>
                             <property name="name">copy_hcl_button</property>
                             <property name="visible">True</property>
                             <property name="can-focus">True</property>
@@ -7049,8 +7048,8 @@ to Global Clipboard</property>
                                   <object class="GtkLabel" id="thisdevice_certified_yes_info">
                                     <property name="visible">True</property>
                                     <property name="can-focus">True</property>
-                                    <property name="label" translatable="yes">&lt;b&gt;This device is certified for Qubes OS.&lt;/b&gt;
-For more information, &lt;a href="https://www.qubes-os.org/doc/certified-hardware/"&gt;click here&lt;/a&gt;.</property>
+                                    <property name="label" translatable="yes">&lt;b&gt;This device is officially certified for your current Qubes OS release.&lt;/b&gt;
+&lt;a href="https://www.qubes-os.org/doc/certified-hardware/"&gt;Learn more about Qubes-certified hardware.&lt;/a&gt;</property>
                                     <property name="use-markup">True</property>
                                     <property name="justify">center</property>
                                     <property name="wrap">True</property>
@@ -7092,7 +7091,7 @@ For more information, &lt;a href="https://www.qubes-os.org/doc/certified-hardwar
                                   <object class="GtkImage" id="thisdevice_usbk_tooltip">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enabling USB keyboards unconditionally can be dangerous. You can check your policy settings on the USB Devices page.</property>
+                                    <property name="tooltip-text" translatable="yes">Granting a USB keyboard unconditional access can be dangerous. You can check your policy settings on the USB Devices page.</property>
                                     <property name="margin-start">10</property>
                                     <property name="xalign">0.5</property>
                                     <property name="yalign">0.6000000238418579</property>
@@ -7133,7 +7132,7 @@ For more information, &lt;a href="https://www.qubes-os.org/doc/certified-hardwar
                                   <object class="GtkImage" id="thisdevice_pv_tooltip">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="tooltip-text" translatable="yes">Enabling USB keyboards unconditionally can be dangerous. You can check your policy settings on the USB Devices page.</property>
+                                    <property name="tooltip-text" translatable="yes">Granting a USB keyboard unconditional access can be dangerous. You can check your policy settings on the USB Devices page.</property>
                                     <property name="margin-start">10</property>
                                     <property name="xalign">0.5</property>
                                     <property name="yalign">0.6000000238418579</property>
@@ -7293,7 +7292,7 @@ Documentation will open in a disposable qube.</property>
                 <child>
                   <object class="GtkLabel" id="version_information_label">
                     <property name="can-focus">False</property>
-                    <property name="label" translatable="yes">Version Information</property>
+                    <property name="label" translatable="yes">Version information</property>
                   </object>
                   <packing>
                     <property name="left-attach">1</property>

@@ -384,10 +384,10 @@ class GlobalConfig(Gtk.Application):
         usb_handler.usbvm_handler.reset()
 
     def _handle_urls(self):
-        url_label_ids = ["url_info", "openinvm_info", "splitgpg_info",
-                         "splitgpg_info2", "usb_info", "basics_info",
-                         "thisdevice_security_info", "copymove_info"
-                         "thisdevice_certified_yes_info", "u2fproxy_info"]
+        url_label_ids = ["basics_info", "u2fproxy_info", "splitgpg_info2",
+                         "copymove_info", "openinvm_info", "url_info",
+                         "thisdevice_certified_yes_info",
+                         "thisdevice_security_info"]
         for url_label_id in url_label_ids:
             label: Gtk.Label = self.builder.get_object(url_label_id)
             label.connect("activate-link", self._activate_link)

@@ -736,6 +736,30 @@ Proxy * @type:TemplateVM @default allow target=sys-firewall
                     'service.qubes-updates-proxy', None) in \
                mock_feature.mock_calls
 
+@patch('qubes_config.global_config.updates_handler.apply_feature_change')
+def test_update_proxy_apply(mock_feature, real_builder,
+                            test_qapp_whonix, test_policy_manager):
+    # pylint: disable=unused-argument
+    handler = UpdateProxy(real_builder, test_qapp_whonix, test_policy_manager,
+                          'proxy-file', 'Proxy')
+
+    assert handler.has_whonix
+    assert handler.updatevm_model.get_selected() == 'sys-net'
+    assert handler.whonix_updatevm_model.get_selected() == 'sys-whonix'
+
+    assert handler.updatevm_model.is_vm_available('sys-firewall')
+    assert handler.whonix_updatevm_model.is_vm_available('anon-whonix')
+
+    handler.updatevm_model.select_value('sys-firewall')
+    handler.whonix_updatevm_model.select_value('anon-whonix')
+
+    handler.save()
+
+    handler.reset()
+
+    assert str(handler.updatevm_model.get_selected()) == 'sys-firewall'
+    assert str(handler.whonix_updatevm_model.get_selected()) == 'anon-whonix'
+
 
 @patch('qubes_config.global_config.updates_handler.apply_feature_change')
 def test_update_proxy_save_justwhonix(mock_feature, real_builder,

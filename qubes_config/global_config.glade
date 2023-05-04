@@ -5718,8 +5718,7 @@ Inter-qube copy and paste actions are performed via special keyboard shortcuts, 
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
                                 <property name="halign">start</property>
-                                <property name="label" translatable="yes">To learn more about the "Open in VM" policy and its uses, please see the &lt;a href="https://www.qubes-os.org/doc/"&gt;online documentation&lt;/a&gt;.
-The documentation will open in a disposable qube.</property>
+                                <property name="label" translatable="yes">To learn more about the "Open in VM" policy and its uses, please see the &lt;a href="https://www.qubes-os.org/doc/"&gt;online documentation&lt;/a&gt;.</property>
                                 <property name="use-markup">True</property>
                                 <property name="wrap">True</property>
                               </object>
@@ -6274,8 +6273,7 @@ The documentation will open in a disposable qube.</property>
                               <object class="GtkLabel" id="url_info">
                                 <property name="visible">True</property>
                                 <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">To learn more about the "Open URL" policy and its uses, please see the &lt;a href="https://www.qubes-os.org/doc/"&gt;online documentation&lt;/a&gt;.
-The documentation will open in a disposable qube.</property>
+                                <property name="label" translatable="yes">To learn more about the "Open URL" policy and its uses, please see the &lt;a href="https://www.qubes-os.org/doc/"&gt;online documentation&lt;/a&gt;.</property>
                                 <property name="use-markup">True</property>
                                 <property name="wrap">True</property>
                               </object>
@@ -7188,8 +7186,7 @@ to global clipboard</property>
                               <object class="GtkLabel" id="thisdevice_security_info">
                                 <property name="visible">True</property>
                                 <property name="can-focus">True</property>
-                                <property name="label" translatable="yes">To learn more about the Qubes OS Security Report, please see the &lt;a href="https://www.qubes-os.org/doc/"&gt;online documentation&lt;/a&gt;.
-The documentation will open in a disposable qube.</property>
+                                <property name="label" translatable="yes">To learn more about the Qubes OS Security Report, please see the &lt;a href="https://www.qubes-os.org/doc/"&gt;online documentation&lt;/a&gt;.</property>
                                 <property name="use-markup">True</property>
                                 <property name="wrap">True</property>
                               </object>

@@ -21,18 +21,17 @@
 USB Devices-related functionality.
 """
 from functools import partial
-from typing import List, Union, Optional, Dict, Callable
+from typing import List, Union, Optional, Dict, Tuple, Set
 
 from qrexec.policy.parser import Allow
 
-from ..widgets.gtk_widgets import ImageTextButton
-from ..widgets.utils import get_feature, apply_feature_change_from_widget, \
-    apply_feature_change
+from ..widgets.gtk_widgets import TokenName, TextModeler, VMListModeler
+from ..widgets.utils import get_feature, apply_feature_change
 from ..widgets.gtk_utils import ask_question, show_error
 from .page_handler import PageHandler
-from .policy_rules import RuleTargetedAdminVM
+from .policy_rules import RuleTargetedAdminVM, Rule
 from .policy_manager import PolicyManager
-from .rule_list_widgets import VMWidget, ActionWidget
+from .policy_handler import ErrorHandler
 from .vm_flowbox import VMFlowboxHandler
 from .conflict_handler import ConflictFileHandler
 
@@ -49,223 +48,141 @@ import gettext
 t = gettext.translation("desktop-linux-manager", fallback=True)
 _ = t.gettext
 
-class WidgetWithButtons(Gtk.Box):
-    """This is a simple wrapper for editable widgets
-    with additional confirm/cancel/edit buttons"""
-    def __init__(self, widget: Union[ActionWidget, VMWidget],
-                 confirm_callback: Optional[Callable] = None):
-        super().__init__(orientation=Gtk.Orientation.HORIZONTAL)
-        self.select_widget = widget
-        self.confirm_callback = confirm_callback
 
-        self.edit_button = ImageTextButton(icon_name='qubes-customize',
-                                           label=None,
-                                           click_function=self._edit_clicked,
-                                           style_classes=["flat"])
-        self.confirm_button = ImageTextButton(
-            icon_name="qubes-ok", label=_("ACCEPT"),
-            click_function=self._confirm_clicked,
-            style_classes=["button_save", "flat_button"])
-        self.cancel_button = ImageTextButton(
-            icon_name="qubes-delete", label=_("CANCEL"),
-            click_function=self._cancel_clicked,
-            style_classes=["button_cancel", "flat_button"])
-
-        self.pack_start(self.select_widget, False, False, 0)
-        self.pack_start(self.edit_button, False, False, 0)
-        self.pack_start(self.confirm_button, False, False, 10)
-        self.pack_start(self.cancel_button, False, False, 10)
-
+class InputActionWidget(Gtk.Box):
+    """A simple widget for a combobox for policy actions."""
+    def __init__(self, rule: RuleTargetedAdminVM,
+                 action_choices: Dict[str, str]):
+        """
+        :param rule: wrapped policy rule
+        :param action_choices: Dictionary of "nice rule name": "actual action"
+        """
+        super().__init__()
+        self.rule = rule
+        self.service = rule.raw_rule.service
+        self.combobox = Gtk.ComboBoxText()
+        self.model = TextModeler(
+            combobox=self.combobox,
+            values=action_choices,
+            selected_value=self.rule.action,
+            style_changes=True)
+        self.add(self.combobox)
         self.show_all()
-        self._set_editable(False)
-        self._initial_value = self.select_widget.get_selected()
 
-    def _set_editable(self, state: bool):
-        self.select_widget.set_editable(state)
-        self.edit_button.set_visible(not state)
-        self.cancel_button.set_visible(state)
-        self.confirm_button.set_visible(state)
-
-    def _edit_clicked(self, _widget):
-        self._set_editable(True)
-
-    def _cancel_clicked(self, _widget):
-        self.select_widget.revert_changes()
-        self._set_editable(False)
-
-    def _confirm_clicked(self, _widget):
-        self.select_widget.save()
-        self._set_editable(False)
-        if self.confirm_callback:
-            self.confirm_callback()
+    def is_changed(self):
+        """Was the widget changed?"""
+        return self.model.is_changed()
 
     def reset(self):
-        """Reset all changes."""
-        self.select_widget.model.select_value(self._initial_value)
-        self.select_widget.model.update_initial()
-        self.select_widget.save()
-        self._set_editable(False)
-
-    def close_edit(self):
-        """Close edit options and revert changes since last confirm."""
-        self._cancel_clicked(None)
-
-    def is_changed(self) -> bool:
-        """Has the selection been changed from initial value?"""
-        return self._initial_value != self.select_widget.get_selected()
+        """Reset widget state to before changes."""
+        self.model.reset()
 
     def update_changed(self):
-        """Notify widget that the initial value (for purposes of tracking
-        changes) should be updated."""
-        self._initial_value = self.select_widget.get_selected()
-
-
-class USBVMHandler:
-    """Handler for the usb vm selector."""
-
-    FEATURE_NAME = 'config-usbvm-name'
-
-    def __init__(self, qapp: qubesadmin.Qubes, gtk_builder: Gtk.Builder):
-        self.qapp = qapp
-        self.vm = self.qapp.domains[self.qapp.local_name]
-
-        self.usb_qube_box: Gtk.Box = \
-            gtk_builder.get_object('usb_select_usb_qube_box')
-
-        self.select_widget = VMWidget(
-            qapp=self.qapp, categories=None,
-            initial_value=self._get_current_usbvm())
-        self.widget_with_buttons = WidgetWithButtons(
-            self.select_widget, confirm_callback=self._emit_signal)
-        self.usb_qube_box.pack_start(self.widget_with_buttons, False, False, 0)
-
-    def _emit_signal(self, *_args):
-        self.usb_qube_box.get_toplevel().emit('usbvm-changed', None)
-
-    def _get_current_usbvm(self):
-        usb_vm_name = get_feature(self.vm, self.FEATURE_NAME, 'sys-usb')
-        # Future: what if user has no sys-usb? well. Disable whole page?
-        return self.qapp.domains.get(usb_vm_name)
-
-    def save(self):
-        """Save user changes."""
-        self.widget_with_buttons.close_edit()
-        apply_feature_change_from_widget(self.select_widget,
-                                         self.vm,
-                                         self.FEATURE_NAME)
-        self.widget_with_buttons.update_changed()
-
-    def get_selected_usbvm(self):
-        """Get currently chosen usbvm."""
-        return self.select_widget.get_selected()
-
-    def get_unsaved(self) -> str:
-        """Get human-readable description of unsaved changes, or
-        empty string if none were found."""
-        self.widget_with_buttons.close_edit()
-        if self.widget_with_buttons.is_changed():
-            return _("USB qube")
-        return ""
-
-    def reset(self):
-        """Reset all changes to their initial state."""
-        self.widget_with_buttons.close_edit()
-        self.widget_with_buttons.reset()
+        """Mark any changes in the widget as saved."""
+        self.model.update_initial()
 
 
 class InputDeviceHandler:
     """Handler for various qubes.Input policies."""
     ACTION_CHOICES = {
-        "ask": _("always ask"),
-        "allow": _("enable"),
-        "deny": _("disable")
+        _("always ask"): "ask",
+        _("enable"): "allow",
+        _("disable"): "deny"
     }
+
     def __init__(self,
                  qapp: qubesadmin.Qubes,
                  policy_manager: PolicyManager,
                  gtk_builder: Gtk.Builder,
-                 sys_usb: qubesadmin.vm.QubesVM
+                 usb_qubes: Set[qubesadmin.vm.QubesVM]
                  ):
         self.qapp = qapp
         self.policy_manager = policy_manager
         self.policy_file_name = '50-config-input'
-        self.sys_usb = sys_usb
 
         self.warn_box = gtk_builder.get_object('usb_input_problem_box_warn')
         self.warn_label: Gtk.Label = gtk_builder.get_object(
             'usb_input_problem_warn_label')
         self.warn_box.set_visible(False)
 
-        self.default_policy = f"""
-qubes.InputMouse * {self.sys_usb} @adminvm deny
-qubes.InputKeyboard * {self.sys_usb} @adminvm deny
-qubes.InputTablet * {self.sys_usb} @adminvm deny
-"""
+        self.policy_grid: Gtk.Grid = \
+            gtk_builder.get_object('usb_input_grid')
 
-        # this is unavoidable piece of ugliness to avoid unaligned columns
-        self.policy_order = {'qubes.InputKeyboard': 0,
-                             'qubes.InputMouse': 1,
-                             'qubes.InputTablet': 2}
-        self.action_widgets: Dict[str, WidgetWithButtons] = {}
+        self.default_policy = ""
+
+        self.usb_qubes = usb_qubes
+
+        self.rules: List[Rule] = []
+        self.current_token: Optional[str] = None
+
+        # widgets indexed via tuples: service_name, usb-qube-name
+        self.widgets: Dict[Tuple[str, str], InputActionWidget] = {}
+
+        self.policy_order = ['qubes.InputKeyboard',
+                             'qubes.InputMouse',
+                             'qubes.InputTablet']
+
+        self.load_rules()
+
+        self.conflict_file_handler = ConflictFileHandler(
+            gtk_builder=gtk_builder, prefix="usb_input",
+            service_names=self.policy_order,
+            own_file_name=self.policy_file_name,
+            policy_manager=self.policy_manager)
+
+    def load_rules(self):
+        self.default_policy = ""
+
+        if not self.usb_qubes:
+            self._warn('No USB qubes found: to apply policy to USB input '
+                       'devices, connect your USB controller to a '
+                       'dedicated USB qube.')
+            return
+
+        for vm in self.usb_qubes:
+            self.default_policy += f"""
+qubes.InputMouse * {vm.name} @adminvm deny
+qubes.InputKeyboard * {vm.name} @adminvm deny
+qubes.InputTablet * {vm.name} @adminvm deny"""
+
+        for col_num, vm in enumerate(self.usb_qubes):
+            self.policy_grid.attach(TokenName(vm.name, self.qapp),
+                                    1 + col_num, 0, 1, 1)
 
         self.rules, self.current_token = \
             self.policy_manager.get_rules_from_filename(
                 self.policy_file_name, self.default_policy)
 
-        self.grid: Gtk.Grid = gtk_builder.get_object('usb_input_grid')
-
-        if len(self.rules) != 3:
-            self._warn("Unexpected number of policy lines.")
-
         for rule in self.rules:
-            if rule.service not in self.policy_order or \
-                    rule.target != '@adminvm':
-                self._warn(str(rule))
             try:
                 wrapped_rule = RuleTargetedAdminVM(rule)
-            except Exception:  # pylint: disable=broad-except
-                self._warn(str(rule))
+            except ValueError:
+                self._warn('Unexpected policy rule: ' + str(rule))
                 continue
-
-            action_widget = ActionWidget(
-                choices=self.ACTION_CHOICES,
-                verb_description=None,
-                rule=wrapped_rule)
-            widget_with_buttons = WidgetWithButtons(action_widget)
-
-            self.action_widgets[rule.service] = widget_with_buttons
-            self.grid.attach(child=widget_with_buttons,
-                             left=1, top=self.policy_order[rule.service],
-                             width=1, height=1)
-
-        # if there are any missing rules, fill them with default
-        for policy_service in self.policy_order:
-            if policy_service in self.action_widgets:
+            if wrapped_rule.source not in self.usb_qubes:
+                # non-fatal
+                self._warn('Unexpected policy rule: ' + str(rule))
+            designation = (rule.service, str(wrapped_rule.source))
+            if designation in self.widgets:
+                self._warn('Unexpected policy rules')
                 continue
-            default_rule = [
-                rule for rule in
-                self.policy_manager.text_to_rules(self.default_policy)
-                if rule.service == policy_service][0]
-            wrapped_rule = RuleTargetedAdminVM(default_rule)
-            action_widget = ActionWidget(
-                choices=self.ACTION_CHOICES,
-                verb_description=None,
-                rule=wrapped_rule)
-            widget_with_buttons = WidgetWithButtons(action_widget)
+            self.widgets[designation] = InputActionWidget(wrapped_rule,
+                                                          self.ACTION_CHOICES)
 
-            self.action_widgets[default_rule.service] = \
-                widget_with_buttons
-            self.grid.attach(child=widget_with_buttons,
-                             left=1,
-                             top=self.policy_order[default_rule.service],
-                             width=1, height=1)
+        for service in self.policy_order:
+            for vm in self.usb_qubes:
+                if (service, vm.name) not in self.widgets:
+                    rule = self.policy_manager.text_to_rules(
+                        f"{service} * {vm.name} @adminvm deny")[0]
+                    self.widgets[(service, vm.name)] = InputActionWidget(
+                        RuleTargetedAdminVM(rule), self.ACTION_CHOICES)
 
+        for row_num, service in enumerate(self.policy_order):
+            for col_num, vm in enumerate(self.usb_qubes):
+                self.policy_grid.attach(self.widgets[(service, vm.name)],
+                                        1 + col_num, 1 + row_num, 1, 1)
 
-        self.conflict_file_handler = ConflictFileHandler(
-            gtk_builder=gtk_builder, prefix="usb_input",
-            service_names=list(self.policy_order.keys()),
-            own_file_name=self.policy_file_name,
-            policy_manager=self.policy_manager)
+        self.policy_grid.show_all()
 
     def _warn(self, error_descr: str):
         self.warn_label.set_text(
@@ -275,34 +192,35 @@ qubes.InputTablet * {self.sys_usb} @adminvm deny
     def save(self):
         """Save user changes"""
         rules = []
-        for widget in self.action_widgets.values():
-            widget.close_edit()
-            widget.select_widget.rule.action = \
-                widget.select_widget.get_selected()
-            rules.append(widget.select_widget.rule.raw_rule)
+        if not self.widgets:
+            # no point in changing anything, there are no USB qubes
+            return
+        for widget in self.widgets.values():
+            widget.rule.action = \
+                widget.model.get_selected()
+            rules.append(widget.rule.raw_rule)
 
         self.policy_manager.save_rules(self.policy_file_name, rules,
                                        self.current_token)
         _r, self.current_token = self.policy_manager.get_rules_from_filename(
             self.policy_file_name, self.default_policy)
 
-        for widget in self.action_widgets.values():
+        for widget in self.widgets.values():
             widget.update_changed()
 
     def get_unsaved(self) -> str:
         """Get human-readable description of unsaved changes, or
         empty string if none were found."""
         unsaved = []
-        for policy, widget in self.action_widgets.items():
-            widget.close_edit()
+        for widget in self.widgets.values():
             if widget.is_changed():
-                name = policy[len('qubes.Input'):]
+                name = widget.service[len('qubes.Input'):]
                 unsaved.append(_('{name} input settings').format(name=name))
         return "\n".join(unsaved)
 
     def reset(self):
         """Reset changes to the initial state."""
-        for widget in self.action_widgets.values():
+        for widget in self.widgets.values():
             widget.reset()
         self.warn_label.set_text('Unexpected policy file contents:')
 
@@ -319,14 +237,12 @@ class U2FPolicyHandler:
                  qapp: qubesadmin.Qubes,
                  policy_manager: PolicyManager,
                  gtk_builder: Gtk.Builder,
-                 sys_usb: qubesadmin.vm.QubesVM
+                 usb_qubes: Set[qubesadmin.vm.QubesVM]
                  ):
         self.qapp = qapp
         self.policy_manager = policy_manager
         self.policy_filename = '50-config-u2f'
-        self.sys_usb = sys_usb
-
-        self._errors: List[str] = []
+        self.usb_qubes = usb_qubes
 
         self.default_policy = ""
         self.deny_all_policy = """
@@ -335,10 +251,10 @@ u2f.Register * @anyvm @anyvm deny
 policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
 """
 
-        self.problem_no_vms_box: Gtk.Box = \
-            gtk_builder.get_object('usb_u2f_no_qubes_problem')
-        self.problem_no_usbvm_box: Gtk.Box = \
-            gtk_builder.get_object('usb_u2f_no_usb_vm_problem')
+        self.problem_fatal_box: Gtk.Box = \
+            gtk_builder.get_object('usb_u2f_fatal_problem')
+        self.problem_fatal_label: Gtk.Label = \
+            gtk_builder.get_object('usb_u2f_fatal_problem_label')
 
         self.enable_check: Gtk.CheckButton = \
             gtk_builder.get_object('usb_u2f_enable_check') # general enable
@@ -357,12 +273,19 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
         self.blanket_check: Gtk.CheckButton = \
             gtk_builder.get_object('usb_u2f_blanket_check')
 
-        self.initially_enabled_vms : List[qubesadmin.vm.QubesVM] = []
+        self.usb_qube_combo: Gtk.ComboBox = gtk_builder.get_object(
+            'u2f_usb_combo')
+
+        self.initially_enabled_vms: List[qubesadmin.vm.QubesVM] = []
         self.available_vms: List[qubesadmin.vm.QubesVM] = []
         self.initial_register_vms: List[qubesadmin.vm.QubesVM] = []
         self.initial_blanket_vms: List[qubesadmin.vm.QubesVM] = []
         self.allow_all_register: bool = False
         self.current_token: Optional[str] = None
+        self.rules: List[Rule] = []
+        self.usb_qube_model: Optional[VMListModeler] = None
+
+        self.error_handler = ErrorHandler(gtk_builder, 'usb_u2f')
 
         self._initialize_data()
 
@@ -403,21 +326,9 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
             own_file_name=self.policy_filename,
             policy_manager=self.policy_manager)
 
-        self.box.connect('map', self._on_switch)
-
-    def _on_switch(self, *_args):
-        if self._errors:
-            rule_text = "\n".join(str(rule) for rule in self._errors)
-            show_error(
-                parent=self.box.get_toplevel(),
-                title=_("Unknown rule found in police file"),
-                text=_("The following rules could not be parsed:\n"
-                     "{rule_text}\n"
-                     "This has probably happened due to manual editing of the"
-                     "policy file. The rule will be discarded.").format(
-                    rule_text=rule_text)
-            )
-
+        if self.usb_qube_model:
+            self.usb_qube_model.connect_change_callback(
+                self.load_rules_for_usb_qube)
 
     @staticmethod
     def _enable_clicked(related_box: Union[Gtk.Box, VMFlowboxHandler],
@@ -437,38 +348,102 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
         return False
 
     def _initialize_data(self):
-        self._errors.clear()
+        self.problem_fatal_box.set_visible(False)
+
+        # guess at the current sys-usb
+        self.rules, self.current_token = \
+            self.policy_manager.get_rules_from_filename(
+                self.policy_filename, self.default_policy)
+
+        if not self.usb_qubes:
+            self.disable_u2f("No USB qubes found. To use U2F Proxy, you have to"
+                             "connect your USB controller to a qube.")
+            return
+
+        usb_qube_candidates = set()
+        for qube in self.usb_qubes:
+            if qube.features.check_with_template(
+                    self.SUPPORTED_SERVICE_FEATURE):
+                usb_qube_candidates.add(qube)
+
+        self.usb_qubes = usb_qube_candidates
+
+        self.usb_qube_model = VMListModeler(
+            combobox=self.usb_qube_combo,
+            qapp=self.qapp,
+            filter_function=lambda vm: vm in self.usb_qubes,
+            style_changes=True
+        )
+
+        if not usb_qube_candidates:
+            self.disable_u2f(
+                "The Qubes U2F Proxy service is not installed in the USB qube. "
+                "If you wish to use this service, install the "
+                "<tt>qubes-u2f</tt> package in the template on which "
+                "the USB qube is based.")
+            return
+
+        policy_candidates = set()
+        for rule in self.rules:
+            try:
+                policy_candidates.add(self.qapp.domains[rule.target])
+            except KeyError:
+                continue
+
+        sys_usb = None
+
+        if not policy_candidates:
+            sys_usb = next(iter(self.usb_qubes))
+        else:
+            # just grab one
+            sys_usb = policy_candidates.pop()
+
+        while sys_usb not in usb_qube_candidates and policy_candidates:
+            sys_usb = policy_candidates.pop()
+
+        if not sys_usb:
+            sys_usb = usb_qube_candidates.pop()
+
+        self.usb_qube_model.select_value(sys_usb)
+        self.usb_qube_model.update_initial()
+
+        self.load_rules_for_usb_qube()
+
+    def load_rules_for_usb_qube(self):
+        """Reload rules for select usb qube"""
+        if not self.usb_qube_model:
+            return
+        usb_qube = self.usb_qube_model.get_selected()
+        self.allow_all_register = False
         self.initially_enabled_vms.clear()
         self.available_vms.clear()
         self.initial_register_vms.clear()
         self.initial_blanket_vms.clear()
 
+        self.error_handler.clear_all_errors()
+
         for vm in self.qapp.domains:
             if vm.features.check_with_template(self.SUPPORTED_SERVICE_FEATURE):
-                if vm == self.sys_usb:
+                if vm == usb_qube:
                     continue
                 self.available_vms.append(vm)
             if get_feature(vm, self.SERVICE_FEATURE):
+                if vm == usb_qube:
+                    continue
                 self.initially_enabled_vms.append(vm)
-        available_in_sys_usb = self.sys_usb.features.check_with_template(
-                    self.SUPPORTED_SERVICE_FEATURE)
-        if not self.available_vms or not available_in_sys_usb:
-            self.problem_no_usbvm_box.show_all()
-            self.problem_no_vms_box.show_all()
-            self.problem_no_usbvm_box.set_visible(not available_in_sys_usb)
-            self.problem_no_vms_box.set_visible(not bool(self.available_vms))
-            self.enable_check.set_active(False)
-            self.enable_check.set_sensitive(False)
-            self.box.set_visible(False)
+
+        if not self.available_vms:
+            self.disable_u2f(
+                "No qubes with the U2F Proxy service found. If you wish to "
+                "use this service, install the <tt>qubes-u2f</tt> package in "
+                "the template on which the USB qube is based.")
             return
 
         self.enable_check.set_active(bool(self.initially_enabled_vms))
-
-        all_rules, self.current_token = \
-            self.policy_manager.get_rules_from_filename(
-                self.policy_filename, self.default_policy)
-
-        for rule in all_rules:
+        for rule in self.rules:
+            if rule.target not in [str(usb_qube), '@anyvm']:
+                self.error_handler.add_error(rule)
+                continue
             if rule.service == self.REGISTER_POLICY:
                 if rule.source == '@anyvm' and isinstance(rule.action, Allow):
                     self.allow_all_register = True
@@ -477,7 +452,7 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
                         vm = self.qapp.domains[rule.source]
                         self.initial_register_vms.append(vm)
                     except KeyError:
-                        self._errors.append(str(rule))
+                        self.error_handler.add_error(rule)
                         continue
             elif rule.service == self.AUTH_POLICY:
                 if rule.source != '@anyvm' and isinstance(rule.action, Allow):
@@ -485,10 +460,10 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
                         vm = self.qapp.domains[rule.source]
                         self.initial_blanket_vms.append(vm)
                     except KeyError:
-                        self._errors.append(str(rule))
+                        self.error_handler.add_error(rule)
                         continue
             elif rule.service != self.POLICY_REGISTER_POLICY:
-                self._errors.append(str(rule))
+                self.error_handler.add_error(rule)
                 continue
 
         if self.allow_all_register:
@@ -498,8 +473,19 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
             if self.initial_register_vms:
                 self.register_check.set_active(True)
                 self.register_some_radio.set_active(True)
+            else:
+                self.register_check.set_active(False)
 
         self.blanket_check.set_active(bool(self.initial_blanket_vms))
+
+    def disable_u2f(self, reason: str):
+        self.problem_fatal_box.set_visible(True)
+        self.problem_fatal_box.show_all()
+        self.problem_fatal_label.set_markup(reason)
+        self.enable_check.set_active(False)
+        self.enable_check.set_sensitive(False)
+        self.box.set_visible(False)
+        self.usb_qube_combo.set_active(False)
 
     def save(self):
         """Save user changes in policy."""
@@ -518,10 +504,6 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
                 self.policy_manager.text_to_rules(self.deny_all_policy),
                 self.current_token)
 
-            _r, self.current_token =\
-                self.policy_manager.get_rules_from_filename(
-                self.policy_filename, self.default_policy)
-
             self._initialize_data()
             return
 
@@ -539,6 +521,11 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
 
         rules = []
 
+        if not self.usb_qube_model:
+            return
+        sys_usb = self.usb_qube_model.get_selected()
+        self.usb_qube_model.update_initial()
+
         # register rules
         if not self.register_check.get_active():
             rules.append(self.policy_manager.new_rule(
@@ -553,22 +540,22 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
                 rules.append(self.policy_manager.new_rule(
                     service=self.POLICY_REGISTER_POLICY,
                     argument=f"+{self.AUTH_POLICY}",
-                    source=str(self.sys_usb),
+                    source=str(sys_usb),
                     target="@anyvm", action="allow target=dom0"))
                 rules.append(self.policy_manager.new_rule(
                     service=self.REGISTER_POLICY,
                     source="@anyvm",
-                    target=str(self.sys_usb), action="allow"))
+                    target=str(sys_usb), action="allow"))
             else:
                 for vm in self.register_some_handler.selected_vms:
                     rules.append(self.policy_manager.new_rule(
                         service=self.REGISTER_POLICY,
                         source=str(vm),
-                        target=str(self.sys_usb), action="allow"))
+                        target=str(sys_usb), action="allow"))
                 rules.append(self.policy_manager.new_rule(
                     service=self.POLICY_REGISTER_POLICY,
                     argument=f"+{self.AUTH_POLICY}",
-                    source=str(self.sys_usb),
+                    source=str(sys_usb),
                     target="@anyvm", action="allow target=dom0"))
 
         if self.blanket_check.get_active():
@@ -576,13 +563,10 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
                 rules.append(self.policy_manager.new_rule(
                     service=self.AUTH_POLICY,
                     source=str(vm),
-                    target=str(self.sys_usb), action="allow"))
+                    target=str(sys_usb), action="allow"))
 
         self.policy_manager.save_rules(self.policy_filename, rules,
                                        self.current_token)
-        _r, self.current_token = self.policy_manager.get_rules_from_filename(
-            self.policy_filename, self.default_policy)
-
         self._initialize_data()
 
     def reset(self):
@@ -594,6 +578,8 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
         self.enable_some_handler.reset()
         self.register_some_handler.reset()
         self.blanket_handler.reset()
+        if self.usb_qube_model:
+            self.usb_qube_model.reset()
 
     def get_unsaved(self) -> str:
         """Get human-readable description of unsaved changes, or
@@ -606,6 +592,9 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
             return ""
 
         unsaved = []
+
+        if self.usb_qube_model and self.usb_qube_model.is_changed():
+            unsaved.append(_("USB qube for U2F Proxy changed"))
 
         if self.enable_some_handler.selected_vms != self.initially_enabled_vms:
             unsaved.append(_("List of qubes with U2F enabled changed"))
@@ -639,41 +628,32 @@ class DevicesHandler(PageHandler):
 
         self.main_window = gtk_builder.get_object('main_window')
 
-        self.usbvm_handler = USBVMHandler(self.qapp, gtk_builder)
+        usb_qubes: Set[qubesadmin.vm.QubesVM] = set()
 
-        usb_vm = self.usbvm_handler.get_selected_usbvm()
+        for vm in self.qapp.domains:
+            for device in vm.devices['pci'].attached():
+                if device.description.startswith('USB controller'):
+                    usb_qubes.add(vm)
 
         self.input_handler = InputDeviceHandler(
-            qapp, policy_manager, gtk_builder, usb_vm)
+            qapp, policy_manager, gtk_builder, usb_qubes)
 
         self.u2f_handler = U2FPolicyHandler(self.qapp, self.policy_manager,
-                                            gtk_builder, usb_vm)
-        self.main_window.connect('usbvm-changed', self._usbvm_changed)
-
-    def _usbvm_changed(self, *_args):
-        # changing USB VM is such a big change (e.g. u2f settings will scream)
-        # that here only changes usbvm for the purposes of saving settings,
-        # but the main window will ask user to restart Settings app anyway
-        sys_usb = self.usbvm_handler.get_selected_usbvm()
-        self.input_handler.sys_usb = sys_usb
-        self.u2f_handler.sys_usb = sys_usb
+                                            gtk_builder, usb_qubes)
 
     def get_unsaved(self) -> str:
         """Get human-readable description of unsaved changes, or
         empty string if none were found."""
-        unsaved = [self.usbvm_handler.get_unsaved(),
-                   self.input_handler.get_unsaved(),
+        unsaved = [self.input_handler.get_unsaved(),
                    self.u2f_handler.get_unsaved()]
         return "\n".join([x for x in unsaved if x])
 
     def reset(self):
         """Reset state to initial or last saved state, whichever is newer."""
-        self.usbvm_handler.reset()
         self.input_handler.reset()
         self.u2f_handler.reset()
 
     def save(self):
         """Save current rules, whatever they are - custom or default."""
-        self.usbvm_handler.save()
         self.input_handler.save()
         self.u2f_handler.save()

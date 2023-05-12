@@ -1,12 +1,15 @@
 # pylint: disable=wrong-import-position,import-error
 import sys
 import subprocess
+from typing import List
+
 import gi
 gi.require_version('Gtk', '3.0')  # isort:skip
 from gi.repository import Gtk, GObject, Gio, GLib  # isort:skip
 from qubesadmin import Qubes
 from qubesadmin.utils import size_to_human
 from qubesadmin import exc
+from qubesadmin.storage import Pool
 
 import gettext
 t = gettext.translation("desktop-linux-manager", fallback=True)
@@ -143,11 +146,43 @@ class VMMenu(Gtk.Menu):
         self.show_all()
 
 
+class PoolWrapper:
+    """Wrapper for pools, to manage various exceptions thrown by properties."""
+    def __init__(self, pool: Pool):
+        self.pool = pool
+        self.has_error = False
+        self.size = self._get_attribute('size', None)
+        self.usage = self._get_attribute('usage', None)
+        self.config = self._get_attribute('config', {})
+        self.usage_details = self._get_attribute('usage_details', {})
+        self.name = self._get_attribute('name', 'ERROR: pool name unknown')
+
+        self.metadata_size = self.usage_details.get('metadata_size', None)
+        self.metadata_usage = self.usage_details.get('metadata_usage', None)
+
+        if self.size and self.usage:
+            self.usage_perc = self.usage / self.size
+        else:
+            self.usage_perc = 0
+
+        if self.metadata_size and self.metadata_usage:
+            self.metadata_perc = self.metadata_usage / self.metadata_size
+        else:
+            self.metadata_perc = 0
+
+    def _get_attribute(self, attribute_name, default):
+        try:
+            return getattr(self.pool, attribute_name, default)
+        except exc.StoragePoolException:
+            self.has_error = True
+            return default
+
+
 class PoolUsageData:
     def __init__(self, qubes_app):
         self.qubes_app = qubes_app
 
-        self.pools = []
+        self.pools: List[PoolWrapper] = []
         self.total_size = 0
         self.used_size = 0
         self.warning_message = []
@@ -160,31 +195,29 @@ class PoolUsageData:
         except exc.QubesDaemonAccessError:
             pools = []
         for pool in pools:
-            self.pools.append(pool)
-            if not getattr(pool, 'size', None) or \
-                    'included_in' in getattr(pool, 'config', {}):
+            wrapped_pool = PoolWrapper(pool)
+            self.pools.append(wrapped_pool)
+
+            if wrapped_pool.has_error:
                 continue
-            self.total_size += getattr(pool, 'size', 0)
-            self.used_size += getattr(pool, 'usage', 0)
-            try:
-                if pool.usage/pool.size >= URGENT_WARN_LEVEL:
-                    self.warning_message.append(
-                        _("\n{:.1%} space left in pool {}").format(
-                            1-pool.usage/pool.size, pool.name))
-            except (ValueError, exc.QubesDaemonAccessError):
-                pass
-            try:
-                if pool.usage_details.get('metadata_size', None):
-                    metadata_usage = pool.usage_details['metadata_usage'] / \
-                                     pool.usage_details['metadata_size']
-                    if metadata_usage >= URGENT_WARN_LEVEL:
-                        # pylint: disable=consider-using-f-string
-                        self.warning_message.append(_(
-                            "\nMetadata space for pool {} is running out. "
-                            "Current usage: {.1%}").format(
-                                pool.name, metadata_usage))
-            except (exc.QubesPropertyAccessError, AttributeError):
-                pass
+
+            if not wrapped_pool.size or not wrapped_pool.usage or \
+                    'included_in' in wrapped_pool.config:
+                continue
+            self.total_size += wrapped_pool.size
+            self.used_size += wrapped_pool.usage
+
+            if wrapped_pool.usage_perc >= URGENT_WARN_LEVEL:
+                self.warning_message.append(
+                    _("\n{:.1%} space left in pool {}").format(
+                        1-wrapped_pool.usage_perc, wrapped_pool.name))
+
+            if wrapped_pool.metadata_perc >= URGENT_WARN_LEVEL:
+                # pylint: disable=consider-using-f-string
+                self.warning_message.append(_(
+                    "\nMetadata space for pool {} is running out. "
+                    "Current usage: {:.0%}").format(
+                        wrapped_pool.name, wrapped_pool.metadata_perc))
 
     def get_pools_widgets(self):
         for p in self.pools:
@@ -199,76 +232,77 @@ class PoolUsageData:
         return 0
 
     @staticmethod
-    def __create_box(pool):
+    def __create_box(pool: PoolWrapper):
         name_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         percentage_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         usage_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
 
         pool_name = Gtk.Label(xalign=0)
 
-        if getattr(pool, 'size', None) and \
-                'included_in' not in getattr(pool, 'config', None):
-            # pool with detailed usage data
-            has_metadata = 'metadata_size' in getattr(
-                pool, 'usage_details', {}) and \
-                           pool.usage_details['metadata_size']
-
-            pool_name.set_markup(f'<b>{pool.name}</b>')
-
-            data_name = Gtk.Label(xalign=0)
-            data_name.set_markup("data")
-            data_name.set_margin_left(40)
-
-            name_box.pack_start(pool_name, True, True, 0)
-            name_box.pack_start(data_name, True, True, 0)
-
-            if has_metadata:
-                metadata_name = Gtk.Label(xalign=0)
-                metadata_name.set_markup("metadata")
-                metadata_name.set_margin_left(40)
-
-                name_box.pack_start(metadata_name, True, True, 0)
-
-            try:
-                percentage = pool.usage/pool.size
-            except (exc.QubesPropertyAccessError, ValueError):
-                percentage = 0
-
-            percentage_use = Gtk.Label()
-            percentage_use.set_markup(colored_percentage(percentage))
-            percentage_use.set_justify(Gtk.Justification.RIGHT)
-
-            # empty label to guarantee proper alignment
-            percentage_box.pack_start(Gtk.Label(), True, True, 0)
-            percentage_box.pack_start(percentage_use, True, True, 0)
-
-            if has_metadata:
-                metadata_usage = pool.usage_details['metadata_usage'] / \
-                                 pool.usage_details['metadata_size']
-                metadata_label = Gtk.Label()
-                metadata_label.set_markup(colored_percentage(
-                    metadata_usage))
-                percentage_box.pack_start(metadata_label, True, True, 0)
-
-            numeric_label = Gtk.Label()
-            numeric_label.set_markup(
-                '<span color=\'grey\'><i>'
-                f'{size_to_human(getattr(pool, "usage", 0))}/'
-                f'{size_to_human(getattr(pool, "size", 0))}</i></span>')
-            numeric_label.set_justify(Gtk.Justification.RIGHT)
-
-            # pack with empty labels to guarantee proper alignment
-            usage_box.pack_start(Gtk.Label(), True, True, 0)
-            usage_box.pack_start(numeric_label, True, True, 0)
-            usage_box.pack_start(Gtk.Label(), True, True, 0)
-
+        if pool.has_error:
+            # Pool with errors
+            formatted_name = \
+                f'<span color=\'red\'><b>{pool.name}</b></span'
+        elif pool.size and 'included_in' not in pool.config:
+            # normal pool
+            formatted_name = f'<b>{pool.name}</b>'
         else:
-            # pool that is included in other pools and/or has no usage data
-            pool_name.set_markup(
-                f'<span color=\'grey\'><i>{pool.name}</i></span>')
-            name_box.pack_start(pool_name, True, True, 0)
+            # pool without data or included in another pool
+            formatted_name = f'<span color=\'grey\'><i>{pool.name}</i></span>'
 
+        pool_name.set_markup(formatted_name)
         pool_name.set_margin_left(20)
+
+        name_box.pack_start(pool_name, True, True, 0)
+
+        if not pool.size or 'included_in' in pool.config:
+            return name_box, percentage_box, usage_box
+
+        if pool.has_error:
+            error_desc = Gtk.Label(xalign=0)
+            error_desc.set_markup("Error accessing pool data")
+            error_desc.set_margin_left(40)
+            name_box.pack_start(error_desc, True, True, 0)
+            return name_box, percentage_box, usage_box
+
+        data_name = Gtk.Label(xalign=0)
+        data_name.set_markup("data")
+        data_name.set_margin_left(40)
+
+        name_box.pack_start(data_name, True, True, 0)
+
+        if pool.metadata_perc:
+            metadata_name = Gtk.Label(xalign=0)
+            metadata_name.set_markup("metadata")
+            metadata_name.set_margin_left(40)
+
+            name_box.pack_start(metadata_name, True, True, 0)
+
+        percentage_use = Gtk.Label()
+        percentage_use.set_markup(colored_percentage(pool.usage_perc))
+        percentage_use.set_justify(Gtk.Justification.RIGHT)
+
+        # empty label to guarantee proper alignment
+        percentage_box.pack_start(Gtk.Label(), True, True, 0)
+        percentage_box.pack_start(percentage_use, True, True, 0)
+
+        if pool.metadata_perc:
+            metadata_label = Gtk.Label()
+            metadata_label.set_markup(colored_percentage(
+                pool.metadata_perc))
+            percentage_box.pack_start(metadata_label, True, True, 0)
+
+        numeric_label = Gtk.Label()
+        numeric_label.set_markup(
+            '<span color=\'grey\'><i>'
+            f'{size_to_human(pool.usage or 0)}/'
+            f'{size_to_human(pool.size or 0)}</i></span>')
+        numeric_label.set_justify(Gtk.Justification.RIGHT)
+
+        # pack with empty labels to guarantee proper alignment
+        usage_box.pack_start(Gtk.Label(), True, True, 0)
+        usage_box.pack_start(numeric_label, True, True, 0)
+        usage_box.pack_start(Gtk.Label(), True, True, 0)
 
         return name_box, percentage_box, usage_box
 

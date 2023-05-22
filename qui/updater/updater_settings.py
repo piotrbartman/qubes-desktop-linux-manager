@@ -45,8 +45,9 @@ class Settings:
     DEFAULT_RESTART_SYSTEM_VMS = True
     DEFAULT_RESTART_OTHER_VMS = False
 
-    def __init__(self, main_window, qapp, refresh_callback: Callable):
+    def __init__(self, main_window, qapp, log, refresh_callback: Callable):
         self.qapp = qapp
+        self.log = log
         self.refresh_callback = refresh_callback
         self.vm = self.qapp.domains[self.qapp.local_name]
 

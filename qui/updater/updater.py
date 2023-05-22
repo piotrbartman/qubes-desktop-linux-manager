@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # pylint: disable=wrong-import-position,import-error
+import logging
 import time
 
 import pkg_resources
@@ -29,6 +30,9 @@ locale.textdomain('desktop-linux-manager')
 class QubesUpdater(Gtk.Application):
     # pylint: disable=too-many-instance-attributes
 
+    LOGPATH = '/var/log/qubes/qui.updater.log'
+    LOG_FORMAT = '%(asctime)s %(message)s'
+
     def __init__(self, qapp):
         super().__init__(
             application_id="org.gnome.example",
@@ -37,6 +41,15 @@ class QubesUpdater(Gtk.Application):
         self.qapp = qapp
         self.primary = False
         self.connect("activate", self.do_activate)
+
+        log_handler = logging.FileHandler(
+            QubesUpdater.LOGPATH, encoding='utf-8')
+        log_formatter = logging.Formatter(QubesUpdater.LOG_FORMAT)
+        log_handler.setFormatter(log_formatter)
+
+        self.log = logging.getLogger('vm-update.agent.PackageManager')
+        self.log.addHandler(log_handler)
+        self.log.setLevel("DEBUG")
 
     def do_activate(self, *_args, **_kwargs):
         if not self.primary:
@@ -47,6 +60,7 @@ class QubesUpdater(Gtk.Application):
             self.main_window.present()
 
     def perform_setup(self, *_args, **_kwargs):
+        self.log.debug("Setup")
         # pylint: disable=attribute-defined-outside-init
         self.builder = Gtk.Builder()
         self.builder.set_translation_domain("desktop-linux-manager")
@@ -68,15 +82,17 @@ class QubesUpdater(Gtk.Application):
 
         self.header_label: Gtk.Label = self.builder.get_object("header_label")
 
-        self.intro_page = IntroPage(self.builder, self.next_button)
+        self.intro_page = IntroPage(self.builder, self.log, self.next_button)
         self.progress_page = ProgressPage(
             self.builder,
+            self.log,
             self.header_label,
             self.next_button,
             self.cancel_button
         )
         self.summary_page = SummaryPage(
             self.builder,
+            self.log,
             self.next_button,
             self.cancel_button,
             self.progress_page.back_by_row_selection
@@ -92,6 +108,7 @@ class QubesUpdater(Gtk.Application):
         self.settings = Settings(
             self.main_window,
             self.qapp,
+            self.log,
             refresh_callback=self.intro_page.refresh_update_list
         )
 
@@ -129,6 +146,7 @@ class QubesUpdater(Gtk.Application):
         self.settings.show()
 
     def next_clicked(self, _emitter):
+        self.log.debug("Next clicked")
         if self.intro_page.is_visible:
             vms_to_update = self.intro_page.get_vms_to_update()
             self.intro_page.active = False
@@ -144,6 +162,7 @@ class QubesUpdater(Gtk.Application):
             self.summary_page.show(*self.progress_page.get_update_summary())
         elif self.summary_page.is_visible:
             self.main_window.hide()
+            self.log.debug("Hide main window")
             # ensuring that main_window will be hidden
             while Gtk.events_pending():
                 Gtk.main_iteration()
@@ -151,6 +170,7 @@ class QubesUpdater(Gtk.Application):
             self.exit_updater()
 
     def cancel_clicked(self, _emitter):
+        self.log.debug("Cancel clicked")
         if self.summary_page.is_visible:
             self.progress_page.show()
         elif self.progress_page.is_visible:
@@ -159,16 +179,18 @@ class QubesUpdater(Gtk.Application):
             self.exit_updater()
 
     def cancel_updates(self, *_args, **_kwargs):
-        # pylint: disable=attribute-defined-outside-init
+        self.log.info("User initialize interruption")
         if self.progress_page.update_thread \
                 and self.progress_page.update_thread.is_alive():
-            self.progress_page.exit_triggered = True
+            self.progress_page.interrupt_update()
+            self.log.info("Update interrupted")
             show_dialog_with_icon(self.main_window, l("Updating cancelled"), l(
                     "Waiting for current qube to finish updating."
                     " Updates for remaining qubes have been cancelled."),
                                   buttons=RESPONSES_OK, icon_name="qubes-info")
 
             while self.progress_page.update_thread.is_alive():
+                self.log.debug("Waiting to finish ongoing updates")
                 while Gtk.events_pending():
                     Gtk.main_iteration()
                 time.sleep(0.1)
@@ -178,6 +200,7 @@ class QubesUpdater(Gtk.Application):
             self.window_close()
 
     def window_close(self, *_args, **_kwargs):
+        self.log.debug("Close window")
         if self.progress_page.exit_triggered:
             self.cancel_updates()
         else:
@@ -186,6 +209,7 @@ class QubesUpdater(Gtk.Application):
 
     def exit_updater(self, _emitter=None):
         if self.primary:
+            self.log.debug("Exit")
             self.release()
 
 

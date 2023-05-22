@@ -19,7 +19,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 import pytest
-from unittest.mock import patch, call
+from unittest.mock import patch, call, Mock
 
 import gi
 gi.require_version('Gtk', '3.0')  # isort:skip
@@ -42,8 +42,9 @@ def test_show(
         ('test-blue', "admin.vm.feature.Get", 'restart-after-update', None)
     ] = b"0\x00" + "".encode()
 
+    mock_log = Mock()
     sut = SummaryPage(
-        real_builder, mock_next_button, mock_cancel_button,
+        real_builder, mock_log, mock_next_button, mock_cancel_button,
         back_by_row_selection=lambda *args: None  # callback
     )
 
@@ -69,8 +70,9 @@ def test_on_header_toggled(
         ('test-blue', "admin.vm.feature.Get", 'restart-after-update', None)
     ] = b"0\x00" + "".encode()
 
+    mock_log = Mock()
     sut = SummaryPage(
-        real_builder, mock_next_button, mock_cancel_button,
+        real_builder, mock_log, mock_next_button, mock_cancel_button,
         back_by_row_selection=lambda *args: None  # callback
     )
 
@@ -100,8 +102,9 @@ def test_on_checkbox_toggled(
         real_builder, test_qapp, appvms_list,
         mock_next_button, mock_cancel_button, mock_settings
 ):
+    mock_log = Mock()
     sut = SummaryPage(
-        real_builder, mock_next_button, mock_cancel_button,
+        real_builder, mock_log, mock_next_button, mock_cancel_button,
         back_by_row_selection=lambda *args: None  # callback
     )
 
@@ -179,8 +182,9 @@ def test_populate_restart_list(
             (exclude, "admin.vm.feature.Get", 'restart-after-update', None)
         ] = b"0\x00" + "".encode()
 
+    mock_log = Mock()
     sut = SummaryPage(
-        real_builder, mock_next_button, mock_cancel_button,
+        real_builder, mock_log, mock_next_button, mock_cancel_button,
         back_by_row_selection=lambda *args: None  # callback
     )
     sut.summary_list = mock_tree_view
@@ -218,8 +222,9 @@ def test_restart_selected_vms(
         real_builder, mock_next_button, mock_cancel_button
 ):
     # ARRANGE
+    mock_log = Mock()
     sut = SummaryPage(
-        real_builder, mock_next_button, mock_cancel_button,
+        real_builder, mock_log, mock_next_button, mock_cancel_button,
         back_by_row_selection=lambda *args: None  # callback
     )
     mock_thread.alive_requests_max = alive_requests_max
@@ -315,8 +320,9 @@ def test_perform_restart(
     for call_ in expected_start_calls:
         test_qapp.expected_calls[call_] = b'0\x00'
 
+    mock_log = Mock()
     sut = SummaryPage(
-        real_builder, mock_next_button, mock_cancel_button,
+        real_builder, mock_log, mock_next_button, mock_cancel_button,
         back_by_row_selection=lambda *args: None  # callback
     )
 

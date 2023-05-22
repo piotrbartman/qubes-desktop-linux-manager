@@ -21,7 +21,7 @@
 import gi
 import subprocess
 
-from unittest.mock import patch, call
+from unittest.mock import patch, call, Mock
 
 gi.require_version('Gtk', '3.0')
 gi.require_version('GdkPixbuf', '2.0')
@@ -40,9 +40,9 @@ def test_init_update(
         all_vms_list):
 
     mock_threading.return_value = mock_thread
-
+    mock_log = Mock()
     sut = ProgressPage(
-        real_builder, mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_log, mock_label, mock_next_button, mock_cancel_button
     )
 
     sut.progress_list = mock_tree_view
@@ -66,8 +66,9 @@ def test_perform_update(
         idle_add, real_builder,
         mock_next_button, mock_cancel_button, mock_label, updatable_vms_list
 ):
+    mock_log = Mock()
     sut = ProgressPage(
-        real_builder, mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_log, mock_label, mock_next_button, mock_cancel_button
     )
 
     sut.vms_to_update = updatable_vms_list
@@ -97,8 +98,9 @@ def test_update_admin_vm(
         mock_next_button, mock_cancel_button, mock_label, mock_text_view,
         mock_list_store
 ):
+    mock_log = Mock()
     sut = ProgressPage(
-        real_builder, mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_log, mock_label, mock_next_button, mock_cancel_button
     )
 
     admins = ListWrapper(UpdateRowWrapper, mock_list_store)
@@ -122,9 +124,11 @@ def test_update_templates(
         idle_add, real_builder, updatable_vms_list,
         mock_next_button, mock_cancel_button, mock_label, mock_text_view
 ):
+    mock_log = Mock()
     sut = ProgressPage(
-        real_builder, mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_log, mock_label, mock_next_button, mock_cancel_button
     )
+
     sut.do_update_templates = lambda *_args, **_kwargs: None
     total_progress = []
     sut.set_total_progress = lambda prog: total_progress.append(prog)
@@ -171,8 +175,9 @@ def test_do_update_templates(
 
     mock_subprocess.return_value = MockPorc()
 
+    mock_log = Mock()
     sut = ProgressPage(
-        real_builder, mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_log, mock_label, mock_next_button, mock_cancel_button
     )
     sut.read_stderrs = lambda *_args, **_kwargs: None
     sut.read_stdouts = lambda *_args, **_kwargs: None
@@ -200,8 +205,9 @@ def test_get_update_summary(
         real_builder,
         mock_next_button, mock_cancel_button, mock_label, updatable_vms_list
 ):
+    mock_log = Mock()
     sut = ProgressPage(
-        real_builder, mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_log, mock_label, mock_next_button, mock_cancel_button
     )
 
     updatable_vms_list[0].set_status(UpdateStatus.NoUpdatesFound)

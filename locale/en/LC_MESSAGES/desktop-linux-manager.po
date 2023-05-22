@@ -531,6 +531,9 @@ msgstr ""
 msgid "Update in progress..."
 msgstr ""
 
+msgid "Interrupting the update..."
+msgstr ""
+
 msgid "Update finished"
 msgstr ""
 

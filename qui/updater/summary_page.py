@@ -243,7 +243,6 @@ class SummaryPage:
             target=self.perform_restart
         )
 
-        self.log.debug("Start restarting")
         self.restart_thread.start()
 
         spinner = None

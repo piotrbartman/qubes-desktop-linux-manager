@@ -185,12 +185,12 @@ class QubesUpdater(Gtk.Application):
             self.progress_page.interrupt_update()
             self.log.info("Update interrupted")
             show_dialog_with_icon(self.main_window, l("Updating cancelled"), l(
-                    "Waiting for current qube to finish updating."
-                    " Updates for remaining qubes have been cancelled."),
+                "Waiting for current qube to finish updating."
+                " Updates for remaining qubes have been cancelled."),
                                   buttons=RESPONSES_OK, icon_name="qubes-info")
 
+            self.log.debug("Waiting to finish ongoing updates")
             while self.progress_page.update_thread.is_alive():
-                self.log.debug("Waiting to finish ongoing updates")
                 while Gtk.events_pending():
                     Gtk.main_iteration()
                 time.sleep(0.1)

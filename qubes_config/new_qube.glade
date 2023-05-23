@@ -125,6 +125,14 @@
                             <property name="can-focus">False</property>
                             <property name="halign">start</property>
                             <property name="valign">start</property>
+                            <child type="placeholder">
+                              <object class="GtkButton" id="apps_list_load_all">
+                                <property name="label" translatable="yes">Load applications available in other templates</property>
+                                <property name="visible">True</property>
+                                <property name="can-focus">True</property>
+                                <property name="receives-default">True</property>
+                              </object>
+                            </child>
                           </object>
                           <packing>
                             <property name="expand">False</property>

@@ -53,11 +53,13 @@ class SummaryPage:
     def __init__(
             self,
             builder,
+            log,
             next_button,
             cancel_button,
             back_by_row_selection
     ):
         self.builder = builder
+        self.log = log
         self.next_button = next_button
         self.cancel_button = cancel_button
         self.restart_thread = None
@@ -159,6 +161,7 @@ class SummaryPage:
             qube_failed_num: int
     ):
         """Show this page and handle buttons."""
+        self.log.debug("Show summary page")
         self.stack.set_visible_child(self.page)
         summary_1 = ngettext(
             "%(num)d qube updated successfully.",
@@ -188,6 +191,7 @@ class SummaryPage:
 
         DispVM with auto_cleanup are skipped.
         """
+        self.log.debug("populate restart list")
         self.summary_list.set_model(vm_updated.list_store_raw)
         self.updated_tmpls = [
             row for row in vm_updated
@@ -234,10 +238,12 @@ class SummaryPage:
             )
 
     def restart_selected_vms(self):
+        self.log.debug("Start restarting")
         self.restart_thread = threading.Thread(
             target=self.perform_restart
         )
 
+        self.log.debug("Start restarting")
         self.restart_thread.start()
 
         spinner = None
@@ -254,6 +260,7 @@ class SummaryPage:
                                  {}, spinner)
             dialog.set_deletable(False)
             dialog.show()
+            self.log.debug("Show restart dialog")
 
         # wait for thread and spin spinner
         while self.restart_thread.is_alive():
@@ -265,9 +272,11 @@ class SummaryPage:
         if dialog:
             spinner.stop()
             dialog.destroy()
+            self.log.debug("Hide restart dialog")
         self._show_status_dialog()
 
     def perform_restart(self):
+
         tmpls_to_shutdown = [row.vm
                              for row in self.updated_tmpls
                              if row.vm.is_running()]
@@ -304,8 +313,11 @@ class SummaryPage:
             try:
                 vm.shutdown(force=True)
                 wait_for.append(vm)
+                self.log.info("Shutdown %s", vm.name)
             except qubesadmin.exc.QubesVMError as err:
                 self.err += vm.name + " cannot shutdown: " + str(err) + '\n'
+                self.log.error("Cannot shutdown %s because %s",
+                               vm.name, str(err))
 
         asyncio.run(wait_for_domain_shutdown(wait_for))
 
@@ -321,8 +333,10 @@ class SummaryPage:
         for vm in shutdowns:
             try:
                 vm.start()
+                self.log.info("Restart %s", vm.name)
             except qubesadmin.exc.QubesVMError as err:
                 self.err += vm.name + " cannot start: " + str(err) + '\n'
+                self.log.error("Cannot start %s because %s", vm.name, str(err))
 
     def _show_status_dialog(self):
         if self.status == RestartStatus.OK:
@@ -338,6 +352,7 @@ class SummaryPage:
                        l("During restarting following errors occurs: ")
                        + self.err
                        )
+            self.log.error("Restart error: %s", self.err)
 
 
 class RestartRowWrapper(RowWrapper):

@@ -18,6 +18,8 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+from unittest.mock import Mock
+
 import gi
 import pytest
 
@@ -42,13 +44,15 @@ def init_features(test_qapp):
 
 def test_show_and_hide(test_qapp):
     init_features(test_qapp)
-    sut = Settings(Gtk.Window(), test_qapp, lambda *args: None)
+    mock_log = Mock()
+    sut = Settings(Gtk.Window(), test_qapp, mock_log, lambda *args: None)
     sut.show()
     sut.close_without_saving(None, None)
 
 
 def test_update_if_stale(test_qapp):
-    sut = Settings(Gtk.Window(), test_qapp, lambda *args: None)
+    mock_log = Mock()
+    sut = Settings(Gtk.Window(), test_qapp, mock_log, lambda *args: None)
     assert sut.update_if_stale == 7
     test_qapp.expected_calls[
         ('dom0', 'admin.vm.feature.Get', 'qubes-vm-update-update-if-stale', None)
@@ -63,7 +67,8 @@ def test_update_if_stale(test_qapp):
 
 
 def test_restart_system_vms(test_qapp):
-    sut = Settings(Gtk.Window(), test_qapp, lambda *args: None)
+    mock_log = Mock()
+    sut = Settings(Gtk.Window(), test_qapp, mock_log, lambda *args: None)
     test_qapp.expected_calls[
         ('dom0', 'admin.vm.feature.Get', 'qubes-vm-update-restart-system', None)
     ] = b'2\x00QubesFeatureNotFoundError\x00\x00' \
@@ -82,7 +87,8 @@ def test_restart_system_vms(test_qapp):
 
 
 def test_restart_other_vms(test_qapp):
-    sut = Settings(Gtk.Window(), test_qapp, lambda *args: None)
+    mock_log = Mock()
+    sut = Settings(Gtk.Window(), test_qapp, mock_log, lambda *args: None)
     test_qapp.expected_calls[
         ('dom0', 'admin.vm.feature.Get', 'qubes-vm-update-restart-other', None)
     ] = b'2\x00QubesFeatureNotFoundError\x00\x00' \
@@ -101,7 +107,8 @@ def test_restart_other_vms(test_qapp):
 
 
 def test_max_concurrency(test_qapp):
-    sut = Settings(Gtk.Window(), test_qapp, lambda *args: None)
+    mock_log = Mock()
+    sut = Settings(Gtk.Window(), test_qapp, mock_log, lambda *args: None)
     test_qapp.expected_calls[
         ('dom0', 'admin.vm.feature.Get',
          'qubes-vm-update-max-concurrency', None)
@@ -144,7 +151,8 @@ class MockCallback:
 )
 def test_save(feature, default_value, new_value, test_qapp, button_name):
     mock_callback = MockCallback()
-    sut = Settings(Gtk.Window(), test_qapp, mock_callback)
+    mock_log = Mock()
+    sut = Settings(Gtk.Window(), test_qapp, mock_log, mock_callback)
 
     init_features(test_qapp)
     sut.show()
@@ -218,7 +226,8 @@ def test_limit_concurrency(test_qapp):
     dom0_get_max_concurrency = ('dom0', 'admin.vm.feature.Get',
                                 f'qubes-vm-update-max-concurrency', None)
 
-    sut = Settings(Gtk.Window(), test_qapp, lambda *args: None)
+    mock_log = Mock()
+    sut = Settings(Gtk.Window(), test_qapp, mock_log, lambda *args: None)
 
     #  False
 

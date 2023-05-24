@@ -20,17 +20,18 @@
 # USA.
 import pytest
 from unittest.mock import patch
+from unittest.mock import Mock
 
 from qui.updater.intro_page import IntroPage, UpdateRowWrapper, UpdatesAvailable
 from qui.updater.utils import ListWrapper, HeaderCheckbox
-
 
 @patch('subprocess.check_output')
 def test_populate_vm_list(
         mock_subprocess, real_builder, test_qapp,
         mock_next_button, mock_settings
 ):
-    sut = IntroPage(real_builder, mock_next_button)
+    mock_log = Mock()
+    sut = IntroPage(real_builder, mock_log, mock_next_button)
     test_qapp.expected_calls[
         ('test-standalone', "admin.vm.feature.Get", 'updates-available', None)
     ] = b"0\x00" + str(1).encode()
@@ -65,7 +66,8 @@ def test_on_header_toggled(
         real_builder, test_qapp, updates_available, expectations,
         mock_next_button, mock_settings, mock_list_store
 ):
-    sut = IntroPage(real_builder, mock_next_button)
+    mock_log = Mock()
+    sut = IntroPage(real_builder, mock_log, mock_next_button)
 
     # populate_vm_list
     sut.list_store = ListWrapper(UpdateRowWrapper, mock_list_store)
@@ -101,7 +103,8 @@ def test_on_checkbox_toggled(
         real_builder, test_qapp,
         mock_next_button, mock_settings, mock_list_store
 ):
-    sut = IntroPage(real_builder, mock_next_button)
+    mock_log = Mock()
+    sut = IntroPage(real_builder, mock_log, mock_next_button)
 
     # populate_vm_list
     sut.list_store = ListWrapper(UpdateRowWrapper, mock_list_store)

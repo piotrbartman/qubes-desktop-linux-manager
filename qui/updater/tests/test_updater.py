@@ -23,8 +23,9 @@ from unittest.mock import patch, call
 from qui.updater.updater import QubesUpdater
 
 
+@patch('logging.FileHandler')
 @patch('qui.updater.intro_page.IntroPage.populate_vm_list')
-def test_setup(populate_vm_list, test_qapp):
+def test_setup(populate_vm_list, _mock_logging, test_qapp):
     sut = QubesUpdater(test_qapp)
     sut.perform_setup()
     calls = [call(sut.qapp, sut.settings)]

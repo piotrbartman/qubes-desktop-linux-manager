@@ -555,6 +555,9 @@ msgstr "Anuluj"
 msgid "Update in progress..."
 msgstr "Aktualizacja w toku..."
 
+msgid "Interrupting the update..."
+msgstr "Przerywanie aktualizacji..."
+
 msgid "Update finished"
 msgstr "Aktualizacja zakończona"
 

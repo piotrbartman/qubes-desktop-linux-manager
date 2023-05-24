@@ -45,8 +45,9 @@ class IntroPage:
     Show the list of updatable vms with an update info.
     """
 
-    def __init__(self, builder, next_button):
+    def __init__(self, builder, log, next_button):
         self.builder = builder
+        self.log = log
         self.next_button = next_button
         self.disable_checkboxes = False
         self.active = True
@@ -85,6 +86,7 @@ class IntroPage:
 
     def populate_vm_list(self, qapp, settings):
         """Adds to list any updatable vms with an update info."""
+        self.log.debug("Populate update list")
         self.list_store = ListWrapper(
             UpdateRowWrapper, self.vm_list.get_model())
 
@@ -106,6 +108,7 @@ class IntroPage:
         """
         Refreshes "Updates Available" column if settings changed.
         """
+        self.log.debug("Refreshing update list")
         if not self.active:
             return
 

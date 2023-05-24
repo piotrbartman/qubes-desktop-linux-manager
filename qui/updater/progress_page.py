@@ -41,11 +41,13 @@ class ProgressPage:
     def __init__(
             self,
             builder,
+            log,
             header_label,
             next_button,
             cancel_button
     ):
         self.builder = builder
+        self.log = log
         self.header_label = header_label
         self.next_button = next_button
         self.cancel_button = cancel_button
@@ -85,6 +87,7 @@ class ProgressPage:
 
     def init_update(self, vms_to_update, settings):
         """Starts `perform_update` in new thread."""
+        self.log.info("Prepare updating")
         self.vms_to_update = vms_to_update
         self.progress_list.set_model(vms_to_update.list_store_raw)
         self.next_button.set_sensitive(False)
@@ -100,6 +103,15 @@ class ProgressPage:
             args=(settings,)
         )
         self.update_thread.start()
+
+    def interrupt_update(self):
+        """
+        Finish ongoing updates, but skip the ones that haven't started yet.
+        """
+        self.log.debug("Interrupting updates")
+        self.exit_triggered = True
+        GLib.idle_add(self.header_label.set_text,
+                      l("Interrupting the update..."))
 
     def perform_update(self, settings):
         """Updates dom0 and then other vms."""
@@ -123,10 +135,14 @@ class ProgressPage:
         """Runs command to update dom0."""
         admin = admins[0]
         if self.exit_triggered:
+            self.log.info("Update canceled: skip adminVM updating")
             GLib.idle_add(admin.set_status, UpdateStatus.Cancelled)
             GLib.idle_add(
                 admin.append_text_view,
                 l("Canceled update for {}\n").format(admin.vm.name))
+            self.update_details.update_buffer()
+            return
+        self.log.debug("Start adminVM updating")
 
         info = f"Updating {admin.name}...\n" \
                "Detailed information will be displayed after update.\n" \
@@ -161,11 +177,16 @@ class ProgressPage:
     def update_templates(self, to_update, settings):
         """Updates templates and standalones and then sets update statuses."""
         if self.exit_triggered:
+            self.log.info("Update canceled: skip templateVM updating")
             for row in to_update:
                 GLib.idle_add(row.set_status, UpdateStatus.Cancelled)
                 GLib.idle_add(
                     row.append_text_view,
                     l("Canceled update for {}\n").format(row.vm.name))
+                GLib.idle_add(self.set_total_progress, 100)
+                self.update_details.update_buffer()
+                return
+        self.log.debug("Start templateVM updating")
 
         for row in to_update:
             GLib.idle_add(
@@ -291,6 +312,7 @@ class ProgressPage:
 
     def show(self):
         """Show this page and handle buttons."""
+        self.log.debug("Show progress page")
         self.selection.unselect_all()
         self.update_details.set_active_row(None)
         self.stack.set_visible_child(self.page)

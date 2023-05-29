@@ -1,3 +1,30 @@
+qubes-desktop-linux-manager (4.2.7-1) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * ci: drop R4.1
+
+  [ Andrew David Wong ]
+  * Improve language
+  * Improve language
+  * Improve language
+  * Remove links from tooltips
+  * Add IDs for new links
+  * Remove IDs without links; sort by order of appearance
+  * Replace unofficial links; improve language
+  * Remove sentence about opening link in disposable
+
+  [ Marek Marczykowski-Górecki ]
+  * Update codecov-wrapper
+  * ci: include the signing key for codecov
+
+  [ Piotr Bartman ]
+  * qubes-vm-update: fix cancellation
+
+  [ Marta Marczykowska-Górecka ]
+  * More resilient qui-disk-space widget
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 29 May 2023 19:15:57 +0200
+
 qubes-desktop-linux-manager (4.2.6-1) unstable; urgency=medium
 
   [ Piotr Bartman ]

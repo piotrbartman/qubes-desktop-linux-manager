@@ -23,6 +23,8 @@ import subprocess
 
 from unittest.mock import patch, call, Mock
 
+import pytest
+
 gi.require_version('Gtk', '3.0')
 gi.require_version('GdkPixbuf', '2.0')
 from gi.repository import Gtk
@@ -93,8 +95,15 @@ def test_perform_update(
 
 @patch('gi.repository.GLib.idle_add')
 @patch('subprocess.check_output', return_value=b'')
+@pytest.mark.parametrize(
+    "interrupted",
+    (
+        pytest.param(True, id="interrupted"),
+        pytest.param(False, id="not interrupted"),
+    )
+)
 def test_update_admin_vm(
-        _mock_subprocess, idle_add,  real_builder, test_qapp,
+        mock_subprocess, idle_add,  interrupted, real_builder, test_qapp,
         mock_next_button, mock_cancel_button, mock_label, mock_text_view,
         mock_list_store
 ):
@@ -113,15 +122,26 @@ def test_update_admin_vm(
     sut.update_details.active_row = admins[0]
     admins[0].buffer = "Update details"
 
+    if interrupted:
+        sut.interrupt_update()
     sut.update_admin_vm(admins=admins)
 
     calls = [call(mock_text_view.buffer.set_text, "Update details")]
     idle_add.assert_has_calls(calls)
+    if not interrupted:
+        mock_subprocess.assert_called()
 
 
 @patch('gi.repository.GLib.idle_add')
+@pytest.mark.parametrize(
+    "interrupted",
+    (
+        pytest.param(True, id="interrupted"),
+        pytest.param(False, id="not interrupted"),
+    )
+)
 def test_update_templates(
-        idle_add, real_builder, updatable_vms_list,
+        idle_add, interrupted, real_builder, updatable_vms_list,
         mock_next_button, mock_cancel_button, mock_label, mock_text_view
 ):
     mock_log = Mock()
@@ -129,7 +149,7 @@ def test_update_templates(
         real_builder, mock_log, mock_label, mock_next_button, mock_cancel_button
     )
 
-    sut.do_update_templates = lambda *_args, **_kwargs: None
+    sut.do_update_templates = Mock()
     total_progress = []
     sut.set_total_progress = lambda prog: total_progress.append(prog)
 
@@ -139,6 +159,8 @@ def test_update_templates(
     for i, row in enumerate(updatable_vms_list):
         row.buffer = f"Details {i}"
 
+    if interrupted:
+        sut.interrupt_update()
     sut.update_templates(updatable_vms_list, mock_settings)
 
     sut.update_details.set_active_row(updatable_vms_list[2])
@@ -148,6 +170,8 @@ def test_update_templates(
              call(mock_text_view.buffer.set_text, "Details 2"),
              ]
     idle_add.assert_has_calls(calls)
+    if not interrupted:
+        sut.do_update_templates.assert_called()
 
 
 @patch('subprocess.Popen')

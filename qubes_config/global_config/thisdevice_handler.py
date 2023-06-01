@@ -243,10 +243,9 @@ class ThisDeviceHandler(PageHandler):
                         return 'allow'
         return 'deny'
 
-    @staticmethod
-    def is_certified() -> bool:
+    def is_certified(self) -> bool:
         """Is this device Qubes certified?"""
-        return False
+        return self._get_data("certified") == "yes"
 
     def _page_saved(self, _page: PageHandler, page_name: str):
         if page_name == 'usb':

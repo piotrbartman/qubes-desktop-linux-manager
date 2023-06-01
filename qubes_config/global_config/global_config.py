@@ -230,11 +230,6 @@ class GlobalConfig(Gtk.Application):
                            GObject.SignalFlags.RUN_LAST, GObject.TYPE_PYOBJECT,
                            (GObject.TYPE_PYOBJECT,))
 
-        GObject.signal_new('usbvm-changed',
-                           Gtk.Window,
-                           GObject.SignalFlags.RUN_LAST, GObject.TYPE_PYOBJECT,
-                           (GObject.TYPE_PYOBJECT,))
-
         # signal that informs other pages that a given page has been changed
         GObject.signal_new('page-changed',
                            Gtk.Window,
@@ -345,7 +340,6 @@ class GlobalConfig(Gtk.Application):
         self.progress_bar_dialog.update_progress(page_progress)
 
         self.main_notebook.connect("switch-page", self._page_switched)
-        self.main_window.connect('usbvm-changed', self._usbvm_changed)
 
         self._handle_urls()
 
@@ -365,23 +359,9 @@ class GlobalConfig(Gtk.Application):
              self.builder.get_object('thisdevice_scrolled_window'),
              ])
 
-    def _usbvm_changed(self, *_args):
-        response = show_dialog_with_icon(
-            parent=self.main_window, title=_("USB qube change"),
-            text=_("Changing USB qube requires restarting Global Settings to"
-                   "correctly initialize all defaults. "
-                   "Do you want to save changes and restart?"),
-            buttons={
-                _("_Save changes"): Gtk.ResponseType.YES,
-                _("_Discard changes"): Gtk.ResponseType.NO
-            }, icon_name="qubes-ask")
-        if response == Gtk.ResponseType.YES:
-            self._apply()
-            self._quit()
-            return
-        usb_handler = self.handlers['usb']
-        assert isinstance(usb_handler, DevicesHandler)
-        usb_handler.usbvm_handler.reset()
+        self.progress_bar_dialog.update_progress(1)
+        self.progress_bar_dialog.hide()
+        self.progress_bar_dialog.destroy()
 
     def _handle_urls(self):
         url_label_ids = ["basics_info", "u2fproxy_info", "splitgpg_info2",

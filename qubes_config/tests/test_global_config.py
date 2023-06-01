@@ -21,12 +21,12 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
 # pylint: disable=protected-access
+
 import time
-from unittest.mock import patch, ANY
+from unittest.mock import patch
 
 from ..global_config.global_config import GlobalConfig, ClipboardHandler,\
     FileAccessHandler
-from ..global_config.usb_devices import DevicesHandler
 from ..global_config.basics_handler import BasicSettingsHandler
 
 import gi
@@ -94,90 +94,6 @@ def test_global_config_init(mock_error, mock_subprocess,
         mock_apply.assert_called_with(
             test_qapp.domains['dom0'], 'gui-default-secure-copy-sequence',
             'Ctrl-Mod4-c')
-
-    mock_error.assert_not_called()
-
-
-@patch('subprocess.check_output')
-@patch('qubes_config.global_config.global_config.show_error')
-def test_global_config_usb_change(mock_error, mock_subprocess,
-                                  test_qapp, test_policy_manager, test_builder):
-    mock_subprocess.return_value = b''
-    app = GlobalConfig(test_qapp, test_policy_manager)
-    # do not call do_activate - it will make Gtk confused and, in case
-    # of errors, spawn an entire screenful of windows
-    app.perform_setup()
-
-    assert test_builder
-
-    # find clipboard
-    app.main_notebook.set_current_page(0)
-
-    while app.main_notebook.get_nth_page(
-            app.main_notebook.get_current_page()).get_name() != 'usb':
-        app.main_notebook.next_page()
-
-    handler = app.get_current_page()
-    assert isinstance(handler, DevicesHandler)
-
-    # change usb vm
-    with patch('qubes_config.widgets.gtk_utils.Gtk.Dialog') \
-        as mock_dialog, patch('qubes_config.global_config.usb_devices.'
-               'apply_feature_change_from_widget') as mock_apply:
-        mock_dialog.new().run.return_value = Gtk.ResponseType.YES
-
-        handler.usbvm_handler.widget_with_buttons.edit_button.clicked()
-        handler.usbvm_handler.select_widget.model.select_value('sys-net')
-        handler.usbvm_handler.widget_with_buttons.confirm_button.clicked()
-
-        assert len(mock_dialog.new().run.mock_calls) == 1
-
-        mock_apply.assert_called_with(ANY, test_qapp.domains['dom0'],
-                                      'config-usbvm-name')
-
-    mock_error.assert_not_called()
-
-
-@patch('subprocess.check_output')
-@patch('qubes_config.global_config.global_config.show_error')
-def test_global_config_usb_change_no_double(mock_error, mock_subprocess,
-                                  test_qapp, test_policy_manager, test_builder):
-    # this test checks if answering no or cancel to changing usb vm does
-    # not lead to a cycle of questions
-
-    mock_subprocess.return_value = b''
-    app = GlobalConfig(test_qapp, test_policy_manager)
-    # do not call do_activate - it will make Gtk confused and, in case
-    # of errors, spawn an entire screenful of windows
-    app.perform_setup()
-
-    assert test_builder
-
-    app.main_notebook.set_current_page(0)
-
-    while app.main_notebook.get_nth_page(
-            app.main_notebook.get_current_page()).get_name() != 'usb':
-        app.main_notebook.next_page()
-
-    handler = app.get_current_page()
-    assert isinstance(handler, DevicesHandler)
-
-    # change usb vm
-    with patch('qubes_config.widgets.gtk_utils.Gtk.Dialog') as mock_dialog, \
-            patch('qubes_config.global_config.usb_devices.'
-               'apply_feature_change_from_widget') as mock_apply:
-        mock_dialog.new().run.return_value = Gtk.ResponseType.NO
-
-        handler.usbvm_handler.widget_with_buttons.edit_button.clicked()
-        handler.usbvm_handler.select_widget.model.select_value('sys-net')
-        handler.usbvm_handler.widget_with_buttons.confirm_button.clicked()
-
-        assert len(mock_dialog.new().run.mock_calls) == 1
-
-        mock_apply.assert_not_called()
-
-    assert handler.usbvm_handler.get_selected_usbvm() == \
-           test_qapp.domains['sys-usb']
 
     mock_error.assert_not_called()
 

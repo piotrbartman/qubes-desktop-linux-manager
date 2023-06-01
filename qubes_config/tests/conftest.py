@@ -162,6 +162,9 @@ def add_expected_vm(qapp,
         qapp.expected_calls[(name, "admin.vm.tag.Get", tag, None)] = \
             b"0\x001"
 
+    qapp.expected_calls[(name, "admin.vm.device.pci.List", None, None)] = \
+        b"0\x00"
+
 def add_dom0_vm_property(qapp, prop_name, prop_value):
     """Add a vm property to dom0"""
     qapp.expected_calls[('dom0', 'admin.property.Get', prop_name, None)] = \
@@ -318,6 +321,55 @@ def test_qapp_whonix(test_qapp):  # pylint: disable=redefined-outer-name
                     {'service.qubes-update-check': None}, ['whonix-updatevm'])
     test_qapp.domains.clear_cache()
     return test_qapp
+
+@pytest.fixture
+def test_qapp_simple(): # pylint: disable=redefined-outer-name
+    """A qapp with only one template, one sys-net and that's all"""
+    # pylint does not understand fixtures
+    qapp = QubesTest()
+    qapp._local_name = 'dom0'  # pylint: disable=protected-access
+
+    add_dom0_vm_property(qapp, 'clockvm', 'sys-net')
+    add_dom0_vm_property(qapp, 'updatevm', 'sys-net')
+    add_dom0_vm_property(qapp, 'default_netvm', 'sys-net')
+    add_dom0_vm_property(qapp, 'default_template', 'fedora-36')
+    add_dom0_vm_property(qapp, 'default_dispvm', 'fedora-36')
+
+    add_dom0_text_property(qapp, 'default_kernel', '1.1')
+    add_dom0_text_property(qapp, 'default_pool', 'file')
+
+    add_dom0_feature(qapp, 'gui-default-allow-fullscreen', '')
+    add_dom0_feature(qapp, 'gui-default-allow-utf8-titles', '')
+    add_dom0_feature(qapp, 'gui-default-trayicon-mode', '')
+
+    # setup labels
+    qapp.expected_calls[('dom0', 'admin.label.List', None, None)] = \
+        b'0\x00red\nblue\ngreen\n'
+
+    # setup pools:
+    qapp.expected_calls[('dom0', 'admin.pool.List', None, None)] = \
+        b'0\x00linux-kernel\nlvm\nfile\n'
+    qapp.expected_calls[('dom0', 'admin.pool.volume.List',
+                         'linux-kernel', None)] = \
+        b'0\x001.1\nmisc\n4.2\n'
+
+    add_expected_vm(qapp, 'dom0', 'AdminVM',
+                    {}, {'service.qubes-update-check': 1,
+                         'config.default.qubes-update-check': None,
+                         'config-usbvm-name': None,
+                         'gui-default-secure-copy-sequence': None,
+                         'gui-default-secure-paste-sequence': None
+                         }, [])
+    add_expected_vm(qapp, 'sys-net', 'AppVM',
+                    {'provides_network': ('bool', False, 'True')},
+                    {'service.qubes-update-check': None,
+                     'service.qubes-updates-proxy': 1}, [])
+
+    add_expected_vm(qapp, 'fedora-36', 'TemplateVM',
+                    {"netvm": ("vm", False, '')},
+                    {'service.qubes-update-check': None}, [])
+
+    return qapp
 
 SIGNALS_REGISTERED = False
 

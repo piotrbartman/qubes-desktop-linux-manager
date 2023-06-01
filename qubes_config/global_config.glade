@@ -767,69 +767,6 @@
                           <object class="GtkLabel">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">USB qube</property>
-                            <property name="xalign">0</property>
-                            <style>
-                              <class name="group_title"/>
-                              <class name="section_title"/>
-                            </style>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">A USB qube is a qube to which one or more USB controllers are connected. Changing the default USB qube is not recommended for most users.  If you have changed the devices assigned to your USB qube(s), select the qube to which you would like the policy settings below to apply.
-&lt;b&gt;Note:&lt;/b&gt; Changes here apply &lt;b&gt;ONLY&lt;/b&gt; to the policy settings on this page. If you do not change the devices assigned to your USB qube(s), this setting will have no effect.</property>
-                            <property name="use-markup">True</property>
-                            <property name="wrap">True</property>
-                            <property name="xalign">0</property>
-                            <style>
-                              <class name="explanation"/>
-                            </style>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkBox" id="usb_select_usb_qube_box">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="spacing">10</property>
-                            <child>
-                              <object class="GtkLabel">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Current USB qube:</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">2</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
                             <property name="label" translatable="yes">USB Input devices</property>
                             <property name="xalign">0</property>
                             <style>
@@ -840,7 +777,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">3</property>
+                            <property name="position">0</property>
                           </packing>
                         </child>
                         <child>
@@ -858,7 +795,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">4</property>
+                            <property name="position">1</property>
                           </packing>
                         </child>
                         <child>
@@ -885,7 +822,142 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">5</property>
+                            <property name="position">2</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <!-- n-columns=3 n-rows=4 -->
+                          <object class="GtkGrid" id="usb_input_grid">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="row-spacing">5</property>
+                            <property name="column-spacing">5</property>
+                            <child>
+                              <object class="GtkBox" id="usb_input_sysusb_box">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <child>
+                                  <object class="GtkLabel">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="label" translatable="yes">USB &lt;b&gt;qube&lt;/b&gt;</property>
+                                    <property name="use-markup">True</property>
+                                    <property name="xalign">0</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="position">0</property>
+                                  </packing>
+                                </child>
+                                <child>
+                                  <object class="GtkImage">
+                                    <property name="visible">True</property>
+                                    <property name="can-focus">False</property>
+                                    <property name="tooltip-text" translatable="yes">A USB qube is a qube to which one or more USB controllers are connected. </property>
+                                    <property name="xalign">0.5</property>
+                                    <property name="yalign">0.6000000238418579</property>
+                                    <property name="pixel-size">20</property>
+                                    <property name="icon-name">qubes-question</property>
+                                  </object>
+                                  <packing>
+                                    <property name="expand">False</property>
+                                    <property name="fill">True</property>
+                                    <property name="padding">3</property>
+                                    <property name="position">1</property>
+                                  </packing>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">&lt;b&gt;Keyboard&lt;/b&gt;: </property>
+                                <property name="use-markup">True</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">&lt;b&gt;Mouse&lt;/b&gt;: </property>
+                                <property name="use-markup">True</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">2</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="label" translatable="yes">&lt;b&gt;Touchscreen/Tablet&lt;/b&gt;: </property>
+                                <property name="use-markup">True</property>
+                              </object>
+                              <packing>
+                                <property name="left-attach">0</property>
+                                <property name="top-attach">3</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                            <child>
+                              <placeholder/>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">3</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="label" translatable="yes">U2F devices</property>
+                            <property name="xalign">0</property>
+                            <style>
+                              <class name="group_title"/>
+                              <class name="section_title"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">4</property>
                           </packing>
                         </child>
                         <child>
@@ -926,86 +998,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">6</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <!-- n-columns=2 n-rows=3 -->
-                          <object class="GtkGrid" id="usb_input_grid">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="row-spacing">10</property>
-                            <property name="column-spacing">10</property>
-                            <child>
-                              <object class="GtkLabel">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="halign">start</property>
-                                <property name="label" translatable="yes">USB &lt;b&gt;Keyboard&lt;/b&gt;: </property>
-                                <property name="use-markup">True</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLabel">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="halign">start</property>
-                                <property name="label" translatable="yes">USB &lt;b&gt;Mouse&lt;/b&gt;: </property>
-                                <property name="use-markup">True</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">1</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkLabel">
-                                <property name="visible">True</property>
-                                <property name="can-focus">False</property>
-                                <property name="halign">start</property>
-                                <property name="label" translatable="yes">USB &lt;b&gt;Touchscreen/Tablet&lt;/b&gt;: </property>
-                                <property name="use-markup">True</property>
-                              </object>
-                              <packing>
-                                <property name="left-attach">0</property>
-                                <property name="top-attach">2</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                            <child>
-                              <placeholder/>
-                            </child>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">7</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="label" translatable="yes">U2F devices</property>
-                            <property name="xalign">0</property>
-                            <style>
-                              <class name="group_title"/>
-                              <class name="section_title"/>
-                            </style>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">8</property>
+                            <property name="position">5</property>
                           </packing>
                         </child>
                         <child>
@@ -1025,15 +1018,83 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">9</property>
+                            <property name="position">6</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkBox" id="usb_input_error_box">
+                          <object class="GtkBox">
+                            <property name="name">u2f_usb_qube_box</property>
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="label" translatable="yes">&lt;b&gt;USB qube&lt;/b&gt;</property>
+                                <property name="use-markup">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkImage">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="tooltip-text" translatable="yes">Select qube to which the USB controller you use with your U2F devices is connected</property>
+                                <property name="xalign">0.5</property>
+                                <property name="yalign">0.6000000238418579</property>
+                                <property name="pixel-size">20</property>
+                                <property name="icon-name">qubes-question</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="padding">3</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkComboBox" id="u2f_usb_combo">
+                                <property name="name">u2f_usb_combo</property>
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="halign">start</property>
+                                <property name="margin-left">5</property>
+                                <property name="margin-right">50</property>
+                                <property name="margin-start">5</property>
+                                <property name="margin-end">50</property>
+                                <property name="margin-bottom">5</property>
+                                <property name="hexpand">False</property>
+                                <property name="has-entry">True</property>
+                                <child internal-child="entry">
+                                  <object class="GtkEntry">
+                                    <property name="can-focus">True</property>
+                                    <property name="width-chars">24</property>
+                                  </object>
+                                </child>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">2</property>
+                              </packing>
+                            </child>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">7</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkBox" id="usb_u2f_error_box">
                             <property name="can-focus">False</property>
                             <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkLabel" id="usb_input_error_label">
+                              <object class="GtkLabel" id="usb_u2f_error_label">
                                 <property name="can-focus">False</property>
                                 <property name="label" translatable="yes">Some policy rules could not be parsed. They are correct but are too complicated for this tool to handle. They will be discarded on save. The following rules were affected:</property>
                                 <property name="wrap">True</property>
@@ -1045,7 +1106,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkListBox" id="usb_input_error_list">
+                              <object class="GtkListBox" id="usb_u2f_error_list">
                                 <property name="can-focus">False</property>
                                 <property name="selection-mode">none</property>
                                 <property name="activate-on-single-click">False</property>
@@ -1066,16 +1127,16 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">11</property>
+                            <property name="position">8</property>
                           </packing>
                         </child>
                         <child>
-                          <object class="GtkBox" id="usb_u2f_no_usb_vm_problem">
+                          <object class="GtkBox" id="usb_u2f_fatal_problem">
                             <property name="can-focus">False</property>
                             <property name="halign">center</property>
                             <property name="orientation">vertical</property>
                             <child>
-                              <object class="GtkLabel" id="updates_problem_label3">
+                              <object class="GtkLabel" id="usb_u2f_fatal_problem_label">
                                 <property name="can-focus">False</property>
                                 <property name="halign">center</property>
                                 <property name="label" translatable="yes">The Qubes U2F Proxy service is not installed in the USB qube. If you wish to use this service, install the &lt;tt&gt;qubes-u2f&lt;/tt&gt; package in the template on which the USB qube is based.</property>
@@ -1095,36 +1156,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">12</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkBox" id="usb_u2f_no_qubes_problem">
-                            <property name="can-focus">False</property>
-                            <property name="halign">center</property>
-                            <property name="orientation">vertical</property>
-                            <child>
-                              <object class="GtkLabel" id="updates_problem_label2">
-                                <property name="can-focus">False</property>
-                                <property name="halign">center</property>
-                                <property name="label" translatable="yes">No qubes with the U2F Proxy service found. If you wish to use this service, install the &lt;tt&gt;qubes-u2f&lt;/tt&gt; package in the template on which the USB qube is based.</property>
-                                <property name="use-markup">True</property>
-                                <property name="wrap">True</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <style>
-                              <class name="problem_box"/>
-                            </style>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">13</property>
+                            <property name="position">9</property>
                           </packing>
                         </child>
                         <child>
@@ -1165,7 +1197,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">14</property>
+                            <property name="position">10</property>
                           </packing>
                         </child>
                         <child>
@@ -1189,7 +1221,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">15</property>
+                            <property name="position">12</property>
                           </packing>
                         </child>
                         <child>
@@ -2060,7 +2092,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">16</property>
+                            <property name="position">13</property>
                           </packing>
                         </child>
                         <style>

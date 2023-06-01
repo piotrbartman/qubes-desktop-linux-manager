@@ -264,7 +264,6 @@ class TemplateHandler:
         self._application_data: \
             Dict[qubesadmin.vm.QubesVM, List[ApplicationData]] = {}
         self._default_applications: Dict[qubesadmin.vm.QubesVM, List[str]] = {}
-        self._collect_application_data()
 
     def change_vm_type(self, vm_type: str):
         """Change selector to one appropriate for the type of VM
@@ -289,42 +288,50 @@ class TemplateHandler:
                 template)
         return False
 
-    def _collect_application_data(self):
-        self.errors = []
+    def load_all_available_apps(self):
         for vm in self.qapp.domains:
-            command = ['qvm-appmenus', '--get-available',
-                       '--i-understand-format-is-unstable', '--file-field',
-                       'Comment', vm.name]
-
-            available_applications = [
-                ApplicationData.from_line(line, template=vm)
-                for line in subprocess.check_output(
-                    command).decode().splitlines()]
-            self._application_data[vm] = available_applications
-            command = ['qvm-appmenus', '--get-default-whitelist', vm.name]
-            try:
-                default_applications = subprocess.check_output(
-                        command).decode().splitlines()
-            except subprocess.CalledProcessError:
-                self.errors.append(vm)
-                default_applications = []
-            self._default_applications[vm] = default_applications
-        if self.errors:
-            show_error(self.main_window, _('Failed to load application data'),
-                       _('Failed to load application data for the following '
-                         'qubes:\n - ') +
-                       '\n - '.join([vm.name for vm in self.errors]))
+            self.get_available_apps(vm)
 
     def get_available_apps(self, vm: Optional[qubesadmin.vm.QubesVM] = None):
         """Get apps available for a given template."""
         if vm:
-            return self._application_data.get(vm, [])
+            if vm in self._application_data:
+                return self._application_data.get(vm, [])
+            command = ['qvm-appmenus', '--get-available',
+                       '--i-understand-format-is-unstable', '--file-field',
+                       'Comment', vm.name]
+            try:
+                available_apps = [
+                    ApplicationData.from_line(line, template=vm)
+                    for line in subprocess.check_output(
+                        command).decode().splitlines()]
+                self._application_data[vm] = available_apps
+            except subprocess.CalledProcessError:
+                show_error(self.main_window,
+                           _('Failed to load application data'),
+                           _('Failed to load application data for ') + vm.name)
+                available_apps = []
+            return available_apps
+
         return [appdata for appdata_list
                 in self._application_data.values() for appdata in appdata_list]
 
     def get_default_apps(self, vm: qubesadmin.vm.QubesVM) -> List[str]:
         """Get list of default apps for a given template"""
-        return self._default_applications.get(vm, [])
+        if vm in self._default_applications:
+            return self._default_applications.get(vm, [])
+
+        command = ['qvm-appmenus', '--get-default-whitelist', vm.name]
+        try:
+            default_applications = subprocess.check_output(
+                command).decode().splitlines()
+        except subprocess.CalledProcessError:
+            show_error(self.main_window,
+                       _('Failed to load application data'),
+                       _('Failed to load default_applications for ') + vm.name)
+            default_applications = []
+        self._default_applications[vm] = default_applications
+        return default_applications
 
     def select_template(self, vm: Optional[str]):
         """Selected a vm in the current selector as provided by

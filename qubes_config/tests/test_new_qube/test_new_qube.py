@@ -167,8 +167,8 @@ def test_complex_new_qube(mock_error, mock_subprocess,
                in mock_popen.mock_calls
 
     mock_error.assert_not_called()
-    # no more subprocess calls
-    assert num_setup_calls == len(mock_subprocess.mock_calls)
+    # 2 additional calls were made: to list available apps and default apps
+    assert num_setup_calls + 2 == len(mock_subprocess.mock_calls)
 
 
 @patch('subprocess.check_output', side_effect = mock_output)
@@ -226,8 +226,9 @@ def test_new_template_cloned(mock_error, mock_subprocess,
         assert not mock_popen.mock_calls  # no apps added
 
     mock_error.assert_not_called()
-    # no more subprocess calls
-    assert num_setup_calls == len(mock_subprocess.mock_calls)
+    # 2 additional subprocess calls to get all apps and available apps for
+    # the new template
+    assert num_setup_calls + 2 == len(mock_subprocess.mock_calls)
 
 
 @patch('subprocess.check_output', side_effect = mock_output)
@@ -290,7 +291,7 @@ def test_new_standalone(mock_error, mock_subprocess,
                      '--update', ANY], stdin=-1) not in mock_popen.mock_calls
 
     mock_error.assert_not_called()
-    # no more subprocess calls
+    # no more subprocess calls, no actual new template was selected
     assert num_setup_calls == len(mock_subprocess.mock_calls)
 
 
@@ -352,8 +353,9 @@ def test_new_disposable(mock_error, mock_subprocess,
         assert not mock_popen.mock_calls  # no apps added
 
     mock_error.assert_not_called()
-    # no more subprocess calls
-    assert num_setup_calls == len(mock_subprocess.mock_calls)
+    # 2 additional subprocess calls to get all apps and available apps for
+    # the new template
+    assert num_setup_calls + 2 == len(mock_subprocess.mock_calls)
 
 
 @patch('subprocess.check_output', side_effect = mock_output)

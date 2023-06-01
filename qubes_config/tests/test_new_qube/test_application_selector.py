@@ -21,7 +21,7 @@
 # pylint: disable=missing-function-docstring
 # pylint: disable=missing-class-docstring
 # pylint: disable=protected-access
-
+import time
 from unittest.mock import patch
 
 from ...new_qube.application_selector import ApplicationBoxHandler, \
@@ -254,6 +254,8 @@ def test_app_handler_do_template(mock_subprocess,
     app_selector.apps_search.set_text('Udon')
 
     assert app_selector.apps_list_placeholder.get_visible()
+    app_selector.load_all_button.clicked()
+    time.sleep(1)
 
     for child in app_selector.apps_list_other.get_children():
         # as we cannot use mapping in tests, let's just check the filter

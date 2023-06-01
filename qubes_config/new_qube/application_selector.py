@@ -221,6 +221,8 @@ class ApplicationBoxHandler:
             gtk_builder.get_object('apps_list_other_templates')
         self.label_other_templates: Gtk.Label = gtk_builder.get_object(
             'label_other_templates')
+        self.load_all_button: Gtk.Button = \
+            gtk_builder.get_object('apps_list_load_all')
 
         self.change_template_msg: Gtk.Dialog = gtk_builder.get_object(
             'msg_change_template')
@@ -253,6 +255,7 @@ class ApplicationBoxHandler:
         self.apps_list.set_sort_func(self._sort_func_app_list)
         self.apps_list_other.set_sort_func(self._sort_func_app_list)
         self.apps_list_other.set_filter_func(self._filter_func_other_list)
+        self.load_all_button.connect('clicked', self._load_all_apps)
 
         self.flowbox.set_sort_func(self._sort_flowbox)
 
@@ -297,6 +300,23 @@ class ApplicationBoxHandler:
                 x.appdata.template):
             return False
         return self._filter_func_app_list(x)
+
+    def _load_all_apps(self, *_args):
+        self.load_all_button.set_label("Loading applications...")
+
+        while Gtk.events_pending():
+            Gtk.main_iteration()
+
+        self.template_selector.load_all_available_apps()
+        self._fill_others_list()
+        self.apps_list_other.invalidate_filter()
+
+        while Gtk.events_pending():
+            Gtk.main_iteration()
+
+        self.apps_list_other.set_visible(True)
+        self.load_all_button.set_label("No matching applications found")
+        self.load_all_button.set_sensitive(False)
 
     @staticmethod
     def _row_activated(listbox: Gtk.ListBox, row: ApplicationRow):

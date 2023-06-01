@@ -1,3 +1,21 @@
+qubes-desktop-linux-manager (4.2.8-1) unstable; urgency=medium
+
+  [ Marta Marczykowska-Górecka ]
+  * Fix USB device handling in Global Config
+  * Lazy-load available applications in new qube
+
+  [ Piotr Bartman ]
+  * qubes-vm-update: logging
+  * qubes-vm-update: add update interruption tests
+
+  [ Marek Marczykowski-Górecki ]
+  * Get certification status from the YAML data
+
+  [ Marta Marczykowska-Górecka ]
+  * Fix apply in Updates tab in Global Config
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 02 Jun 2023 00:52:50 +0200
+
 qubes-desktop-linux-manager (4.2.7-1) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]

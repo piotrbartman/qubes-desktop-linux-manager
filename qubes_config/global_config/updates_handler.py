@@ -384,9 +384,8 @@ class UpdateProxy:
         self.whonix_updatevm_box: Gtk.Box = \
             gtk_builder.get_object('updates_whonix_updatevm_box')
 
-        self.rules, self.current_token = \
-            self.policy_manager.get_rules_from_filename(
-                self.policy_file_name, "")
+        self.rules: List[Rule] = []
+        self.current_token: Optional[str] = None
 
         self.exception_list_handler = PolicyExceptionsHandler(
             gtk_builder=gtk_builder, prefix='updates_updatevm',
@@ -439,8 +438,12 @@ class UpdateProxy:
 
     def load_rules(self):
         """Load rules into widgets."""
+        self.rules, self.current_token = \
+            self.policy_manager.get_rules_from_filename(
+                self.policy_file_name, "")
         def_updatevm = self.default_updatevm
         def_whonix_updatevm = None
+
         if self.has_whonix:
             def_whonix_updatevm = self.default_whonix_updatevm
 

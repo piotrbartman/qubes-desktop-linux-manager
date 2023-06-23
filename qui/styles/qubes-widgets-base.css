@@ -113,7 +113,7 @@ radiobutton radio {
 
 .button_cancel {
     background: @button-color;
-    color: @button-text-color;
+    color: @dark-text-color;
 }
 
 .loading progress {

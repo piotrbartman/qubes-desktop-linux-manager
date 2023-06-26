@@ -167,6 +167,8 @@ def add_expected_vm(qapp,
 
 def add_dom0_vm_property(qapp, prop_name, prop_value):
     """Add a vm property to dom0"""
+    if not prop_value:
+        prop_value = ""
     qapp.expected_calls[('dom0', 'admin.property.Get', prop_name, None)] = \
         b'0\x00' + f'default=True type=vm {prop_value}'.encode()
 
@@ -371,6 +373,48 @@ def test_qapp_simple(): # pylint: disable=redefined-outer-name
 
     return qapp
 
+
+@pytest.fixture
+def test_qapp_broken():  # pylint: disable=redefined-outer-name
+    """A qapp with no templates, no sys-net"""
+    # pylint does not understand fixtures
+    qapp = QubesTest()
+    qapp._local_name = 'dom0'  # pylint: disable=protected-access
+
+    add_dom0_vm_property(qapp, 'clockvm', None)
+    add_dom0_vm_property(qapp, 'updatevm', None)
+    add_dom0_vm_property(qapp, 'default_netvm', None)
+    add_dom0_vm_property(qapp, 'default_template', None)
+    add_dom0_vm_property(qapp, 'default_dispvm', None)
+
+    add_dom0_text_property(qapp, 'default_kernel', '1.1')
+    add_dom0_text_property(qapp, 'default_pool', 'file')
+
+    add_dom0_feature(qapp, 'gui-default-allow-fullscreen', '')
+    add_dom0_feature(qapp, 'gui-default-allow-utf8-titles', '')
+    add_dom0_feature(qapp, 'gui-default-trayicon-mode', '')
+
+    # setup labels
+    qapp.expected_calls[('dom0', 'admin.label.List', None, None)] = \
+        b'0\x00red\nblue\ngreen\n'
+
+    # setup pools:
+    qapp.expected_calls[('dom0', 'admin.pool.List', None, None)] = \
+        b'0\x00linux-kernel\nlvm\nfile\n'
+    qapp.expected_calls[('dom0', 'admin.pool.volume.List',
+                         'linux-kernel', None)] = \
+        b'0\x001.1\nmisc\n4.2\n'
+
+    add_expected_vm(qapp, 'dom0', 'AdminVM',
+                    {}, {'service.qubes-update-check': 1,
+                         'config.default.qubes-update-check': None,
+                         'config-usbvm-name': None,
+                         'gui-default-secure-copy-sequence': None,
+                         'gui-default-secure-paste-sequence': None
+                         }, [])
+    return qapp
+
+
 SIGNALS_REGISTERED = False
 
 @pytest.fixture
@@ -400,7 +444,6 @@ def real_builder():
     builder.add_from_file(pkg_resources.resource_filename(
         'qubes_config', 'global_config.glade'))
     return builder
-
 
 
 NEW_QUBE_SIGNALS_REGISTERED = False

@@ -214,3 +214,23 @@ def test_global_config_failure(mock_error, mock_subprocess,
         # if switch was successful because we don't have the main
         # loop in these tests
         mock_timeout.assert_called()
+
+
+@patch('subprocess.check_output')
+@patch('qubes_config.global_config.global_config.show_error')
+def test_global_config_broken_system(mock_error, mock_subprocess,
+                                     test_qapp_broken, test_policy_manager,
+                                     test_builder):
+    mock_subprocess.return_value = b''
+    app = GlobalConfig(test_qapp_broken, test_policy_manager)
+    # do not call do_activate - it will make Gtk confused and, in case
+    # of errors, spawn an entire screenful of windows
+    app.perform_setup()
+    assert test_builder
+
+    # switch across pages, nothing should happen
+    while app.main_notebook.get_nth_page(
+            app.main_notebook.get_current_page()).get_name() != 'thisdevice':
+        app.main_notebook.next_page()
+
+    mock_error.assert_not_called()

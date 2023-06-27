@@ -43,15 +43,6 @@ class MockProcess:
         self.stdout = stdout
 
 
-FULL_LIST = """qubes-dom0-current-testing\0c\0disabled
-qubes-dom0-security-testing\0c\0enabled
-qubes-dom0-current\0c\0enabled
-qubes-templates-itl-testing\0c\0enabled
-qubes-templates-itl\0c\0enabled
-qubes-templates-community-testing\0c\0enabled
-qubes-templates-community\0c\0enabled"""
-
-
 ALL_ENABLED = """qubes-dom0-current-testing\0c\0enabled
 qubes-dom0-security-testing\0c\0enabled
 qubes-dom0-current\0c\0enabled
@@ -73,21 +64,9 @@ qubes-templates-community\0c\0disabled"""
 MISSING = """qubes-dom0-current\0c\0enabled"""
 
 
-def subprocess_replace(repo_list, command, *_args, **_kwargs):
-    assert command[0] == 'sudo'
-
-    if '/etc/qubes-rpc/qubes.repos.List' in command:
-        output = repo_list
-        return MockProcess(output.encode(), 0, None)
-
-    assert False
-
-def subprocess_fail(_command, *_args, **_kwargs):
-    return MockProcess(b'', 2, b'2')
-
-
-@patch('subprocess.run', partial(subprocess_replace, ALL_ENABLED))
-def test_repo_handler_all(real_builder):
+@patch('qubes_config.global_config.updates_handler.qrexec_call')
+def test_repo_handler_all(mock_output, real_builder):
+    mock_output.return_value = ALL_ENABLED
     handler = RepoHandler(real_builder)
     assert handler.dom0_testing_radio.get_active()
     assert handler.template_official_testing.get_active()
@@ -96,8 +75,9 @@ def test_repo_handler_all(real_builder):
     assert handler.template_community_testing.get_active()
 
 
-@patch('subprocess.run', partial(subprocess_replace, MINIMAL))
-def test_repo_handler_minimal(real_builder):
+@patch('qubes_config.global_config.updates_handler.qrexec_call')
+def test_repo_handler_minimal(mock_output, real_builder):
+    mock_output.return_value = MINIMAL
     handler = RepoHandler(real_builder)
     assert handler.dom0_stable_radio.get_active()
     assert not handler.template_official_testing.get_active()
@@ -107,8 +87,9 @@ def test_repo_handler_minimal(real_builder):
     assert not handler.template_community_testing.get_sensitive()
 
 
-@patch('subprocess.run', partial(subprocess_replace, MISSING))
-def test_repo_handler_missing_repos(real_builder):
+@patch('qubes_config.global_config.updates_handler.qrexec_call')
+def test_repo_handler_missing_repos(mock_output, real_builder):
+    mock_output.return_value = MISSING
     handler = RepoHandler(real_builder)
     assert handler.dom0_stable_radio.get_active()
     assert not handler.template_official_testing.get_active()
@@ -118,8 +99,9 @@ def test_repo_handler_missing_repos(real_builder):
     assert not handler.template_community_testing.get_sensitive()
 
 
-@patch('subprocess.run', subprocess_fail)
-def test_repo_handler_error(real_builder):
+@patch('qubes_config.global_config.updates_handler.qrexec_call')
+def test_repo_handler_error(mock_output, real_builder):
+    mock_output.side_effect = RuntimeError()
     handler = RepoHandler(real_builder)
     assert not handler.dom0_stable_radio.get_sensitive()
     assert not handler.dom0_testing_sec_radio.get_sensitive()
@@ -130,31 +112,30 @@ def test_repo_handler_error(real_builder):
     assert handler.problems_repo_box.get_visible()
 
 
-def subprocess_save_repos(command, repo_list ="",
-                          enable_repos = None, disable_repos = None, **_kwargs):
-    assert command[0] == 'sudo'
-    arg = command[-1]
+def mock_qrexec(_vm, service, arg, repo_list="",
+                          enable_repos=None, disable_repos=None):
+    if 'qubes.repos.List' in service:
+        return repo_list
 
-    if '/etc/qubes-rpc/qubes.repos.List' in command:
-        output = repo_list
-        return MockProcess(output.encode(), 0, None)
-
-    if '/etc/qubes-rpc/qubes.repos.Enable' in command:
+    if 'qubes.repos.Enable' in service:
         if enable_repos and arg in enable_repos:
-            return MockProcess(b'ok\n', 0, None)
+            return 'ok\n'
 
-    if '/etc/qubes-rpc/qubes.repos.Disable' in command:
+    if 'qubes.repos.Disable' in service:
         if disable_repos and arg in disable_repos:
-            return MockProcess(b'ok\n', 0, None)
+            return 'ok\n'
 
     assert False
 
 
 def test_repo_handler_save(real_builder):
-
-    with patch('subprocess.run', partial(
-            subprocess_save_repos, repo_list=ALL_ENABLED)):
+    with patch('qubes_config.global_config.updates_handler.qrexec_call',
+               partial(mock_qrexec, repo_list=ALL_ENABLED)):
         handler = RepoHandler(real_builder)
+
+    assert handler.dom0_stable_radio.get_sensitive()
+    assert handler.template_community_testing.get_sensitive()
+    assert handler.template_official_testing.get_sensitive()
 
     handler.dom0_stable_radio.set_active(True)
     handler.template_community_testing.set_active(False)
@@ -168,31 +149,35 @@ qubes-templates-itl\0c\0enabled
 qubes-templates-community-testing\0c\0disabled
 qubes-templates-community\0c\0enabled"""
 
-    with patch('subprocess.run', partial(
-            subprocess_save_repos, repo_list=changed_result,
-            enable_repos=['qubes-dom0-current',
-                          'qubes-templates-itl',
-                          'qubes-templates-community',],
-            disable_repos=['qubes-dom0-security-testing',
-                           'qubes-dom0-current-testing',
-                           'qubes-templates-itl-testing',
-                           'qubes-templates-community-testing'])):
+    with patch('qubes_config.global_config.updates_handler.qrexec_call',
+               partial(mock_qrexec, repo_list=changed_result,
+                       enable_repos=['qubes-dom0-current',
+                                     'qubes-templates-itl',
+                                     'qubes-templates-community',],
+                       disable_repos=['qubes-dom0-security-testing',
+                                      'qubes-dom0-current-testing',
+                                      'qubes-templates-itl-testing',
+                                      'qubes-templates-community-testing'])):
         handler.save()
 
 
 def test_repo_handler_save_fail(real_builder):
-    with patch('subprocess.run', partial(
-            subprocess_save_repos, repo_list=ALL_ENABLED)):
+    with patch('qubes_config.global_config.updates_handler.qrexec_call',
+               partial(mock_qrexec, repo_list=ALL_ENABLED)):
         handler = RepoHandler(real_builder)
 
     handler.dom0_stable_radio.set_active(True)
 
-    with patch('subprocess.run', subprocess_fail):
+    with patch('qubes_config.global_config.updates_handler.qrexec_call') as \
+            mock_output:
+        mock_output.side_effect = RuntimeError()
         with pytest.raises(qubesadmin.exc.QubesException):
             handler.save()
 
-@patch('subprocess.run', partial(subprocess_replace, MINIMAL))
-def test_repo_handler_unsaved(real_builder):
+
+@patch('qubes_config.global_config.updates_handler.qrexec_call')
+def test_repo_handler_unsaved(mock_output, real_builder):
+    mock_output.return_value = MINIMAL
     handler = RepoHandler(real_builder)
 
     assert handler.get_unsaved() == ''
@@ -900,7 +885,10 @@ Proxy * @tag:whonix-updatevm @default allow target=anon-whonix"""
     assert not handler.is_changed()
 
 
-def test_complete_handler(real_builder, test_qapp, test_policy_manager):
+@patch('qubes_config.global_config.updates_handler.qrexec_call')
+def test_complete_handler(mock_output, real_builder, test_qapp,
+                          test_policy_manager):
+    mock_output.return_value = ALL_ENABLED
     handler = UpdatesHandler(test_qapp, test_policy_manager, real_builder)
 
     # check if dom0 updatevm worked
@@ -929,8 +917,10 @@ def test_complete_handler(real_builder, test_qapp, test_policy_manager):
     assert handler.update_checker.dom0_update_check.get_active()
 
 
-def test_complete_handle_dom0updatevm(real_builder,
+@patch('qubes_config.global_config.updates_handler.qrexec_call')
+def test_complete_handle_dom0updatevm(mock_output, real_builder,
                                       test_qapp, test_policy_manager):
+    mock_output.return_value = ''
     handler = UpdatesHandler(test_qapp, test_policy_manager, real_builder)
 
     # check if dom0 updatevm worked

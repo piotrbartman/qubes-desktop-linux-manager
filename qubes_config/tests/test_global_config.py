@@ -160,9 +160,13 @@ def test_global_config_page_change(mock_error, mock_subprocess,
             child.activate()
             child.source_widget.model.select_value('sys-net')
             child.validate_and_save()
+            break
+    else:
+        assert False
 
-    old_text = test_policy_manager.policy_client.files[
-        handler.filecopy_handler.policy_file_name]
+    # file should not yet exist
+    assert handler.filecopy_handler.policy_file_name not in \
+           test_policy_manager.policy_client.files
 
     # save changes
     with patch(show_dialog_with_icon_path) as mock_ask:
@@ -175,7 +179,7 @@ def test_global_config_page_change(mock_error, mock_subprocess,
     time.sleep(0.1)
 
     # changes should have been done
-    assert old_text != test_policy_manager.policy_client.files[
+    assert 'sys-net' in test_policy_manager.policy_client.files[
         handler.filecopy_handler.policy_file_name]
 
     mock_error.assert_not_called()

@@ -74,7 +74,7 @@ class PolicyManager:
     def get_rules_from_filename(self, filename: str, default_policy: str) -> \
             Tuple[List[Rule], Optional[str]]:
         """Get rules contained in a provided file. If the file does not exist,
-        populate it with provided default policy and return the contents.
+        return default policy.
         Return list of Rule objects and str of the PolicyClient's token
         for the file."""
         try:
@@ -82,8 +82,7 @@ class PolicyManager:
         except subprocess.CalledProcessError:
             if not default_policy:
                 return [], None
-            self.policy_client.policy_replace(filename, default_policy)
-            rules_text, token = self.policy_client.policy_get(filename)
+            rules_text, token = default_policy, None
 
         rules = self.text_to_rules(rules_text)
 

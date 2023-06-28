@@ -77,10 +77,12 @@ def test_get_policy_from_file_new():
 
     test_default = 'Test\t*\t@anyvm\t@anyvm\tdeny'
 
+    # token should be None (the file is new), but rules should be appropriate
     got_rules, token = manager.get_rules_from_filename('test', test_default)
-    assert token == 'test'
+    assert token is None
     assert len(got_rules) == 1
     assert str(got_rules[0]) == test_default
+    assert 'test' not in manager.policy_client.files
 
 
 def test_get_policy_from_file_existing():

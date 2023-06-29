@@ -435,7 +435,7 @@ class BasicSettingsHandler(PageHandler):
             readable_name=_("Default net qube"),
             additional_options=NONE_CATEGORY))
         self.handlers.append(PropertyHandler(
-            qapp=self.qapp, trait_holder=self.vm, trait_name="default_dispvm",
+            qapp=self.qapp, trait_holder=self.qapp, trait_name="default_dispvm",
             widget=self.defdispvm_combo, vm_filter=self._default_dispvm_filter,
             readable_name=_("Default disposable qube template"),
             additional_options=NONE_CATEGORY))

@@ -1,3 +1,13 @@
+qubes-desktop-linux-manager (4.2.9-1) unstable; urgency=medium
+
+  [ Marta Marczykowska-Górecka ]
+  * Fix button text color in global config
+  * Fix global-config to accept a system with only dom0
+  * Global config: if policy files do not exist, do not create them
+  * Fix what property is actually set for default_dispvm
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 02 Jul 2023 03:48:51 +0200
+
 qubes-desktop-linux-manager (4.2.8-1) unstable; urgency=medium
 
   [ Marta Marczykowska-Górecka ]

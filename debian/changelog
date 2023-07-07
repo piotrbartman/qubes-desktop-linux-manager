@@ -1,3 +1,15 @@
+qubes-desktop-linux-manager (4.2.10-1) unstable; urgency=medium
+
+  [ Demi Marie Obenour ]
+  * Add missing gnome-icon-theme dependency
+
+  [ Marta Marczykowska-Górecka ]
+  * Use qrexec.client.call instead of reimplementing it
+  * Add caching to qubes-global-config
+  * Move USB conflicting file info box to correct place
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 07 Jul 2023 03:29:12 +0200
+
 qubes-desktop-linux-manager (4.2.9-1) unstable; urgency=medium
 
   [ Marta Marczykowska-Górecka ]

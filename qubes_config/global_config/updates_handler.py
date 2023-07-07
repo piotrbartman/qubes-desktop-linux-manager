@@ -20,12 +20,12 @@
 """
 Updates page handler
 """
-import os
 import subprocess
 from html import escape
 from typing import Optional, List, Dict
 
 from qrexec.policy.parser import Rule
+from qrexec.client import call as qrexec_call
 
 from ..widgets.gtk_widgets import VMListModeler, NONE_CATEGORY
 from ..widgets.utils import get_boolean_feature, apply_feature_change
@@ -114,7 +114,7 @@ class RepoHandler:
                 self.repos[repo_name] = {}
                 self.repos[repo_name]['prettyname'] = lst[1]
                 self.repos[repo_name]['enabled'] = lst[2] == 'enabled'
-        except RuntimeError as ex:
+        except (RuntimeError, IndexError) as ex:
             # disable all repo-related stuff
             self.dom0_stable_radio.set_sensitive(False)
             self.dom0_testing_sec_radio.set_sensitive(False)
@@ -142,19 +142,12 @@ class RepoHandler:
 
     @staticmethod
     def _run_qrexec_repo(service, arg=''):
-        # Set default locale to C in order to prevent error msg
-        # in subprocess call related to falling back to C locale
-        env = os.environ.copy()
-        env['LC_ALL'] = 'C'
-        # Fake up a "qrexec call" to dom0 because dom0 can't qrexec to itself
-        cmd = '/etc/qubes-rpc/' + service
-        # --non-interactive is a workaround for sudo bug
-        process = subprocess.run(['sudo', '--non-interactive', cmd, arg],
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                           check=False, env=env)
-        if process.returncode != 0 or process.stderr:
-            raise RuntimeError('qrexec call failed')
-        return process.stdout.decode('utf-8')
+        try:
+            return qrexec_call('dom0', service, arg)
+        except subprocess.CalledProcessError as ex:
+            raise RuntimeError('qrexec call failed: ' + ex.stderr) from ex
+        except Exception as ex:
+            raise RuntimeError('qrexec call failed: ' + str(ex)) from ex
 
     def _set_repository(self, repository, state):
         action = 'Enable' if state else 'Disable'

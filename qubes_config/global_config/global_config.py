@@ -385,12 +385,18 @@ class GlobalConfig(Gtk.Application):
     def save_page(self, page: PageHandler) -> bool:
         """Save provided page and emit any necessary signals;
         return True if successful, False otherwise"""
+        # pylint: disable=protected-access
+        # need to invalidate cache before and after saving to avoid
+        # stale cache
+
+        self.qapp._invalidate_cache_all()
         try:
             page.save()
             for name, handler in self.handlers.items():
                 if handler == page:
                     self.main_window.emit('page-changed', name)
                     break
+            self.qapp._invalidate_cache_all()
             page.reset()
         except Exception as ex:
             show_error(self.main_window, _("Could not save changes"),
@@ -480,6 +486,7 @@ def main():
     Start the app
     """
     qapp = qubesadmin.Qubes()
+    qapp.cache_enabled = True
     policy_manager = PolicyManager()
     app = GlobalConfig(qapp, policy_manager)
     app.run(sys.argv)

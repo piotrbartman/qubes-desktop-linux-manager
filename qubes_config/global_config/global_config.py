@@ -96,7 +96,8 @@ qubes.ClipboardPaste * @anyvm @anyvm ask\n""",
                 widget=self.copy_combo,
                 options={_('default (Ctrl+Shift+C)'): None,
                          _('Ctrl+Shift+C'): 'Ctrl-Shift-c',
-                         _('Ctrl+Win+C'): 'Ctrl-Mod4-c'},
+                         _('Ctrl+Win+C'): 'Ctrl-Mod4-c',
+                         _("Win+C"): 'Mod4-c'},
                 readable_name=_("Global Clipboard copy shortcut")
             ),
             FeatureHandler(
@@ -105,7 +106,8 @@ qubes.ClipboardPaste * @anyvm @anyvm ask\n""",
                 options= {_('default (Ctrl+Shift+V)'): None,
                           _('Ctrl+Shift+V'): 'Ctrl-Shift-V',
                           _('Ctrl+Win+V'): 'Ctrl-Mod4-v',
-                          _('Ctrl+Insert'): 'Ctrl-Ins'},
+                          _('Ctrl+Insert'): 'Ctrl-Ins',
+                          _('Win+V'): 'Mod4-v'},
                 readable_name=_("Global Clipboard paste shortcut")
             )
         ]

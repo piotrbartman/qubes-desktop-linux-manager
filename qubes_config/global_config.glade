@@ -826,6 +826,47 @@
                           </packing>
                         </child>
                         <child>
+                          <object class="GtkBox" id="usb_input_problem_box">
+                            <property name="can-focus">False</property>
+                            <property name="orientation">vertical</property>
+                            <child>
+                              <object class="GtkLabel" id="usb_input_problem_label">
+                                <property name="can-focus">False</property>
+                                <property name="label" translatable="yes">Custom policy changes found. The changes below may be overwritten by existing custom policy changes. View the files listed below to verify the existing policy.</property>
+                                <property name="wrap">True</property>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkListBox" id="usb_input_problem_files_list">
+                                <property name="can-focus">False</property>
+                                <property name="selection-mode">none</property>
+                                <property name="activate-on-single-click">False</property>
+                                <style>
+                                  <class name="problem_list"/>
+                                </style>
+                              </object>
+                              <packing>
+                                <property name="expand">False</property>
+                                <property name="fill">True</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                            <style>
+                              <class name="problem_box"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">3</property>
+                          </packing>
+                        </child>
+                        <child>
                           <!-- n-columns=3 n-rows=4 -->
                           <object class="GtkGrid" id="usb_input_grid">
                             <property name="visible">True</property>
@@ -940,7 +981,7 @@
                           <packing>
                             <property name="expand">False</property>
                             <property name="fill">True</property>
-                            <property name="position">3</property>
+                            <property name="position">4</property>
                           </packing>
                         </child>
                         <child>
@@ -952,47 +993,6 @@
                             <style>
                               <class name="group_title"/>
                               <class name="section_title"/>
-                            </style>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">4</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkBox" id="usb_input_problem_box">
-                            <property name="can-focus">False</property>
-                            <property name="orientation">vertical</property>
-                            <child>
-                              <object class="GtkLabel" id="usb_input_problem_label">
-                                <property name="can-focus">False</property>
-                                <property name="label" translatable="yes">Custom policy changes found. The changes below may be overwritten by existing custom policy changes. View the files listed below to verify the existing policy.</property>
-                                <property name="wrap">True</property>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">0</property>
-                              </packing>
-                            </child>
-                            <child>
-                              <object class="GtkListBox" id="usb_input_problem_files_list">
-                                <property name="can-focus">False</property>
-                                <property name="selection-mode">none</property>
-                                <property name="activate-on-single-click">False</property>
-                                <style>
-                                  <class name="problem_list"/>
-                                </style>
-                              </object>
-                              <packing>
-                                <property name="expand">False</property>
-                                <property name="fill">True</property>
-                                <property name="position">1</property>
-                              </packing>
-                            </child>
-                            <style>
-                              <class name="problem_box"/>
                             </style>
                           </object>
                           <packing>

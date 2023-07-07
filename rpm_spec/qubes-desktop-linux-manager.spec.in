@@ -60,6 +60,7 @@ Requires:  qubes-artwork >= 4.1.5
 # for qui/widget-wrapper
 Requires:  xhost
 Requires:  gtksourceview4
+Requires:  gnome-icon-theme
 
 Provides:   qui = %{version}-%{release}
 Obsoletes:  qui < 4.0.0

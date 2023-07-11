@@ -145,7 +145,7 @@ class RepoHandler:
         try:
             return qrexec_call('dom0', service, arg)
         except subprocess.CalledProcessError as ex:
-            raise RuntimeError('qrexec call failed: ' + ex.stderr) from ex
+            raise RuntimeError('qrexec call failed: ' + str(ex.stderr)) from ex
         except Exception as ex:
             raise RuntimeError('qrexec call failed: ' + str(ex)) from ex
 

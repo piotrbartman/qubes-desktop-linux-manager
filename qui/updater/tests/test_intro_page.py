@@ -18,11 +18,15 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+import argparse
+
 import pytest
 from unittest.mock import patch
 from unittest.mock import Mock
 
+from qubes_config.tests.conftest import test_qapp_impl
 from qui.updater.intro_page import IntroPage, UpdateRowWrapper, UpdatesAvailable
+from qui.updater.updater import parse_args
 from qui.updater.utils import ListWrapper, HeaderCheckbox
 
 @patch('subprocess.check_output')
@@ -153,3 +157,53 @@ def test_on_checkbox_toggled(
     # no selected row
     assert not sut.checkbox_column_button.get_inconsistent()
     assert not sut.checkbox_column_button.get_active()
+
+all_domains = {vm.name for vm in test_qapp_impl().domains}
+all_templates = {vm.name for vm in test_qapp_impl().domains if vm.klass == "template"}
+all_standalones = {vm.name for vm in test_qapp_impl().domains if vm.klass == "standalone"}
+
+@patch('subprocess.check_output')
+@pytest.mark.parametrize(
+    "args, output, selected",
+    (
+        pytest.param(('--all',), ",".join(all_domains.difference({"dom0"})).encode(), all_domains),
+        pytest.param(('--update-if-stale', '10'), b'fedora-36', {'fedora-36'}),
+        pytest.param(('--targets', 'dom0,fedora-36'), b'fedora-36', {'dom0', 'fedora-36'}),
+        pytest.param(('--dom0', '--skip', 'dom0'), None, set()),
+        pytest.param(('--skip', 'dom0'), None, set()),
+        pytest.param(('--targets', 'dom0', '--skip', 'dom0'), None, set()),
+        pytest.param(('--dom0',), None, {'dom0'}),
+        pytest.param(('--standalones',), ",".join(all_standalones).encode(), all_standalones),
+        pytest.param(('--templates', '--skip', 'fedora-36,garbage-name'),
+                     ",".join(all_templates.difference({"fedora-36"})).encode(),
+                     all_templates.difference({"fedora-36"})),
+    ),
+)
+def test_select_rows_ignoring_conditions(
+        mock_subprocess, args, output, selected, real_builder, test_qapp,
+        mock_next_button, mock_settings, mock_list_store
+):
+    mock_log = Mock()
+    sut = IntroPage(real_builder, mock_log, mock_next_button)
+
+    # populate_vm_list
+    sut.list_store = ListWrapper(UpdateRowWrapper, mock_list_store)
+    for vm in test_qapp.domains:
+        sut.list_store.append_vm(vm)
+
+    assert len(sut.list_store) == 12
+
+    if output is not None:
+        # inconsistent output of qubes-vm-update, but it does not matter
+        mock_subprocess.return_value = \
+            b'Following templates will be updated: ' + output
+
+    cliargs = parse_args(args)
+    sut.select_rows_ignoring_conditions(cliargs)
+    to_update = {row.name for row in sut.list_store if row.selected}
+
+    assert to_update == selected
+    if output is None:
+        mock_subprocess.assert_not_called()
+
+

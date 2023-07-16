@@ -242,7 +242,7 @@ class PoolUsageData:
         if pool.has_error:
             # Pool with errors
             formatted_name = \
-                f'<span color=\'red\'><b>{pool.name}</b></span'
+                f'<span color=\'red\'><b>{pool.name}</b></span>'
         elif pool.size and 'included_in' not in pool.config:
             # normal pool
             formatted_name = f'<b>{pool.name}</b>'

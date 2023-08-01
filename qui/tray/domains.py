@@ -495,6 +495,7 @@ class DomainMenuItem(Gtk.ImageMenuItem):
         if state == 'Halted':
             self.hide()
             return
+        self.show_all()
 
         if state in ['Running', 'Paused']:
             self.hide_spinner()

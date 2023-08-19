@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Exec=qubes-policy-editor
+Exec=qubes-policy-editor-gui
 Icon=qubes-global-config
 Terminal=false
 Name=Qubes Policy Editor

@@ -206,11 +206,11 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 
 /usr/share/applications/qubes-global-config.desktop
 /usr/share/applications/qubes-new-qube.desktop
-/usr/share/applications/qubes-policy-editor.desktop
+/usr/share/applications/qubes-policy-editor-gui.desktop
 
 %{_bindir}/qubes-new-qube
 %{_bindir}/qubes-global-config
-%{_bindir}/qubes-policy-editor
+%{_bindir}/qubes-policy-editor-gui
 
 /usr/share/icons/hicolor/16x16/apps/qui-domains.png
 /usr/share/icons/hicolor/24x24/apps/qui-domains.png

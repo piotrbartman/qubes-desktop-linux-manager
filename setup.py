@@ -56,7 +56,7 @@ setuptools.setup(
             'qui-clipboard = qui.clipboard:main',
             'qubes-new-qube = qubes_config.new_qube.new_qube_app:main',
             'qubes-global-config = qubes_config.global_config.global_config:main',
-            'qubes-policy-editor = qubes_config.policy_editor.policy_editor:main'
+            'qubes-policy-editor-gui = qubes_config.policy_editor.policy_editor:main'
         ]
     },
     package_data={'qui': ["updater.glade",

@@ -24,7 +24,7 @@ In case of problems, you can view system log with `journalctl --user -u qubes-wi
 
 To run the policy editor, use
 ```commandline
-$ qubes-policy-editor file_name
+$ qubes-policy-editor-gui file_name
 ```
 
 You can use an existing policy file name to edit an existing file (e.g. `90-default`),

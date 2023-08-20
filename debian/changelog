@@ -1,3 +1,13 @@
+qubes-desktop-linux-manager (4.2.12-1) unstable; urgency=medium
+
+  [ Marta Marczykowska-Górecka ]
+  * Make sure all qubes are shown in domains widget
+
+  [ Marek Marczykowski-Górecki ]
+  * Rename qrexec-policy-editor to qrexec-policy-editor-gui
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 20 Aug 2023 04:09:24 +0200
+
 qubes-desktop-linux-manager (4.2.11-1) unstable; urgency=medium
 
   [ Marta Marczykowska-Górecka ]

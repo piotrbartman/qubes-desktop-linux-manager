@@ -159,28 +159,29 @@ def test_on_checkbox_toggled(
     assert not sut.checkbox_column_button.get_active()
 
 all_domains = {vm.name for vm in test_qapp_impl().domains}
-all_templates = {vm.name for vm in test_qapp_impl().domains if vm.klass == "template"}
-all_standalones = {vm.name for vm in test_qapp_impl().domains if vm.klass == "standalone"}
+all_templates = {vm.name for vm in test_qapp_impl().domains if vm.klass == "TemplateVM"}
+all_standalones = {vm.name for vm in test_qapp_impl().domains if vm.klass == "StandaloneVM"}
 
 @patch('subprocess.check_output')
 @pytest.mark.parametrize(
-    "args, output, selected",
+    "args, templates, rest, selected",
     (
-        pytest.param(('--all',), ",".join(all_domains.difference({"dom0"})).encode(), all_domains),
-        pytest.param(('--update-if-stale', '10'), b'fedora-36', {'fedora-36'}),
-        pytest.param(('--targets', 'dom0,fedora-36'), b'fedora-36', {'dom0', 'fedora-36'}),
-        pytest.param(('--dom0', '--skip', 'dom0'), None, set()),
-        pytest.param(('--skip', 'dom0'), None, set()),
-        pytest.param(('--targets', 'dom0', '--skip', 'dom0'), None, set()),
-        pytest.param(('--dom0',), None, {'dom0'}),
-        pytest.param(('--standalones',), ",".join(all_standalones).encode(), all_standalones),
+        pytest.param(('--all',), ",".join(all_templates).encode(), ",".join(all_domains.difference({"dom0"}).difference(all_templates)).encode(), all_domains),
+        pytest.param(('--update-if-stale', '10'), b'fedora-36', b'', {'fedora-36'}),
+        pytest.param(('--targets', 'dom0,fedora-36'), b'fedora-36', b'', {'dom0', 'fedora-36'}),
+        pytest.param(('--dom0', '--skip', 'dom0'), b'', b'', set()),
+        pytest.param(('--skip', 'dom0'), b'', b'', set()),
+        pytest.param(('--targets', 'dom0', '--skip', 'dom0'), b'', b'', set()),
+        pytest.param(('--dom0',), b'', b'', {'dom0'}),
+        pytest.param(('--standalones',), b'', ",".join(all_standalones).encode(), all_standalones),
         pytest.param(('--templates', '--skip', 'fedora-36,garbage-name'),
                      ",".join(all_templates.difference({"fedora-36"})).encode(),
+                     b'',
                      all_templates.difference({"fedora-36"})),
     ),
 )
 def test_select_rows_ignoring_conditions(
-        mock_subprocess, args, output, selected, real_builder, test_qapp,
+        mock_subprocess, args, templates, rest, selected, real_builder, test_qapp,
         mock_next_button, mock_settings, mock_list_store
 ):
     mock_log = Mock()
@@ -193,17 +194,17 @@ def test_select_rows_ignoring_conditions(
 
     assert len(sut.list_store) == 12
 
-    if output is not None:
-        # inconsistent output of qubes-vm-update, but it does not matter
-        mock_subprocess.return_value = \
-            b'Following templates will be updated: ' + output
+    mock_subprocess.return_value = (
+        b'Following templates will be updated: ' + templates + b'\n'
+        b'Following qubes will be updated: ' + rest
+    )
 
     cliargs = parse_args(args)
     sut.select_rows_ignoring_conditions(cliargs)
     to_update = {row.name for row in sut.list_store if row.selected}
 
     assert to_update == selected
-    if output is None:
+    if not templates + rest:
         mock_subprocess.assert_not_called()
 
 

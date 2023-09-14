@@ -18,6 +18,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
+import dataclasses
 from typing import Optional, Union, Callable
 
 import pkg_resources
@@ -36,6 +37,12 @@ GObject.signal_new('child-removed',
                    GObject.SignalFlags.RUN_LAST, GObject.TYPE_PYOBJECT,
                    (GObject.TYPE_PYOBJECT,))
 
+@dataclasses.dataclass(frozen=True)
+class OverridenSettings:
+    restart: Optional[bool] = None
+    max_concurrency: Optional[int] = None
+    update_if_stale: Optional[int] = None
+
 
 class Settings:
     DEFAULT_CONCURRENCY = 4
@@ -45,10 +52,18 @@ class Settings:
     DEFAULT_RESTART_SYSTEM_VMS = True
     DEFAULT_RESTART_OTHER_VMS = False
 
-    def __init__(self, main_window, qapp, log, refresh_callback: Callable):
+    def __init__(
+            self,
+            main_window,
+            qapp,
+            log,
+            refresh_callback: Callable,
+            overrides: OverridenSettings = OverridenSettings(),
+    ):
         self.qapp = qapp
         self.log = log
         self.refresh_callback = refresh_callback
+        self.overrides = overrides
         self.vm = self.qapp.domains[self.qapp.local_name]
 
         self.builder = Gtk.Builder()
@@ -122,12 +137,16 @@ class Settings:
     @property
     def update_if_stale(self) -> int:
         """Return the current (set by this window or manually) option value."""
+        if self.overrides.update_if_stale is not None:
+            return self.overrides.update_if_stale
         return int(get_feature(self.vm, "qubes-vm-update-update-if-stale",
                                Settings.DEFAULT_UPDATE_IF_STALE))
 
     @property
     def restart_system_vms(self) -> bool:
         """Return the current (set by this window or manually) option value."""
+        if self.overrides.restart is not None:
+            return self.overrides.restart
         return get_boolean_feature(
             self.vm, "qubes-vm-update-restart-system",
             Settings.DEFAULT_RESTART_SYSTEM_VMS)
@@ -135,6 +154,8 @@ class Settings:
     @property
     def restart_other_vms(self) -> bool:
         """Return the current (set by this window or manually) option value."""
+        if self.overrides.restart is not None:
+            return self.overrides.restart
         return get_boolean_feature(
             self.vm, "qubes-vm-update-restart-other",
             Settings.DEFAULT_RESTART_OTHER_VMS)
@@ -142,6 +163,8 @@ class Settings:
     @property
     def max_concurrency(self) -> Optional[int]:
         """Return the current (set by this window or manually) option value."""
+        if self.overrides.max_concurrency is not None:
+            return self.overrides.max_concurrency
         result = get_feature(self.vm, "qubes-vm-update-max-concurrency", None)
         if result is None:
             return result
@@ -150,15 +173,21 @@ class Settings:
     def load_settings(self):
         self._init_update_if_stale = self.update_if_stale
         self.days_without_update_button.set_value(self._init_update_if_stale)
+        self.days_without_update_button.set_sensitive(
+            not self.overrides.update_if_stale)
 
         self._init_restart_system_vms = self.restart_system_vms
         self._init_restart_other_vms = self.restart_other_vms
+        self.restart_system_checkbox.set_sensitive(not self.overrides.restart)
         self.restart_system_checkbox.set_active(self._init_restart_system_vms)
         self.restart_other_checkbox.set_active(self._init_restart_other_vms)
+        self.restart_other_checkbox.set_sensitive(not self.overrides.restart)
 
         self._init_max_concurrency = self.max_concurrency
         self._init_limit_concurrency = self._init_max_concurrency is not None
         self.limit_concurrency_checkbox.set_active(self._init_limit_concurrency)
+        self.limit_concurrency_checkbox.set_sensitive(
+            not self.overrides.max_concurrency)
         if self._init_limit_concurrency:
             self.max_concurrency_button.set_value(self._init_max_concurrency)
 
@@ -172,6 +201,7 @@ class Settings:
     def _limit_concurrency_toggled(self, _emitter=None):
         self.max_concurrency_button.set_sensitive(
             self.limit_concurrency_checkbox.get_active()
+            and not self.overrides.max_concurrency
         )
 
     def show(self):

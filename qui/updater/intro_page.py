@@ -175,6 +175,48 @@ class IntroPage:
             row.selected = row.updates_available \
                            in self.head_checkbox.allowed
 
+    def select_rows_ignoring_conditions(self, cliargs):
+        cmd = ['qubes-vm-update', '--dry-run']
+
+        args = [a for a in dir(cliargs) if not a.startswith("_")]
+        for arg in args:
+            if arg in ("dom0", "no-restart", "restart", "max_concurrency",
+                       "log"):
+                continue
+            value = getattr(cliargs, arg)
+            if value:
+                if arg in ("skip", "targets"):
+                    vms = set(value.split(","))
+                    vms_without_dom0 = vms.difference({"dom0"})
+                    if not vms_without_dom0:
+                        continue
+                    value = ",".join(vms_without_dom0)
+                cmd.extend((f"--{arg.replace('_', '-')}", str(value)))
+
+        if not cmd[2:]:
+            to_update = set()
+        else:
+            self.log.debug("Run command %s", " ".join(cmd))
+            output = subprocess.check_output(cmd)
+            self.log.debug("Command returns: %s", output.decode())
+
+            to_update = {
+                vm_name.strip()
+                for line in output.decode().split("\n", maxsplit=1)
+                for vm_name in line.split(":", maxsplit=1)[1].split(",")
+            }
+
+        # handle dom0
+        if cliargs.dom0 or cliargs.all:
+            to_update.add("dom0")
+        if cliargs.targets and "dom0" in cliargs.targets.split(","):
+            to_update.add("dom0")
+        if cliargs.skip and "dom0" in cliargs.skip.split(","):
+            to_update = to_update.difference({"dom0"})
+
+        for row in self.list_store:
+            row.selected = row.name in to_update
+
 
 class UpdateRowWrapper(RowWrapper):
     COLUMN_NUM = 9

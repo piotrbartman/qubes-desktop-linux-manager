@@ -20,14 +20,14 @@
 # USA.
 from unittest.mock import patch, call
 
-from qui.updater.updater import QubesUpdater
+from qui.updater.updater import QubesUpdater, parse_args
 
 
 @patch('logging.FileHandler')
 @patch('logging.getLogger')
 @patch('qui.updater.intro_page.IntroPage.populate_vm_list')
 def test_setup(populate_vm_list, _mock_logging, __mock_logging, test_qapp):
-    sut = QubesUpdater(test_qapp)
+    sut = QubesUpdater(test_qapp, parse_args(()))
     sut.perform_setup()
     calls = [call(sut.qapp, sut.settings)]
     populate_vm_list.assert_has_calls(calls)

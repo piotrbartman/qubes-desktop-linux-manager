@@ -217,6 +217,10 @@ def add_feature_to_all(qapp, feature_name, enable_vm_names: List[str]):
 
 @pytest.fixture
 def test_qapp():
+    return test_qapp_impl()
+
+
+def test_qapp_impl():
     """Test QubesApp"""
     qapp = QubesTest()
     qapp._local_name = 'dom0'  # pylint: disable=protected-access

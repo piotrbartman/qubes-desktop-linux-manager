@@ -1,3 +1,11 @@
+qubes-desktop-linux-manager (4.2.13-1) unstable; urgency=medium
+
+  [ Piotr Bartman ]
+  * qubes-vm-update: add CLI options
+  * qubes-vm-update: updates standalones too
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 15 Sep 2023 02:00:01 +0200
+
 qubes-desktop-linux-manager (4.2.12-1) unstable; urgency=medium
 
   [ Marta Marczykowska-Górecka ]

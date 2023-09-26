@@ -120,7 +120,8 @@ class RuleSimple(AbstractRuleWrapper):
         """
         super().__init__(rule)
 
-        if str(rule.action) not in ['ask', 'deny', 'allow']:
+        if str(rule.action) not in ['ask', 'deny', 'allow'] \
+                or rule.argument is not None:
             raise ValueError(_('Unrecognized action: ') + str(rule.action))
 
     @property
@@ -170,7 +171,7 @@ class RuleSimpleAskIsAllow(RuleSimple):
         """
         super().__init__(rule)
 
-        if str(rule.action) not in ['ask', 'deny']:
+        if str(rule.action) not in ['ask', 'deny'] or rule.argument is not None:
             raise ValueError(_('Unrecognized action: ') + str(rule.action))
 
     @staticmethod
@@ -194,7 +195,7 @@ class RuleSimpleNoAllow(RuleSimple):
         """
         super().__init__(rule)
 
-        if str(rule.action) not in ['ask', 'deny']:
+        if str(rule.action) not in ['ask', 'deny'] or rule.argument is not None:
             raise ValueError(_('Unrecognized action: ') + str(rule.action))
 
     @staticmethod
@@ -226,6 +227,8 @@ class RuleTargetedAdminVM(AbstractRuleWrapper):
         :param rule: Rule object
         """
         super().__init__(rule)
+        if rule.argument is not None:
+            raise ValueError(_("Rule cannot have an argument"))
         if rule.target != '@adminvm':
             raise ValueError(_('Target must be @adminvm'))
         if isinstance(rule.action, Ask):
@@ -293,7 +296,8 @@ class RuleTargeted(AbstractRuleWrapper):
         :param rule: Rule object
         """
         super().__init__(rule)
-
+        if rule.argument is not None:
+            raise ValueError(_("Rule cannot have an argument"))
         errors = self.get_rule_errors(str(rule.source), str(rule.target),
                                 str(rule.action))
         if errors:
@@ -406,6 +410,9 @@ class RuleDispVM(AbstractRuleWrapper):
         :param rule: Rule object
         """
         super().__init__(rule)
+
+        if rule.argument is not None:
+            raise ValueError(_("Rule cannot have an argument"))
 
         if str(rule.target) != '@dispvm':
             raise ValueError('Target must be @dispvm')

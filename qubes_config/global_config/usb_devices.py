@@ -445,6 +445,9 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
                 self.error_handler.add_error(rule)
                 continue
             if rule.service == self.REGISTER_POLICY:
+                if rule.argument is not None:
+                    self.error_handler.add_error(rule)
+                    continue
                 if rule.source == '@anyvm' and isinstance(rule.action, Allow):
                     self.allow_all_register = True
                 elif rule.source != '@anyvm' and isinstance(rule.action, Allow):
@@ -455,6 +458,9 @@ policy.RegisterArgument +u2f.Register @anyvm @anyvm deny
                         self.error_handler.add_error(rule)
                         continue
             elif rule.service == self.AUTH_POLICY:
+                if rule.argument is not None:
+                    self.error_handler.add_error(rule)
+                    continue
                 if rule.source != '@anyvm' and isinstance(rule.action, Allow):
                     try:
                         vm = self.qapp.domains[rule.source]

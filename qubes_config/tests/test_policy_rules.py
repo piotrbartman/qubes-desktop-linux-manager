@@ -58,6 +58,11 @@ def test_simple_rule():
     with pytest.raises(ValueError):
         wrapped_rule.action = 'allow target=dom0'
 
+    wrong_rule_3 = make_rule('vm1', 'vm2', 'allow')
+    wrong_rule_3.argument = '+alamakota'
+    with pytest.raises(ValueError):
+        RuleSimple(wrong_rule_3)
+
 
 def test_targeted_rule():
     deny_rule = make_rule('vm1', 'vm2', 'deny')
@@ -80,6 +85,11 @@ def test_targeted_rule():
     assert wrapped_rule.source == 'vm1'
     assert wrapped_rule.target == 'vm2'
     assert wrapped_rule.action == 'ask'
+
+    wrong_rule = make_rule('vm1', '@default', 'ask default_target=vm2')
+    wrong_rule.argument = '+alamakota'
+    with pytest.raises(ValueError):
+        RuleTargeted(wrong_rule)
 
 
 def test_targeted_adminvm_rule():
@@ -139,6 +149,10 @@ def test_targeted_rule_weird_cases():
     with pytest.raises(ValueError):
         RuleTargetedAdminVM(wrong_rule_2)
 
+    wrong_rule_3 = make_rule('vm1', 'vm2', 'allow')
+    wrong_rule_3.argument = '+alamakota'
+    with pytest.raises(ValueError):
+        RuleTargetedAdminVM(wrong_rule_3)
 
 def test_targeted_tokens():
     # can't make a rule with @anyvm target here
@@ -397,6 +411,11 @@ def test_dispvm_validity():
 
     with pytest.raises(ValueError):
         rule = make_rule('vm1', '@dispvm', 'allow target=vm2')
+        RuleDispVM(rule)
+
+    with pytest.raises(ValueError):
+        rule = make_rule('vm1', '@dispvm', 'allow target=vm2')
+        rule.argument = "+alamakota"
         RuleDispVM(rule)
 
 

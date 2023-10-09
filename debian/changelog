@@ -1,3 +1,10 @@
+qubes-desktop-linux-manager (4.2.14-1) unstable; urgency=medium
+
+  [ Marta Marczykowska-Górecka ]
+  * More strictly check against unexpected arguments in policy
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Tue, 10 Oct 2023 00:35:59 +0200
+
 qubes-desktop-linux-manager (4.2.13-1) unstable; urgency=medium
 
   [ Piotr Bartman ]

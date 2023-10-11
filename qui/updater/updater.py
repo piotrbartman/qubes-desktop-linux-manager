@@ -58,8 +58,6 @@ class QubesUpdater(Gtk.Application):
             self.perform_setup()
             self.primary = True
             self.hold()
-        elif len(self.intro_page.get_vms_to_update()) == 0:
-            self.exit_updater()
         else:
             self.main_window.present()
 

@@ -63,8 +63,8 @@
     <property name="can-focus">False</property>
     <property name="hexpand">True</property>
     <property name="vexpand">False</property>
-    <property name="window-position">center</property>
     <property name="title" translatable="yes">Qubes OS Update</property>
+    <property name="window-position">center</property>
     <child>
       <!-- n-columns=1 n-rows=3 -->
       <object class="GtkGrid">
@@ -224,7 +224,9 @@
                     <property name="can-focus">False</property>
                     <property name="halign">start</property>
                     <property name="margin-top">20</property>
-                    <property name="label" translatable="yes">Qubes OS checks for updates for running and networked qubes and their templates. Updates may also be available in other qubes, marked as {MAYBE} above.</property>
+                    <property name="label" translatable="yes">Qubes OS checks for updates for running and networked qubes and their templates. Updates may also be available in other qubes, marked as {MAYBE} above.
+
+{OBSOLETE} qubes are based on templates that are no longer supported and no longer receive updates. Please install new templates using the Qubes Template Manager.</property>
                     <property name="use-markup">True</property>
                     <property name="wrap">True</property>
                     <style>
@@ -454,10 +456,10 @@ CAUTION: this may cause data loss if you are currently running programs in those
                             <property name="editable">False</property>
                             <property name="wrap-mode">word</property>
                             <property name="justification">fill</property>
+                            <property name="left-margin">18</property>
                             <property name="cursor-visible">False</property>
                             <property name="accepts-tab">False</property>
                             <property name="monospace">True</property>
-                            <property name="left-margin">18</property>
                             <style>
                               <class name="text_container"/>
                             </style>

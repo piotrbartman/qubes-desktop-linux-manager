@@ -32,6 +32,7 @@ from gi.repository import Gtk  # isort:skip
 from qubes_config.widgets.gtk_utils import load_icon
 from qubesadmin import exc
 
+from qui.utils import check_support
 from qui.updater.utils import disable_checkboxes, HeaderCheckbox, \
     pass_through_event_window, \
     QubeName, label_color_theme, UpdateStatus, RowWrapper, \
@@ -79,7 +80,10 @@ class IntroPage:
         self.info_how_it_works.set_label(
             self.info_how_it_works.get_label().format(
                 MAYBE=f'<span foreground="{label_color_theme("orange")}">'
-                      '<b>MAYBE</b></span>'))
+                      '<b>MAYBE</b></span>',
+                OBSOLETE=f'<span foreground="{label_color_theme("red")}">'
+                      '<b>OBSOLETE</b></span>'
+            ))
 
         self.restart_button: Gtk.CheckButton = self.builder.get_object(
             "restart_button")
@@ -234,6 +238,7 @@ class UpdateRowWrapper(RowWrapper):
         if to_update and not updates_available:
             updates_available = None
         selected = updates_available is True
+        supported = check_support(vm)
 
         last_updates_check = vm.features.get('last-updates-check', None)
         last_update = vm.features.get('last-update', None)
@@ -245,7 +250,7 @@ class UpdateRowWrapper(RowWrapper):
             selected,
             icon,
             name,
-            UpdatesAvailable.from_bool(updates_available),
+            UpdatesAvailable.from_features(updates_available, supported),
             Date(last_updates_check),
             Date(last_update),
             0,
@@ -287,10 +292,12 @@ class UpdateRowWrapper(RowWrapper):
     def updates_available(self, value):
         updates_available = bool(
             self.vm.features.get('updates-available', False))
+        supported = check_support(self.vm)
+
         if value and not updates_available:
             updates_available = None
         self.raw_row[self._UPDATES_AVAILABLE] = \
-            UpdatesAvailable.from_bool(updates_available)
+            UpdatesAvailable.from_features(updates_available, supported)
 
     @property
     def last_updates_check(self):
@@ -387,12 +394,16 @@ class UpdatesAvailable(Enum):
     YES = 0
     MAYBE = 1
     NO = 2
+    EOL = 3
 
     @staticmethod
-    def from_bool(value: Optional[bool]) -> "UpdatesAvailable":
-        if value:
+    def from_features(updates_available: Optional[bool],
+                      supported: Optional[str]=None) -> "UpdatesAvailable":
+        if not supported:
+            return UpdatesAvailable.EOL
+        if updates_available:
             return UpdatesAvailable.YES
-        if value is None:
+        if updates_available is None:
             return UpdatesAvailable.MAYBE
         return UpdatesAvailable.NO
 
@@ -404,10 +415,22 @@ class UpdatesAvailable(Enum):
             return label_color_theme("orange")
         if self is UpdatesAvailable.NO:
             return label_color_theme("black")
+        if self is UpdatesAvailable.EOL:
+            return label_color_theme('red')
 
     def __str__(self):
+        if self is UpdatesAvailable.YES:
+            name = "YES"
+        elif self is UpdatesAvailable.MAYBE:
+            name = "MAYBE"
+        elif self is UpdatesAvailable.NO:
+            name = "NO"
+        elif self is UpdatesAvailable.EOL:
+            name = "OBSOLETE"
+        else:
+            name = "ERROR"
         return f'<span foreground="{self.color}"><b>' \
-               + self.name + '</b></span>'
+               + name + '</b></span>'
 
     def __eq__(self, other: "UpdatesAvailable"):
         return self.value == other.value

@@ -67,6 +67,7 @@ setuptools.setup(
                           "styles/qubes-colors-light.css",
                           "styles/qubes-colors-dark.css",
                           "styles/qubes-widgets-base.css",
+                          "eol.json"
                           ],
                   'qubes_config': ["new_qube.glade",
                                    "global_config.glade",

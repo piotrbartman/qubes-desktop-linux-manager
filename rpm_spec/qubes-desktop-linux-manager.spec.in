@@ -127,6 +127,17 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 %{python3_sitelib}/qui/updater/updater_settings.py
 %{python3_sitelib}/qui/updater/utils.py
 
+%dir %{python3_sitelib}/qui/devices/
+%dir %{python3_sitelib}/qui/devices/__pycache__
+%{python3_sitelib}/qui/devices/__pycache__/*
+%{python3_sitelib}/qui/devices/__init__.py
+%{python3_sitelib}/qui/devices/actionable_widgets.py
+%{python3_sitelib}/qui/devices/backend.py
+%{python3_sitelib}/qui/devices/device_widget.py
+%{python3_sitelib}/qui/devices/device_widget.py
+%{python3_sitelib}/qui/qubes-devices-dark.css
+%{python3_sitelib}/qui/qubes-devices-light.css
+
 %dir %{python3_sitelib}/qui/tray/
 %dir %{python3_sitelib}/qui/tray/__pycache__
 %{python3_sitelib}/qui/tray/__pycache__/*
@@ -188,6 +199,7 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 
 %{_bindir}/qui-domains
 %{_bindir}/qui-devices
+%{_bindir}/qui-devices-new
 %{_bindir}/qui-disk-space
 %{_bindir}/qui-updates
 %{_bindir}/qui-clipboard
@@ -222,31 +234,54 @@ gtk-update-icon-cache %{_datadir}/icons/Adwaita &>/dev/null || :
 /usr/share/icons/hicolor/96x96/apps/qui-domains.png
 /usr/share/icons/hicolor/128x128/apps/qui-domains.png
 
+/usr/share/icons/hicolor/scalable/apps/arrow-dark.svg
+/usr/share/icons/hicolor/scalable/apps/arrow-light.svg
+/usr/share/icons/hicolor/scalable/apps/camera-dark.svg
+/usr/share/icons/hicolor/scalable/apps/camera-light.svg
+/usr/share/icons/hicolor/scalable/apps/check_maybe.svg
+/usr/share/icons/hicolor/scalable/apps/check_no.svg
+/usr/share/icons/hicolor/scalable/apps/check_yes.svg
+/usr/share/icons/hicolor/scalable/apps/detach-dark.svg
+/usr/share/icons/hicolor/scalable/apps/detach-light.svg
+/usr/share/icons/hicolor/scalable/apps/edit-dark.svg
+/usr/share/icons/hicolor/scalable/apps/edit-light.svg
+/usr/share/icons/hicolor/scalable/apps/harddrive-dark.svg
+/usr/share/icons/hicolor/scalable/apps/harddrive-light.svg
+/usr/share/icons/hicolor/scalable/apps/help-dark.svg
+/usr/share/icons/hicolor/scalable/apps/help-light.svg
+/usr/share/icons/hicolor/scalable/apps/key-dark.svg
+/usr/share/icons/hicolor/scalable/apps/key-light.svg
+/usr/share/icons/hicolor/scalable/apps/mic-dark.svg
+/usr/share/icons/hicolor/scalable/apps/mic-light.svg
+/usr/share/icons/hicolor/scalable/apps/mouse-dark.svg
+/usr/share/icons/hicolor/scalable/apps/mouse-light.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-ask.svg
-/usr/share/icons/hicolor/scalable/apps/qubes-customize.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-check-maybe.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-check-yes.svg
-/usr/share/icons/hicolor/scalable/apps/qubes-delete.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-customize.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-delete-x.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-delete.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-devices.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-expander-hidden-black.svg
-/usr/share/icons/hicolor/scalable/apps/qubes-expander-shown-black.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-expander-hidden-white.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-expander-shown-black.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-expander-shown-white.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-global-config.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-info.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-key.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-logo.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-new-qube.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-ok.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-padlock.svg
+/usr/share/icons/hicolor/scalable/apps/qubes-policy-editor.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-question-light.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-question.svg
 /usr/share/icons/hicolor/scalable/apps/qubes-this-device.svg
-/usr/share/icons/hicolor/scalable/apps/qubes-new-qube.svg
-/usr/share/icons/hicolor/scalable/apps/qubes-global-config.svg
-/usr/share/icons/hicolor/scalable/apps/check_no.svg
-/usr/share/icons/hicolor/scalable/apps/check_maybe.svg
-/usr/share/icons/hicolor/scalable/apps/check_yes.svg
-/usr/share/icons/hicolor/scalable/apps/qubes-policy-editor.svg
 /usr/share/icons/hicolor/scalable/apps/qui-domains-scalable.svg
+/usr/share/icons/hicolor/scalable/apps/settings-dark.svg
+/usr/share/icons/hicolor/scalable/apps/settings-light.svg
+/usr/share/icons/hicolor/scalable/apps/smartphone-dark.svg
+/usr/share/icons/hicolor/scalable/apps/smartphone-light.svg
 
 /usr/share/gtksourceview-4/language-specs/qubes-rpc.lang
 

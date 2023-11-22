@@ -1,3 +1,15 @@
+qubes-desktop-linux-manager (4.2.16-1) unstable; urgency=medium
+
+  [ Marta Marczykowska-Górecka ]
+  * Warn about EOL templates in updates notification
+  * Add info about obsolete templates to qubes-updater-gui
+  * Remove -minimal and -xfce suffixes from template names
+
+  [ Marek Marczykowski-Górecki ]
+  * update-gui: Remove checkbox for restarting VMs on the main page
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Wed, 22 Nov 2023 15:07:49 +0100
+
 qubes-desktop-linux-manager (4.2.15-1) unstable; urgency=medium
 
   * updater: always show main window, even if no updates are available

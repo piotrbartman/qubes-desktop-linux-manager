@@ -24,6 +24,36 @@ t = gettext.translation("desktop-linux-manager", fallback=True)
 _ = t.gettext
 
 
+class TextItem(Gtk.MenuItem):
+    def __init__(self, text):
+        super().__init__()
+        title_label = Gtk.Label()
+        title_label.set_markup(text)
+        title_label.set_halign(Gtk.Align.CENTER)
+        title_label.set_justify(Gtk.Justification.CENTER)
+        self.set_margin_left(10)
+        self.set_margin_right(10)
+        self.set_margin_top(5)
+        self.add(title_label)
+        self.set_sensitive(False)
+        self.show_all()
+
+
+class RunItem(Gtk.MenuItem):
+    def __init__(self, text, command):
+        super().__init__()
+        title_label = Gtk.Label()
+        title_label.set_markup(text)
+        title_label.set_halign(Gtk.Align.CENTER)
+        title_label.set_justify(Gtk.Justification.CENTER)
+        self.set_margin_left(10)
+        self.set_margin_right(10)
+        self.set_margin_bottom(5)
+        self.add(title_label)
+        self.show_all()
+        self.connect('activate', command)
+
+
 class UpdatesTray(Gtk.Application):
     def __init__(self, app_name, qapp, dispatcher):
         super().__init__()
@@ -43,6 +73,7 @@ class UpdatesTray(Gtk.Application):
             '<b>Qubes Update</b>\nUpdates are available.'))
 
         self.vms_needing_update = set()
+        self.obsolete_vms = set()
 
         self.tray_menu = Gtk.Menu()
 
@@ -53,31 +84,24 @@ class UpdatesTray(Gtk.Application):
         self.update_indicator_state()
 
     def setup_menu(self):
-        title_label = Gtk.Label(xalign=0)
-        title_label.set_markup(_("<b>Qube updates available</b>"))
-        title_menu_item = Gtk.MenuItem()
-        title_menu_item.add(title_label)
-        title_menu_item.set_sensitive(False)
+        self.tray_menu.set_reserve_toggle_size(False)
 
-        subtitle_label = Gtk.Label(xalign=0)
-        subtitle_label.set_markup(
-            _("<i>Updates available for {} qubes</i>").format(
-                len(self.vms_needing_update)))
-        subtitle_menu_item = Gtk.MenuItem()
-        subtitle_menu_item.set_margin_left(10)
-        subtitle_menu_item.add(subtitle_label)
-        subtitle_menu_item.set_sensitive(False)
+        if self.vms_needing_update:
+            self.tray_menu.append(TextItem(_("<b>Qube updates available!</b>")))
+            self.tray_menu.append(RunItem(
+                _("Updates for {} qubes are available!\n"
+                  "<b>Launch updater</b>").format(
+                    len(self.vms_needing_update)), self.launch_updater))
 
-        run_label = Gtk.Label(xalign=0)
-        run_label.set_text(_("Launch updater"))
-        run_menu_item = Gtk.MenuItem()
-        run_menu_item.set_margin_left(10)
-        run_menu_item.add(run_label)
-        run_menu_item.connect('activate', self.launch_updater)
-
-        self.tray_menu.append(title_menu_item)
-        self.tray_menu.append(subtitle_menu_item)
-        self.tray_menu.append(run_menu_item)
+        if self.obsolete_vms:
+            self.tray_menu.append(TextItem(
+                _("<b>Some qubes are no longer supported!</b>")))
+            obsolete_text = _("The following qubes are based on distributions "
+                              "that are no longer supported:\n")\
+                + ", ".join([str(vm) for vm in self.obsolete_vms])\
+                + _("\n<b>Install new templates with Template Manager</b>")
+            self.tray_menu.append(
+                RunItem(obsolete_text, self.launch_template_manager))
 
         self.tray_menu.show_all()
 
@@ -93,8 +117,14 @@ class UpdatesTray(Gtk.Application):
         # pylint: disable=consider-using-with
         subprocess.Popen(['qubes-update-gui'])
 
+    @staticmethod
+    def launch_template_manager(*_args, **_kwargs):
+        # pylint: disable=consider-using-with
+        subprocess.Popen(['qvm-template-gui'])
+
     def check_vms_needing_update(self):
         self.vms_needing_update.clear()
+        self.obsolete_vms.clear()
         for vm in self.qapp.domains:
             try:
                 updates_available = vm.features.get('updates-available', False)
@@ -102,7 +132,13 @@ class UpdatesTray(Gtk.Application):
                 updates_available = False
             if updates_available and \
                     (getattr(vm, 'updateable', False) or vm.klass == 'AdminVM'):
-                self.vms_needing_update.add(vm.name)
+                self.vms_needing_update.add(vm)
+            try:
+                supported = qui.utils.check_support(vm)
+            except exc.QubesDaemonCommunicationError:
+                supported = True
+            if not supported:
+                self.obsolete_vms.add(vm.name)
 
     def connect_events(self):
         self.dispatcher.add_handler('domain-feature-set:updates-available',
@@ -155,7 +191,7 @@ class UpdatesTray(Gtk.Application):
         self.update_indicator_state()
 
     def update_indicator_state(self):
-        if self.vms_needing_update:
+        if self.vms_needing_update or self.obsolete_vms:
             self.widget_icon.set_visible(True)
         else:
             self.widget_icon.set_visible(False)

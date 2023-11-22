@@ -38,6 +38,8 @@ gi.require_version('Gtk', '3.0')  # isort:skip
 from gi.repository import Gtk  # isort:skip
 
 EOL_DATES = json.load(pkg_resources.resource_stream(__name__, 'eol.json'))
+# remove the following suffixes when checking for EOL
+SUFFIXES = ['-minimal', '-xfce']
 
 def run_asyncio_and_show_errors(loop, tasks, name, restart=True):
     """
@@ -81,9 +83,11 @@ def run_asyncio_and_show_errors(loop, tasks, name, restart=True):
 def check_support(vm):
     """Return true if the given template/standalone vm is still supported, by
     default returns true"""
-    template_name = vm.features.get('template-name', '')
+    template_name: str = vm.features.get('template-name', '')
     if not template_name:
         return True
+    for suffix in SUFFIXES:
+        template_name = template_name.removesuffix(suffix)
     eol = EOL_DATES.get(template_name, None)
     if not eol:
         return True

@@ -85,9 +85,6 @@ class IntroPage:
                       '<b>OBSOLETE</b></span>'
             ))
 
-        self.restart_button: Gtk.CheckButton = self.builder.get_object(
-            "restart_button")
-
     def populate_vm_list(self, qapp, settings):
         """Adds to list any updatable vms with an update info."""
         self.log.debug("Populate update list")

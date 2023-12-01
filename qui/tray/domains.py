@@ -19,7 +19,7 @@ from qubesadmin import exc
 
 import gi  # isort:skip
 gi.require_version('Gtk', '3.0')  # isort:skip
-from gi.repository import Gio, Gtk, GObject, GLib  # isort:skip
+from gi.repository import Gio, Gtk, GObject, GLib, GdkPixbuf  # isort:skip
 
 import gbulb
 gbulb.install()
@@ -58,9 +58,15 @@ class IconCache:
         if icon_name in self.icons:
             icon = self.icons[icon_name]
         else:
-            icon = Gtk.IconTheme.get_default().load_icon(
-                self.icon_files[icon_name], 16, 0)
-            self.icons[icon_name] = icon
+            try:
+                icon = Gtk.IconTheme.get_default().load_icon(
+                    self.icon_files[icon_name], 16, 0)
+                self.icons[icon_name] = icon
+            except (TypeError, GLib.Error):
+                icon = GdkPixbuf.Pixbuf.new(GdkPixbuf.Colorspace.RGB,
+                                            True, 8, 16, 16)
+                icon.fill(0)
+                self.icons[icon_name] = icon
         return icon
 
 

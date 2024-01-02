@@ -327,6 +327,10 @@ class PolicyEditor(Gtk.Application):
             self.source_view.get_input_hints() | Gtk.InputHints.NO_EMOJI)
         self.source_view.set_monospace(True)
         self.source_buffer.connect('changed', self._text_changed)
+        self.source_buffer.get_undo_manager().connect('can-redo-changed',
+                                                      self._redo_changed)
+        self.source_buffer.get_undo_manager().connect('can-undo-changed',
+                                                      self._undo_changed)
 
         style_manager = GtkSource.StyleSchemeManager()
         if is_theme_light(self.main_window):
@@ -470,10 +474,14 @@ class PolicyEditor(Gtk.Application):
             self.source_view.set_sensitive(True)
             self.error_info.set_visible(True)
         self.filename = name
+        self.source_buffer.begin_not_undoable_action()
         self.source_buffer.set_text(contents)
         self.window_title = 'Qubes OS Policy Editor - ' + self.filename
         self.main_window.set_title(self.window_title)
         self.source_buffer.set_modified(False)
+        self.source_buffer.end_not_undoable_action()
+        self.action_items['undo'].set_enabled(False)
+        self.action_items['redo'].set_enabled(False)
         self.action_items['save'].set_enabled(False)
         self.action_items['save_exit'].set_enabled(False)
 
@@ -552,6 +560,15 @@ class PolicyEditor(Gtk.Application):
         else:
             self.action_items['save'].set_enabled(False)
             self.action_items['save_exit'].set_enabled(False)
+
+        # source_buffer can_undo and can_redo always report False here
+        # do not use them to fix undo/redo enabledness
+
+    def _redo_changed(self, undo_manager):
+        self.action_items['redo'].set_enabled(undo_manager.can_redo())
+
+    def _undo_changed(self, undo_manager):
+        self.action_items['undo'].set_enabled(undo_manager.can_undo())
 
     @property
     def policy_text(self):

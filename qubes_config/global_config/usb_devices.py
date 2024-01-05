@@ -637,7 +637,7 @@ class DevicesHandler(PageHandler):
         usb_qubes: Set[qubesadmin.vm.QubesVM] = set()
 
         for vm in self.qapp.domains:
-            for device in vm.devices['pci'].attached():
+            for device in vm.devices['pci'].get_attached_devices():
                 if device.description.startswith('USB controller'):
                     usb_qubes.add(vm)
 

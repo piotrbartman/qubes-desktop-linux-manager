@@ -290,6 +290,8 @@ class ProgressPage:
                     curr_name_out = maybe_name[:-suffix]
                 if curr_name_out:
                     rows[curr_name_out].append_text_view(text)
+                if curr_name_out == self.update_details.active_row.name:
+                    self.update_details.update_buffer()
             else:
                 break
         self.update_details.update_buffer()

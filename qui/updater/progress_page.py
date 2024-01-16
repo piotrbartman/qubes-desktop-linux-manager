@@ -145,7 +145,6 @@ class ProgressPage:
         self.log.debug("Start adminVM updating")
 
         info = f"Updating {admin.name}...\n" \
-               "Detailed information will be displayed after update.\n" \
                f"{admin.name} does not support in-progress update " \
                "information.\n"
         GLib.idle_add(
@@ -157,14 +156,35 @@ class ProgressPage:
 
         try:
             with Ticker(admin):
-                untrusted_output = subprocess.check_output(
-                    ['sudo', 'qubesctl', '--dom0-only', '--no-color',
-                     'pkg.upgrade', 'refresh=True'],
-                    stderr=subprocess.STDOUT)
-                output = self._sanitize_line(untrusted_output)
+                proc = subprocess.Popen(
+                    ['sudo', 'qubes-dom0-update'],
+                    stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
-                GLib.idle_add(admin.append_text_view, output)
-                GLib.idle_add(admin.set_status, UpdateStatus.Success)
+                read_err_thread = threading.Thread(
+                    target=self.dump_to_textview,
+                    args=(proc.stderr, admin)
+                )
+                read_out_thread = threading.Thread(
+                    target=self.dump_to_textview,
+                    args=(proc.stdout, admin)
+                )
+                read_err_thread.start()
+                read_out_thread.start()
+
+                while proc.poll() is None \
+                        or read_out_thread.is_alive() \
+                        or read_err_thread.is_alive():
+                    time.sleep(1)
+                    if self.exit_triggered and proc.poll() is None:
+                        proc.send_signal(signal.SIGINT)
+                        proc.wait()
+                        read_err_thread.join()
+                        read_out_thread.join()
+
+                if "No updates available" in admin.buffer:
+                    GLib.idle_add(admin.set_status, UpdateStatus.NoUpdatesFound)
+                else:
+                    GLib.idle_add(admin.set_status, UpdateStatus.Success)
         except subprocess.CalledProcessError as ex:
             GLib.idle_add(
                 admin.append_text_view,
@@ -290,12 +310,28 @@ class ProgressPage:
                     curr_name_out = maybe_name[:-suffix]
                 if curr_name_out:
                     rows[curr_name_out].append_text_view(text)
-                if curr_name_out == self.update_details.active_row.name:
+                if (self.update_details.active_row is not None and
+                        curr_name_out == self.update_details.active_row.name):
                     self.update_details.update_buffer()
             else:
                 break
         self.update_details.update_buffer()
         proc.stdout.close()
+
+    def dump_to_textview(self, stream, row):
+        curr_name_out = row.name
+        for untrusted_line in iter(stream.readline, ''):
+            if untrusted_line:
+                text = self._sanitize_line(untrusted_line)
+                if curr_name_out:
+                    row.append_text_view(text)
+                if (self.update_details.active_row is not None and
+                        curr_name_out == self.update_details.active_row.name):
+                    self.update_details.update_buffer()
+            else:
+                break
+        self.update_details.update_buffer()
+        stream.close()
 
     @staticmethod
     def _sanitize_line(untrusted_line: bytes) -> str:
@@ -423,6 +459,12 @@ class QubeUpdateDetails:
         if self.active_row is not None:
             buffer_ = self.progress_textview.get_buffer()
             GLib.idle_add(buffer_.set_text, self.active_row.buffer)
+            GLib.idle_add(self._autoscroll)
+
+    def _autoscroll(self):
+        adjustment = self.progress_scrolled_window.get_vadjustment()
+        adjustment.set_value(
+            adjustment.get_upper() - adjustment.get_page_size())
 
 
 class CellRendererProgressWithResult(

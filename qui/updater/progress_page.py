@@ -156,6 +156,7 @@ class ProgressPage:
 
         try:
             with Ticker(admin):
+                # pylint: disable=consider-using-with
                 proc = subprocess.Popen(
                     ['sudo', 'qubes-dom0-update'],
                     stderr=subprocess.PIPE, stdout=subprocess.PIPE)

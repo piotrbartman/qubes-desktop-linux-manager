@@ -159,8 +159,22 @@ class ProgressPage:
                 curr_pkg = self._get_packages_admin()
 
                 # pylint: disable=consider-using-with
+                check_updates = subprocess.Popen(
+                    ['sudo', 'qubes-dom0-update', '--refresh', '--check-only'],
+                    stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                _stdout, stderr = check_updates.communicate()
+                if check_updates.returncode != 100:
+                    GLib.idle_add(admin.append_text_view, stderr)
+                    if check_updates.returncode != 0:
+                        GLib.idle_add(admin.set_status, UpdateStatus.Error)
+                    else:
+                        GLib.idle_add(
+                            admin.set_status, UpdateStatus.NoUpdatesFound)
+                    self.update_details.update_buffer()
+                    return
+
                 proc = subprocess.Popen(
-                    ['sudo', 'qubes-dom0-update'],
+                    ['sudo', 'qubes-dom0-update', '-y'],
                     stderr=subprocess.PIPE, stdout=subprocess.PIPE)
 
                 read_err_thread = threading.Thread(
@@ -189,10 +203,7 @@ class ProgressPage:
                 changes_str = self._print_changes(changes)
                 GLib.idle_add(admin.append_text_view, changes_str)
 
-                if "No updates available" in admin.buffer:
-                    GLib.idle_add(admin.set_status, UpdateStatus.NoUpdatesFound)
-                else:
-                    GLib.idle_add(admin.set_status, UpdateStatus.Success)
+                GLib.idle_add(admin.set_status, UpdateStatus.Success)
         except subprocess.CalledProcessError as ex:
             GLib.idle_add(
                 admin.append_text_view,

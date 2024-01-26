@@ -302,6 +302,8 @@ def test_qapp_impl():
 
     add_feature_with_template_to_all(qapp, 'supported-service.qubes-u2f-proxy',
                                      ['test-vm', 'fedora-35', 'sys-usb'])
+    add_feature_with_template_to_all(qapp, 'service.updates-proxy-setup',
+                                     ['fedora-36', 'fedora-35'])
     add_feature_to_all(qapp, 'service.qubes-u2f-proxy',
                                      ['test-vm'])
 
@@ -326,6 +328,9 @@ def test_qapp_whonix(test_qapp):  # pylint: disable=redefined-outer-name
                     {"netvm": ("vm", False, '')},
                     {'service.qubes-update-check': None}, ['whonix-updatevm'])
     test_qapp.domains.clear_cache()
+    add_feature_with_template_to_all(
+        test_qapp, 'service.updates-proxy-setup',
+        ['fedora-36', 'fedora-35', 'whonix-gw-15', 'whonix-gw-14'])
     return test_qapp
 
 @pytest.fixture

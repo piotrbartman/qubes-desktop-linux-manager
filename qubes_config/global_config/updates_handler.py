@@ -429,7 +429,8 @@ class UpdateProxy:
             return False
         if getattr(vm, 'template', None):
             return False
-        return not vm.is_networked()
+        return bool(vm.features.check_with_template(
+            'service.updates-proxy-setup', vm.klass == 'TemplateVM'))
 
     def load_rules(self):
         """Load rules into widgets."""

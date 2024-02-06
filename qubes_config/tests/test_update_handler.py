@@ -161,6 +161,37 @@ qubes-templates-community\0c\0enabled"""
         handler.save()
 
 
+def test_repo_handler_save_2(real_builder):
+    with patch('qubes_config.global_config.updates_handler.qrexec_call',
+               partial(mock_qrexec, repo_list=ALL_ENABLED)):
+        handler = RepoHandler(real_builder)
+
+    assert handler.dom0_stable_radio.get_sensitive()
+
+    handler.dom0_testing_sec_radio.set_active(True)
+
+    changed_result = """qubes-dom0-current-testing\0c\0disabled
+qubes-dom0-security-testing\0c\0enabled
+qubes-dom0-current\0c\0enabled
+qubes-templates-itl-testing\0c\0enabled
+qubes-templates-itl\0c\0enabled
+qubes-templates-community-testing\0c\0enabled
+qubes-templates-community\0c\0enabled"""
+
+    with patch('qubes_config.global_config.updates_handler.qrexec_call',
+               partial(mock_qrexec, repo_list=changed_result,
+                       enable_repos=['qubes-dom0-current',
+                                     'qubes-dom0-security-testing',
+                                     'qubes-templates-itl',
+                                     'qubes-templates-community',
+                                     'qubes-templates-itl-testing',
+                                     'qubes-templates-community-testing'
+                                     ],
+                       disable_repos=['qubes-dom0-current-testing'])):
+        handler.save()
+
+
+
 def test_repo_handler_save_fail(real_builder):
     with patch('qubes_config.global_config.updates_handler.qrexec_call',
                partial(mock_qrexec, repo_list=ALL_ENABLED)):

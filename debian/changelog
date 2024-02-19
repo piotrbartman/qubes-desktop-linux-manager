@@ -1,3 +1,12 @@
+qubes-desktop-linux-manager (4.2.18-1) unstable; urgency=medium
+
+  [ Marta Marczykowska-Górecka ]
+  * Fix minor visual bugs in global config
+  * Fix undo/redo in policy manager
+  * Fix broken dom0 updates repo logic in global config
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 19 Feb 2024 03:51:28 +0100
+
 qubes-desktop-linux-manager (4.2.17-1) unstable; urgency=medium
 
   [ Marta Marczykowska-Górecka ]

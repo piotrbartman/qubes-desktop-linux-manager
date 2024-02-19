@@ -395,8 +395,8 @@ class RawPolicyTextHandler:
     def __init__(self, gtk_builder: Gtk.Builder, prefix: str,
                  policy_manager: PolicyManager,
                  error_handler: 'ErrorHandler',
-                 callback_on_save_raw: Callable[[List[Rule]], None],
-                 callback_on_open_raw: Callable):
+                 callback_on_save_raw: Optional[Callable[[List[Rule]], None]],
+                 callback_on_open_raw: Optional[Callable]):
         """
         :param gtk_builder: Gtk.Builder
         :param prefix: prefix for widgets

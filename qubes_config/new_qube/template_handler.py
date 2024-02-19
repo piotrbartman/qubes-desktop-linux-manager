@@ -83,6 +83,7 @@ class TemplateSelector(abc.ABC):
         if widget is None or widget.get_active():
             self.main_window.emit('template-changed', self.get_selected_vm())
 
+    @abc.abstractmethod
     def is_vm_available(self, vm: qubesadmin.vm.QubesVM) -> bool:
         """
         Check if the given VM is available in the template list.

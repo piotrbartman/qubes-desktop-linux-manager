@@ -83,8 +83,8 @@ class RepoHandler:
             'qubes-dom0-security-testing': self.dom0_testing_sec_radio,
             'qubes-dom0-current-testing': self.dom0_testing_radio,
             },
-            {'qubes-templates-itl-testing': self.template_official_testing,
-            'qubes-templates-itl': self.template_official},
+            {'qubes-templates-itl': self.template_official,
+             'qubes-templates-itl-testing': self.template_official_testing},
             {'qubes-templates-community': self.template_community,
              'qubes-templates-community-testing':
                 self.template_community_testing,
@@ -193,11 +193,11 @@ class RepoHandler:
             found = False
             for repo, widget in repo_dict.items():
                 try:
-                    if widget.get_active() or found:
+                    if widget.get_active():
                         found = True
-                        self._set_repository(repo, widget.get_active())
+                        self._set_repository(repo, True)
                     else:
-                        self._set_repository(repo, False)
+                        self._set_repository(repo, not found)
                 except RuntimeError as ex:
                     raise qubesadmin.exc.QubesException(
                         'Failed to set repository data: '

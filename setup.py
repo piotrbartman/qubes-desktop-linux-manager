@@ -49,8 +49,7 @@ setuptools.setup(
     entry_points={
         'gui_scripts': [
             'qui-domains = qui.tray.domains:main',
-            'qui-devices = qui.tray.devices:main',
-            'qui-devices-new = qui.devices.device_widget:main',
+            'qui-devices = qui.devices.device_widget:main',
             'qui-disk-space = qui.tray.disk_space:main',
             'qui-updates = qui.tray.updates:main',
             'qubes-update-gui = qui.updater.updater:main',

@@ -89,7 +89,7 @@ class VM:
         """
         VMs that should have the "shut me down when detaching device" option
         """
-        return self._vm.auto_cleanup
+        return getattr(self._vm, "auto_cleanup", False)
 
 
 class Device:

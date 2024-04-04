@@ -251,13 +251,11 @@ class DetachAndAttachWidget(ActionableWidget, VMWithIcon):
         self.device.attach_to_vm(self.vm)
 
 
-class AttachDisposableWidget(ActionableWidget, SimpleActionWidget):
+class AttachDisposableWidget(ActionableWidget, VMWithIcon):
     """Attach to a new disposable qube"""
     def __init__(self, vm: backend.VM, device: backend.Device,
                  variant: str = 'dark'):
-        super().__init__(vm.icon_name,
-                         f'<b>Attach to new disposable qube ({vm.name})</b>',
-                         variant)
+        super().__init__(vm, variant=variant)
         self.vm = vm
         self.device = device
 
@@ -269,14 +267,11 @@ class AttachDisposableWidget(ActionableWidget, SimpleActionWidget):
         self.device.attach_to_vm(backend.VM(new_dispvm))
 
 
-class DetachAndAttachDisposableWidget(ActionableWidget, SimpleActionWidget):
+class DetachAndAttachDisposableWidget(ActionableWidget, VMWithIcon):
     """Detach from all current attachments and attach to new disposable"""
     def __init__(self, vm: backend.VM, device: backend.Device,
                  variant: str = 'dark'):
-        super().__init__(
-            vm.icon_name,
-            f'<b>Detach and attach to new disposable \nqube ({vm.name})</b>',
-            variant)
+        super().__init__(vm, variant=variant)
         self.vm = vm
         self.device = device
 
@@ -435,6 +430,8 @@ class MainDeviceWidget(ActionableWidget, Gtk.Grid):
 
             yield SeparatorItem()
 
+            yield InfoHeader("Detach and attach to new disposable qube:")
+
             for vm in disp_vm_templates:
                 yield DetachAndAttachDisposableWidget(vm, self.device,
                                                       self.variant)
@@ -445,6 +442,8 @@ class MainDeviceWidget(ActionableWidget, Gtk.Grid):
                 yield AttachWidget(vm, self.device)
 
             yield SeparatorItem()
+
+            yield InfoHeader("Attach to new disposable qube:")
 
             for vm in disp_vm_templates:
                 yield AttachDisposableWidget(vm, self.device, self.variant)

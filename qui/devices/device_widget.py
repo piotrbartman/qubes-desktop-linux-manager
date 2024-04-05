@@ -117,35 +117,39 @@ class DevicesTray(Gtk.Application):
 
     def device_list_update(self, vm, _event, **_kwargs):
 
-        changed_devices = []
+        changed_devices: Dict[str, backend.Device] = {}
 
         # create list of all current devices from the changed VM
         try:
             for devclass in DEV_TYPES:
                 for device in vm.devices[devclass]:
-                    changed_devices.append(backend.Device(device, self))
-        except qubesadmin.exc.QubesException:
-            changed_devices = []  # VM was removed
+                    changed_devices[str(device)] = backend.Device(device, self)
 
-        for dev in changed_devices:
-            if str(dev) not in self.devices:
-                self.devices[str(dev)] = dev
+        except qubesadmin.exc.QubesException:
+            changed_devices = {}  # VM was removed
+
+        for dev_name, dev in changed_devices.items():
+            if dev_name not in self.devices:
+                self.devices[dev_name] = dev
                 self.emit_notification(
                     _("Device available"),
                     _("Device {} is available.").format(dev.description),
                     Gio.NotificationPriority.NORMAL,
                     notification_id=dev.notification_id)
 
-        dev_to_remove = [name for name, dev in self.devices.items()
-                         if dev.backend_domain == vm
-                         and name not in changed_devices]
-        for dev_name in dev_to_remove:
+        dev_to_remove = []
+        for dev_name, dev in self.devices.items():
+            if dev.backend_domain != vm:
+                continue
+            if dev_name not in changed_devices:
+                dev_to_remove.append((dev_name, dev))
+
+        for dev_name, dev in dev_to_remove:
             self.emit_notification(
                 _("Device removed"),
-                _("Device {} has been removed.").format(
-                    self.devices[dev_name].description),
+                _("Device {} has been removed.").format(dev.description),
                 Gio.NotificationPriority.NORMAL,
-                notification_id=self.devices[dev_name].notification_id)
+                notification_id=dev.notification_id)
             del self.devices[dev_name]
 
     def initialize_vm_data(self):

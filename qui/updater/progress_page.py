@@ -264,7 +264,7 @@ class ProgressPage:
             for pkg in changes["updated"]:
                 old_ver = str(changes["updated"][pkg]["old"])[2:-2]
                 new_ver = str(changes["updated"][pkg]["new"])[2:-2]
-                result += f'{pkg} {old_ver} -> {new_ver}'
+                result += f'{pkg} {old_ver} -> {new_ver}\n'
         else:
             result += "None\n"
 

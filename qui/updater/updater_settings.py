@@ -240,7 +240,7 @@ class Settings:
         )
 
         limit_concurrency = self.limit_concurrency_checkbox.get_active()
-        if self._init_limit_concurrency != limit_concurrency:
+        if self._init_limit_concurrency or limit_concurrency:
             if limit_concurrency:
                 max_concurrency = int(self.max_concurrency_button.get_value())
             else:

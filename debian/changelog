@@ -1,3 +1,20 @@
+qubes-desktop-linux-manager (4.2.19-1) unstable; urgency=medium
+
+  [ Marta Marczykowska-Górecka ]
+  * Improve "needs updateproxy" logic in global config
+  * mypy pacification
+  * Fix incorrect menu icon for policy editor
+  * Improved qui-devices widget
+  * Remove old devices widget
+  * Use sequoia instead of gnu-gpg, wrap auto-cleanup in getattr
+  * Unify style between attach to qube/to disposable qube
+  * Fix listing changed devices
+
+  [ Piotr Bartman ]
+  * qubes-vm-update: fix updater settings
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 13 Apr 2024 22:03:37 +0200
+
 qubes-desktop-linux-manager (4.2.18-1) unstable; urgency=medium
 
   [ Marta Marczykowska-Górecka ]

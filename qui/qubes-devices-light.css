@@ -1,0 +1,37 @@
+.device_name {
+    font-weight: bold;
+    color: black;
+}
+
+.main_device_item {
+    margin: 2px 0 2px 0;
+    padding: 0;
+}
+
+.main_device_vm {
+    font-weight: 300;
+    margin: 1px;
+}
+
+.main_device_label {
+    margin-left: 5px;
+}
+
+.dev_attached {
+    font-weight: bold;
+}
+
+.device_header {
+    font-weight: bold;
+    color: black;
+}
+
+.separator_item {
+    margin: 8px 0 8px 0;
+    padding: 0px;
+    background: #cccccc;
+}
+
+.vm_item {
+    margin: 4px 0 4px 0;
+}

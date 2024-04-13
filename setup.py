@@ -43,13 +43,13 @@ setuptools.setup(
     description='Qubes User Interface And Configuration Package',
     license='GPL2+',
     url='https://www.qubes-os.org/',
-    packages=["qui", "qui.updater", "qui.tray", "qubes_config",
+    packages=["qui", "qui.updater", "qui.devices", "qui.tray", "qubes_config",
               "qubes_config.global_config", "qubes_config.widgets",
               "qubes_config.new_qube", 'qubes_config.policy_editor'],
     entry_points={
         'gui_scripts': [
             'qui-domains = qui.tray.domains:main',
-            'qui-devices = qui.tray.devices:main',
+            'qui-devices = qui.devices.device_widget:main',
             'qui-disk-space = qui.tray.disk_space:main',
             'qui-updates = qui.tray.updates:main',
             'qubes-update-gui = qui.updater.updater:main',
@@ -67,7 +67,9 @@ setuptools.setup(
                           "styles/qubes-colors-light.css",
                           "styles/qubes-colors-dark.css",
                           "styles/qubes-widgets-base.css",
-                          "eol.json"
+                          "eol.json",
+                          "qubes-devices-light.css",
+                          "qubes-devices-dark.css"
                           ],
                   'qubes_config': ["new_qube.glade",
                                    "global_config.glade",

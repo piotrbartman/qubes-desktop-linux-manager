@@ -1,3 +1,9 @@
+qubes-desktop-linux-manager (4.2.20-1) unstable; urgency=medium
+
+  * Bump required python3-qubesadmin version
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 14 Apr 2024 04:40:11 +0200
+
 qubes-desktop-linux-manager (4.2.19-1) unstable; urgency=medium
 
   [ Marta Marczykowska-Górecka ]

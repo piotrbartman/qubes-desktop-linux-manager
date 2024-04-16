@@ -49,7 +49,7 @@ class Settings:
     MAX_CONCURRENCY = 16
     DEFAULT_UPDATE_IF_STALE = 7
     MAX_UPDATE_IF_STALE = 99
-    DEFAULT_RESTART_SYSTEM_VMS = True
+    DEFAULT_RESTART_SERVICEVMS = True
     DEFAULT_RESTART_OTHER_VMS = False
 
     def __init__(
@@ -93,9 +93,9 @@ class Settings:
         )
         self.days_without_update_button.configure(adj, 1, 0)
 
-        self.restart_system_checkbox: Gtk.CheckButton = self.builder.get_object(
-            "restart_system")
-        self.restart_system_checkbox.connect(
+        self.restart_servicevms_checkbox: Gtk.CheckButton = self.builder.get_object(
+            "restart_servicevms")
+        self.restart_servicevms_checkbox.connect(
             "toggled", self._show_restart_exceptions)
 
         self.restart_other_checkbox: Gtk.CheckButton = self.builder.get_object(
@@ -129,7 +129,7 @@ class Settings:
         self.max_concurrency_button.configure(adj, 1, 0)
 
         self._init_update_if_stale: Optional[int] = None
-        self._init_restart_system_vms: Optional[bool] = None
+        self._init_restart_servicevms: Optional[bool] = None
         self._init_restart_other_vms: Optional[bool] = None
         self._init_limit_concurrency: Optional[bool] = None
         self._init_max_concurrency: Optional[int] = None
@@ -143,13 +143,24 @@ class Settings:
                                Settings.DEFAULT_UPDATE_IF_STALE))
 
     @property
-    def restart_system_vms(self) -> bool:
+    def restart_service_vms(self) -> bool:
         """Return the current (set by this window or manually) option value."""
         if self.overrides.restart is not None:
             return self.overrides.restart
-        return get_boolean_feature(
-            self.vm, "qubes-vm-update-restart-system",
-            Settings.DEFAULT_RESTART_SYSTEM_VMS)
+
+        result = get_boolean_feature(
+            self.vm, "qubes-vm-update-restart-servicevms",
+            None)
+        # TODO
+        #  If not set, try to use a deprecated flag instead of
+        #  the default value. This is only for backward compatibility
+        #  and should be removed in future (e.g. Qubes 5.0 or later)
+        if result is None:
+            result = get_boolean_feature(
+                self.vm, "qubes-vm-update-restart-system",
+                Settings.DEFAULT_RESTART_SERVICEVMS)
+
+        return result
 
     @property
     def restart_other_vms(self) -> bool:
@@ -176,10 +187,10 @@ class Settings:
         self.days_without_update_button.set_sensitive(
             not self.overrides.update_if_stale)
 
-        self._init_restart_system_vms = self.restart_system_vms
+        self._init_restart_servicevms = self.restart_service_vms
         self._init_restart_other_vms = self.restart_other_vms
-        self.restart_system_checkbox.set_sensitive(not self.overrides.restart)
-        self.restart_system_checkbox.set_active(self._init_restart_system_vms)
+        self.restart_servicevms_checkbox.set_sensitive(not self.overrides.restart)
+        self.restart_servicevms_checkbox.set_active(self._init_restart_servicevms)
         self.restart_other_checkbox.set_active(self._init_restart_other_vms)
         self.restart_other_checkbox.set_sensitive(not self.overrides.restart)
 
@@ -226,11 +237,15 @@ class Settings:
         )
 
         self._save_option(
-            name="restart-system",
-            value=self.restart_system_checkbox.get_active(),
-            init=self._init_restart_system_vms,
-            default=Settings.DEFAULT_RESTART_SYSTEM_VMS
+            name="restart-servicevms",
+            value=self.restart_servicevms_checkbox.get_active(),
+            init=self._init_restart_servicevms,
+            default=Settings.DEFAULT_RESTART_SERVICEVMS
         )
+        # TODO
+        #  Make sure that the deprecated flag is unset.
+        #  Should be removed in future (e.g. Qubes 5.0 or later)
+        apply_feature_change(self.vm, "qubes-vm-update-restart-system", None)
 
         self._save_option(
             name="restart-other",

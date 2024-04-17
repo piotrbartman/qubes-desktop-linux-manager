@@ -93,8 +93,8 @@ class Settings:
         )
         self.days_without_update_button.configure(adj, 1, 0)
 
-        self.restart_servicevms_checkbox: Gtk.CheckButton = self.builder.get_object(
-            "restart_servicevms")
+        self.restart_servicevms_checkbox: Gtk.CheckButton = \
+            self.builder.get_object("restart_servicevms")
         self.restart_servicevms_checkbox.connect(
             "toggled", self._show_restart_exceptions)
 
@@ -189,8 +189,10 @@ class Settings:
 
         self._init_restart_servicevms = self.restart_service_vms
         self._init_restart_other_vms = self.restart_other_vms
-        self.restart_servicevms_checkbox.set_sensitive(not self.overrides.restart)
-        self.restart_servicevms_checkbox.set_active(self._init_restart_servicevms)
+        self.restart_servicevms_checkbox.set_sensitive(
+            not self.overrides.restart)
+        self.restart_servicevms_checkbox.set_active(
+            self._init_restart_servicevms)
         self.restart_other_checkbox.set_active(self._init_restart_other_vms)
         self.restart_other_checkbox.set_sensitive(not self.overrides.restart)
 

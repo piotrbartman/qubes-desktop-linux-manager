@@ -219,7 +219,8 @@ class ProgressPage:
         Use rpm to return the installed packages and their versions.
         """
 
-        cmd = ["rpm", "-qa", "--queryformat", "%{NAME} %{VERSION}-%{RELEASE}\n",]
+        cmd = ["rpm", "-qa", "--queryformat",
+               "%{NAME} %{VERSION}-%{RELEASE}\n",]
         # EXAMPLE OUTPUT:
         # qubes-core-agent 4.1.351.fc34
         package_list = subprocess.check_output(cmd).decode().splitlines()

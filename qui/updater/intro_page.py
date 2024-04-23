@@ -202,9 +202,9 @@ class IntroPage:
             self.log.debug("Command returns: %s", output.decode())
 
             to_update = {
-                vm_name.strip()
-                for line in output.decode().split("\n", maxsplit=1)
-                for vm_name in line.split(":", maxsplit=1)[1].split(",")
+                vm_name.strip() for vm_name
+                in output.decode().split("\n", maxsplit=1)[0]
+                .split(":", maxsplit=1)[1].split(",")
             }
 
         # handle dom0

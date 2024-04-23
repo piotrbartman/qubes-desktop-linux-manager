@@ -41,6 +41,7 @@ class QubesUpdater(Gtk.Application):
         )
         self.qapp = qapp
         self.primary = False
+        self.do_nothing = False
         self.connect("activate", self.do_activate)
         self.cliargs = cliargs
 
@@ -55,11 +56,22 @@ class QubesUpdater(Gtk.Application):
 
     def do_activate(self, *_args, **_kwargs):
         if not self.primary:
+            self.log.debug("Primary activation")
             self.perform_setup()
             self.primary = True
             self.hold()
         else:
-            self.main_window.present()
+            self.log.debug("Secondary activation")
+            if self.do_nothing:
+                show_dialog_with_icon(
+                    None, l("Quit"),
+                    l("Nothing to do."),
+                    buttons=RESPONSES_OK,
+                    icon_name="check_yes"
+                )
+                self.window_close()
+            else:
+                self.main_window.present()
 
     def perform_setup(self, *_args, **_kwargs):
         self.log.debug("Setup")
@@ -157,15 +169,9 @@ class QubesUpdater(Gtk.Application):
         if skip_intro_if_args(self.cliargs):
             self.log.info("Skipping intro page.")
             self.intro_page.select_rows_ignoring_conditions(
-                cliargs=self.cliargs)
+                cliargs=self.cliargs, dom0=self.qapp.domains['dom0'])
             if len(self.intro_page.get_vms_to_update()) == 0:
-                show_dialog_with_icon(
-                    None, l("Quit"),
-                    l("Nothing to do."),
-                    buttons=RESPONSES_OK,
-                    icon_name="qubes-info"
-                )
-                self.main_window.close()
+                self.do_nothing = True
                 return
             self.next_clicked(None, skip_intro=True)
         else:
@@ -174,6 +180,7 @@ class QubesUpdater(Gtk.Application):
         width = self.intro_page.vm_list.get_preferred_width().natural_width
         self.main_window.resize(width + 50, int(width * 1.2))
         self.main_window.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
+        # return 0
 
     def open_settings_window(self, _emitter):
         self.settings.show()
@@ -268,8 +275,8 @@ def parse_args(args):
     group.add_argument('--targets', action='store',
                        help='Comma separated list of VMs to target')
     group.add_argument('--all', action='store_true',
-                       help='Target all non-disposable VMs (TemplateVMs and '
-                            'AppVMs)')
+                       help='Target all updatable VMs (AdminVM, '
+                            'TemplateVMs and StandaloneVMs)')
     group.add_argument('--update-if-stale', action='store',
                        help='Target all TemplateVMs with known updates or for '
                             'which last update check was more than N days '

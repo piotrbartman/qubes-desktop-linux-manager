@@ -131,9 +131,9 @@ class SummaryPage:
     def on_header_toggled(self, _emitter):
         """Handles clicking on header checkbox.
 
-        Cycle between selection from appvms which templates was updated :
-         <1> only sys-vms
-         <2> sys-vms + other appvms but without excluded in settings
+        Cycle between selection from appvms which templates was updated:
+         <1> only servicevms
+         <2> servicevms + other appvms but without excluded in settings
          <3> all appvms
          <4> no vm. (nothing)
 
@@ -210,14 +210,14 @@ class SummaryPage:
                     vm.klass != 'DispVM' or not vm.auto_cleanup):
                 self.list_store.append_vm(vm)
 
-        if settings.restart_system_vms:
-            self.head_checkbox.allow_sys()
+        if settings.restart_service_vms:
+            self.head_checkbox.allow_service_vms()
         if settings.restart_other_vms:
-            self.head_checkbox.allow_non_sys()
+            self.head_checkbox.allow_non_service_vms()
         if not restart:
             self.head_checkbox.state = HeaderCheckbox.NONE
         else:
-            if settings.restart_system_vms:
+            if settings.restart_service_vms:
                 self.head_checkbox.state = HeaderCheckbox.SAFE
             if settings.restart_other_vms:
                 self.head_checkbox.state = HeaderCheckbox.EXTENDED
@@ -226,13 +226,13 @@ class SummaryPage:
     def select_rows(self):
         for row in self.list_store:
             row.selected = (
-                    row.is_sys_qube
+                    row.is_service_qube
                     and not row.is_excluded
-                    and AppVMType.SYS in self.head_checkbox.allowed
+                    and AppVMType.SERVICEVM in self.head_checkbox.allowed
                     or
-                    not row.is_sys_qube
+                    not row.is_service_qube
                     and not row.is_excluded
-                    and AppVMType.NON_SYS in self.head_checkbox.allowed
+                    and AppVMType.NON_SERVICEVM in self.head_checkbox.allowed
                     or
                     AppVMType.EXCLUDED in self.head_checkbox.allowed
             )
@@ -254,7 +254,7 @@ class SummaryPage:
             # show wainting dialog
             spinner = Gtk.Spinner()
             spinner.start()
-            dialog = show_dialog(None, l("Restarting qubes"), l(
+            dialog = show_dialog(None, l("Applying updates to qubes"), l(
                 "Waiting for qubes to be restarted/shutdown."),
                                  {}, spinner)
             dialog.set_deletable(False)
@@ -282,11 +282,11 @@ class SummaryPage:
         to_restart = [qube_row.vm
                       for qube_row in self.list_store
                       if qube_row.selected
-                      and qube_row.is_sys_qube]
+                      and qube_row.is_service_qube]
         to_shutdown = [qube_row.vm
                        for qube_row in self.list_store
                        if qube_row.selected
-                       and not qube_row.is_sys_qube]
+                       and not qube_row.is_service_qube]
 
         if not any([tmpls_to_shutdown, to_restart, to_shutdown]):
             self.status = RestartStatus.NOTHING_TO_DO
@@ -381,9 +381,9 @@ class RestartRowWrapper(RowWrapper):
 
     def refresh_additional_info(self):
         self.raw_row[RestartRowWrapper._ADDITIONAL_INFO] = ''
-        if self.selected and not self.is_sys_qube:
+        if self.selected and not self.is_service_qube:
             self.raw_row[RestartRowWrapper._ADDITIONAL_INFO] = \
-                'Restarting an app qube will shut down all running applications'
+                'This qube and all running applications within will be shutdown'
         if self.selected and self.is_excluded:
             self.raw_row[RestartRowWrapper._ADDITIONAL_INFO] = \
                 '<span foreground="red">This qube has been explicitly ' \
@@ -406,8 +406,8 @@ class RestartRowWrapper(RowWrapper):
         return self.raw_row[self._ADDITIONAL_INFO]
 
     @property
-    def is_sys_qube(self):
-        return str(self.vm.name).startswith("sys-")
+    def is_service_qube(self):
+        return get_boolean_feature(self.vm, 'servicevm', False)
 
     @property
     def is_excluded(self):
@@ -415,8 +415,8 @@ class RestartRowWrapper(RowWrapper):
 
 
 class AppVMType:
-    SYS = 0
-    NON_SYS = 1
+    SERVICEVM = 0
+    NON_SERVICEVM = 1
     EXCLUDED = 2
 
 
@@ -433,22 +433,22 @@ class RestartHeaderCheckbox(HeaderCheckbox):
                          [None, None, AppVMType.EXCLUDED])
         self.next_button = next_button
 
-    def allow_sys(self, value=True):
+    def allow_service_vms(self, value=True):
         if value:
-            self._allowed[0] = AppVMType.SYS
+            self._allowed[0] = AppVMType.SERVICEVM
         else:
             self._allowed[0] = None
 
-    def allow_non_sys(self, value=True):
+    def allow_non_service_vms(self, value=True):
         if value:
-            self._allowed[1] = AppVMType.NON_SYS
+            self._allowed[1] = AppVMType.NON_SERVICEVM
         else:
             self._allowed[1] = None
 
     # pylint: disable=arguments-differ
     def all_action(self, num, *args, **kwargs):
-        text = ngettext("_Finish and restart %(num)d qube",
-                        "_Finish and restart %(num)d qubes",
+        text = ngettext("_Finish and restart/shutdown %(num)d qube",
+                        "_Finish and restart/shutdown %(num)d qubes",
                         num) % {'num': num}
         self.next_button.set_label(text)
 

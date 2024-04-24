@@ -230,6 +230,7 @@ def mock_list_store():
             self.raw_rows.remove(idx)
 
         def set_sort_func(self, _col, _sort_func, _data):
+            """not used in tests"""
             pass
 
     return MockListStore()
@@ -240,7 +241,7 @@ def mock_settings():
     class MockSettings:
         def __init__(self):
             self.update_if_stale = 7
-            self.restart_system_vms = True
+            self.restart_service_vms = True
             self.restart_other_vms = True
             self.max_concurrency = None
 

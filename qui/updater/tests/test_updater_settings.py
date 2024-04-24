@@ -31,7 +31,7 @@ from qui.updater.updater_settings import Settings
 
 def init_features(test_qapp):
     test_qapp.expected_calls[
-        ('dom0', 'admin.vm.feature.Get', 'qubes-vm-update-restart-system', None)
+        ('dom0', 'admin.vm.feature.Get', 'qubes-vm-update-restart-servicevms', None)
     ] = b"0\x00" + str(1).encode()
     test_qapp.expected_calls[
         ('dom0', 'admin.vm.feature.Get', 'qubes-vm-update-restart-other', None)
@@ -66,24 +66,24 @@ def test_update_if_stale(test_qapp):
     assert sut.update_if_stale == 7
 
 
-def test_restart_system_vms(test_qapp):
+def test_restart_service_vms(test_qapp):
     mock_log = Mock()
     sut = Settings(Gtk.Window(), test_qapp, mock_log, lambda *args: None)
     test_qapp.expected_calls[
-        ('dom0', 'admin.vm.feature.Get', 'qubes-vm-update-restart-system', None)
+        ('dom0', 'admin.vm.feature.Get', 'qubes-vm-update-restart-servicevms', None)
     ] = b'2\x00QubesFeatureNotFoundError\x00\x00' \
-        + b'qubes-vm-update-restart-system' + b'\x00'
-    assert sut.restart_system_vms
+        + b'qubes-vm-update-restart-servicevms' + b'\x00'
+    assert sut.restart_service_vms
     test_qapp.expected_calls[
-        ('dom0', 'admin.vm.feature.Get', 'qubes-vm-update-restart-system', None)
+        ('dom0', 'admin.vm.feature.Get', 'qubes-vm-update-restart-servicevms', None)
     ] = b"0\x00" + ''.encode()
-    assert not sut.restart_system_vms
+    assert not sut.restart_service_vms
     test_qapp.expected_calls[
         (
-        'dom0', 'admin.vm.feature.Get', 'qubes-vm-update-restart-system', None)
+        'dom0', 'admin.vm.feature.Get', 'qubes-vm-update-restart-servicevms', None)
     ] = b'2\x00QubesFeatureNotFoundError\x00\x00' \
-            + b'qubes-vm-update-restart-system' + b'\x00'
-    assert sut.restart_system_vms
+            + b'qubes-vm-update-restart-servicevms' + b'\x00'
+    assert sut.restart_service_vms
 
 
 def test_restart_other_vms(test_qapp):
@@ -143,8 +143,8 @@ class MockCallback:
     (
         pytest.param("update-if-stale", Settings.DEFAULT_UPDATE_IF_STALE, 30,
                      "days_without_update_button"),
-        pytest.param("restart-system", Settings.DEFAULT_RESTART_SYSTEM_VMS,
-                     False, "restart_system_checkbox"),
+        pytest.param("restart-servicevms", Settings.DEFAULT_RESTART_SERVICEVMS,
+                     False, "restart_servicevms_checkbox"),
         pytest.param("restart-other", Settings.DEFAULT_RESTART_OTHER_VMS,
                      True, "restart_other_checkbox"),
     ),
@@ -222,9 +222,9 @@ def test_save(feature, default_value, new_value, test_qapp, button_name):
 
 def test_limit_concurrency(test_qapp):
     dom0_set_max_concurrency = ('dom0', 'admin.vm.feature.Set',
-                                f'qubes-vm-update-max-concurrency',)
+                                'qubes-vm-update-max-concurrency',)
     dom0_get_max_concurrency = ('dom0', 'admin.vm.feature.Get',
-                                f'qubes-vm-update-max-concurrency', None)
+                                'qubes-vm-update-max-concurrency', None)
 
     mock_log = Mock()
     sut = Settings(Gtk.Window(), test_qapp, mock_log, lambda *args: None)

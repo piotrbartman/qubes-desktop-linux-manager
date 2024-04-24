@@ -78,14 +78,14 @@ def test_on_header_toggled(
 
     sut.list_store = appvms_list
     all_num = len(appvms_list)
-    sut.head_checkbox._allowed[0] = AppVMType.SYS
-    sys_num = 3
-    sut.head_checkbox._allowed[1] = AppVMType.NON_SYS
+    sut.head_checkbox._allowed[0] = AppVMType.SERVICEVM
+    service_num = 3
+    sut.head_checkbox._allowed[1] = AppVMType.NON_SERVICEVM
     non_excluded_num = 6
 
     sut.head_checkbox.state = HeaderCheckbox.NONE
 
-    for expected in (0, sys_num, non_excluded_num, all_num, 0):
+    for expected in (0, service_num, non_excluded_num, all_num, 0):
         selected_num = len([row for row in sut.list_store if row.selected])
         assert selected_num == expected
         assert sut.head_checkbox_button.get_inconsistent() \
@@ -109,8 +109,8 @@ def test_on_checkbox_toggled(
     )
 
     sut.list_store = appvms_list
-    sut.head_checkbox._allowed[0] = AppVMType.SYS
-    sut.head_checkbox._allowed[1] = AppVMType.NON_SYS
+    sut.head_checkbox._allowed[0] = AppVMType.SERVICEVM
+    sut.head_checkbox._allowed[1] = AppVMType.NON_SERVICEVM
 
     sut.head_checkbox.state = HeaderCheckbox.NONE
     sut.head_checkbox.set_buttons()
@@ -153,30 +153,30 @@ def test_on_checkbox_toggled(
 
 # expected data based on test_qapp setup
 UP_VMS = 7
-UP_SYS_VMS = 3
+UP_SERVICE_VMS = 3
 UP_APP_VMS = 4
 
 
 @pytest.mark.parametrize(
-    "restart_system_vms, restart_other_vms, excluded, expected",
+    "restart_service_vms, restart_other_vms, excluded, expected",
     (
         pytest.param(True, True, (), UP_VMS),
-        pytest.param(True, False, (), UP_SYS_VMS),
+        pytest.param(True, False, (), UP_SERVICE_VMS),
         pytest.param(False, False, (), 0),
         pytest.param(False, True, (), UP_APP_VMS),
         pytest.param(True, True, ("test-blue",), UP_VMS - 1),
-        pytest.param(True, False, ("test-blue",), UP_SYS_VMS),
+        pytest.param(True, False, ("test-blue",), UP_SERVICE_VMS),
         pytest.param(False, True, ("sys-usb",), UP_APP_VMS),
-        pytest.param(True, False, ("sys-usb",), UP_SYS_VMS - 1),
+        pytest.param(True, False, ("sys-usb",), UP_SERVICE_VMS - 1),
     ),
 )
 def test_populate_restart_list(
-        restart_system_vms, restart_other_vms, excluded, expected,
+        restart_service_vms, restart_other_vms, excluded, expected,
         real_builder, test_qapp, updatable_vms_list,
         mock_next_button, mock_cancel_button, mock_settings, mock_tree_view
 ):
     mock_settings.restart_other_vms = restart_other_vms
-    mock_settings.restart_system_vms = restart_system_vms
+    mock_settings.restart_service_vms = restart_service_vms
     for exclude in excluded:
         test_qapp.expected_calls[
             (exclude, "admin.vm.feature.Get", 'restart-after-update', None)

@@ -174,8 +174,8 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkCheckButton" id="restart_system">
-                        <property name="label" translatable="yes">Restart all _system qubes after update by default</property>
+                      <object class="GtkCheckButton" id="restart_servicevms">
+                        <property name="label" translatable="yes">Restart all _service qubes after update by default</property>
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
                         <property name="receives-default">False</property>

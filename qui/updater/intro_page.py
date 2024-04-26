@@ -43,7 +43,7 @@ class IntroPage:
     """
     First content page of updater.
 
-    Show the list of updatable vms with an update info.
+    Show the list of updatable vms with update info.
     """
 
     def __init__(self, builder, log, next_button):
@@ -86,7 +86,7 @@ class IntroPage:
             ))
 
     def populate_vm_list(self, qapp, settings):
-        """Adds to list any updatable vms with an update info."""
+        """Adds to list any updatable vms with update info."""
         self.log.debug("Populate update list")
         self.list_store = ListWrapper(
             UpdateRowWrapper, self.vm_list.get_model())
@@ -113,16 +113,14 @@ class IntroPage:
         if not self.active:
             return
 
-        output = subprocess.check_output(
-            ['qubes-vm-update', '--dry-run',
-             '--update-if-stale', str(update_if_stale)])
+        cmd = ['qubes-vm-update', '--dry-run',
+               '--update-if-stale', str(update_if_stale)]
 
-        to_update = [
-            vm_name.strip() for vm_name
-            in output.decode().split("\n", maxsplit=1)[0]
-            .split(":", maxsplit=1)[1].split(",")]
+        to_update = self._get_stale_qubes(cmd)
 
         for row in self.list_store:
+            if row.vm.name == 'dom0':
+                continue
             row.updates_available = bool(row.vm.name in to_update)
 
     def get_vms_to_update(self) -> ListWrapper:
@@ -162,7 +160,7 @@ class IntroPage:
         Cycle between selection of:
          <1> vms with `updates_available` (YES)
          <2> <1> + vms no checked for updates for a while (YES and MAYBE)
-         <3> all vms (YES , MAYBE and NO)
+         <3> all vms (YES, MAYBE and NO)
          <4> no vm. (nothing)
 
         If the user has selected any vms that do not match the defined states,
@@ -176,7 +174,7 @@ class IntroPage:
             row.selected = row.updates_available \
                            in self.head_checkbox.allowed
 
-    def select_rows_ignoring_conditions(self, cliargs):
+    def select_rows_ignoring_conditions(self, cliargs, dom0):
         cmd = ['qubes-vm-update', '--dry-run']
 
         args = [a for a in dir(cliargs) if not a.startswith("_")]
@@ -192,31 +190,48 @@ class IntroPage:
                     if not vms_without_dom0:
                         continue
                     value = ",".join(vms_without_dom0)
-                cmd.extend((f"--{arg.replace('_', '-')}", str(value)))
+                cmd.append(f"--{arg.replace('_', '-')}")
+                if isinstance(value, str):
+                    cmd.append(value)
 
-        if not cmd[2:]:
-            to_update = set()
-        else:
+        to_update = set()
+        if cmd[2:]:
+            to_update = self._get_stale_qubes(cmd)
+
+        to_update = self._handle_cli_dom0(dom0, to_update, cliargs)
+
+        for row in self.list_store:
+            row.selected = row.name in to_update
+
+    def _get_stale_qubes(self, cmd):
+        try:
             self.log.debug("Run command %s", " ".join(cmd))
             output = subprocess.check_output(cmd)
             self.log.debug("Command returns: %s", output.decode())
 
-            to_update = {
-                vm_name.strip()
-                for line in output.decode().split("\n", maxsplit=1)
-                for vm_name in line.split(":", maxsplit=1)[1].split(",")
+            return {
+                vm_name.strip() for vm_name
+                in output.decode().split("\n", maxsplit=1)[0]
+                .split(":", maxsplit=1)[1].split(",")
             }
+        except subprocess.CalledProcessError as err:
+            if err.returncode != 100:
+                raise err
+            return set()
 
-        # handle dom0
+    @staticmethod
+    def _handle_cli_dom0(dom0, to_update, cliargs):
+        if not cliargs.targets and not cliargs.all:
+            if bool(dom0.features.get(
+                    'updates-available', False)):
+                to_update.add('dom0')
         if cliargs.dom0 or cliargs.all:
             to_update.add("dom0")
         if cliargs.targets and "dom0" in cliargs.targets.split(","):
             to_update.add("dom0")
         if cliargs.skip and "dom0" in cliargs.skip.split(","):
             to_update = to_update.difference({"dom0"})
-
-        for row in self.list_store:
-            row.selected = row.name in to_update
+        return to_update
 
 
 class UpdateRowWrapper(RowWrapper):

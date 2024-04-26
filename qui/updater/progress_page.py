@@ -164,7 +164,7 @@ class ProgressPage:
                     stderr=subprocess.PIPE, stdout=subprocess.PIPE)
                 _stdout, stderr = check_updates.communicate()
                 if check_updates.returncode != 100:
-                    GLib.idle_add(admin.append_text_view, stderr)
+                    GLib.idle_add(admin.append_text_view, stderr.decode())
                     if check_updates.returncode != 0:
                         GLib.idle_add(admin.set_status, UpdateStatus.Error)
                     else:

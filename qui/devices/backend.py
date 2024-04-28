@@ -229,9 +229,8 @@ class Device:
         Perform attachment to provided VM.
         """
         try:
-            assignment = qubesadmin.devices.DeviceAssignment(
-                self.backend_domain, self.id_string,
-                persistent=False)
+            assignment = qubesadmin.device_protocol.DeviceAssignment(
+                self.backend_domain, self.id_string)
 
             vm.vm_object.devices[self.device_class].attach(assignment)
             self.gtk_app.emit_notification(
@@ -261,9 +260,8 @@ class Device:
             Gio.NotificationPriority.NORMAL,
             notification_id=self.notification_id)
         try:
-            assignment = qubesadmin.devices.DeviceAssignment(
-                self.backend_domain, self._ident,
-                persistent=False)
+            assignment = qubesadmin.device_protocol.DeviceAssignment(
+                self.backend_domain, self._ident)
             vm.vm_object.devices[self.device_class].detach(assignment)
         except qubesadmin.exc.QubesException as ex:
             self.gtk_app.emit_notification(

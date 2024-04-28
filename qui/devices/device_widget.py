@@ -179,7 +179,8 @@ class DevicesTray(Gtk.Application):
         for domain in self.qapp.domains:
             for devclass in DEV_TYPES:
                 try:
-                    for device in domain.devices[devclass].attached():
+                    for device in domain.devices[devclass
+                            ].get_attached_devices():
                         dev = str(device)
                         if dev in self.devices:
                             # occassionally ghost UnknownDevices appear when a
@@ -227,7 +228,7 @@ class DevicesTray(Gtk.Application):
 
         for devclass in DEV_TYPES:
             try:
-                for device in vm.devices[devclass].attached():
+                for device in vm.devices[devclass].get_attached_devices():
                     dev = str(device)
                     if dev in self.devices:
                         self.devices[dev].attachments.add(wrapped_vm)

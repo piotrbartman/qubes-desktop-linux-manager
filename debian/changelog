@@ -1,3 +1,28 @@
+qubes-desktop-linux-manager (4.2.21-1) unstable; urgency=medium
+
+  [ Piotr Bartman ]
+  * qubes-vm-update: real-time output
+  * qubes-vm-update: auto-scrolling + dom0 without salt
+  * make pylint happy
+  * dom0 package comparison
+  * dom0 fix updating
+  * make output prettier
+
+  [ Piotr Bartman-Szwarc ]
+  * make printed update info more readable
+
+  [ Marek Marczykowski-Górecki ]
+  * Make pylint happy
+
+  [ Piotr Bartman ]
+  * updater: better restarting logic
+  * updater: make pylint happy
+  * updater: fix parsing `--update-if-stale`
+  * updater: handle nothing to do
+  * updater: fix showing output
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sun, 28 Apr 2024 04:20:56 +0200
+
 qubes-desktop-linux-manager (4.2.20-1) unstable; urgency=medium
 
   * Bump required python3-qubesadmin version

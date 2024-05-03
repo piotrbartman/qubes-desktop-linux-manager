@@ -19,6 +19,7 @@
 # with this program; if not, see <http://www.gnu.org/licenses/>.
 """Utility functions using Gtk"""
 import contextlib
+import importlib.resources
 import os
 
 import fcntl
@@ -187,14 +188,31 @@ def show_dialog(
     return dialog
 
 
-def load_theme(widget: Gtk.Widget, light_theme_path: str, dark_theme_path: str):
+def load_theme(widget: Gtk.Widget, light_theme_path: Optional[str] = None,
+               dark_theme_path: Optional[str] = None,
+               package_name: Optional[str] = None,
+               light_file_name: Optional[str] = None,
+               dark_file_name: Optional[str] = None):
     """
     Load a dark or light theme to current screen, based on widget's
     current (system) defaults.
     :param widget: Gtk.Widget, preferably main window
     :param light_theme_path: path to file with light theme css
     :param dark_theme_path: path to file with dark theme css
+    Alternatively, you can provide:
+    :param package_name: name of the package
+    :param light_file_name: name of the css file with light theme
+    :param dark_file_name: name of the css file with dark theme
     """
+    if not light_theme_path and light_file_name:
+        css_path = importlib.resources.files(package_name) / light_file_name
+        with importlib.resources.as_file(css_path) as resource_path:
+            light_theme_path = str(resource_path)
+    if not dark_theme_path and dark_file_name:
+        css_path = importlib.resources.files(package_name) / dark_file_name
+        with importlib.resources.as_file(css_path) as resource_path:
+            dark_theme_path = str(resource_path)
+
     path = light_theme_path if is_theme_light(widget) else dark_theme_path
 
     screen = Gdk.Screen.get_default()

@@ -27,7 +27,7 @@ from html import escape
 
 import gettext
 
-import pkg_resources
+import importlib.resources
 from datetime import datetime
 
 t = gettext.translation("desktop-linux-manager", fallback=True)
@@ -37,7 +37,8 @@ import gi  # isort:skip
 gi.require_version('Gtk', '3.0')  # isort:skip
 from gi.repository import Gtk  # isort:skip
 
-EOL_DATES = json.load(pkg_resources.resource_stream(__name__, 'eol.json'))
+with importlib.resources.files('qui').joinpath('eol.json').open() as stream:
+    EOL_DATES = json.load(stream)
 # remove the following suffixes when checking for EOL
 SUFFIXES = ['-minimal', '-xfce']
 

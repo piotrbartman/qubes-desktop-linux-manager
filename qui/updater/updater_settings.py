@@ -21,7 +21,7 @@
 import dataclasses
 from typing import Optional, Union, Callable
 
-import pkg_resources
+import importlib.resources
 import gi
 
 gi.require_version('Gtk', '3.0')  # isort:skip
@@ -68,8 +68,11 @@ class Settings:
 
         self.builder = Gtk.Builder()
         self.builder.set_translation_domain("desktop-linux-manager")
-        self.builder.add_from_file(pkg_resources.resource_filename(
-            'qui', 'updater_settings.glade'))
+
+        glade_ref = (importlib.resources.files('qui') /
+                      'updater_settings.glade')
+        with importlib.resources.as_file(glade_ref) as path:
+            self.builder.add_from_file(str(path))
 
         self.settings_window: Gtk.Window = self.builder.get_object(
             "main_window")

@@ -24,7 +24,7 @@ import re
 from typing import Callable, Optional, Dict, Tuple
 
 import gi
-import pkg_resources
+import importlib.resources
 
 import qubesadmin
 from qrexec.policy.admin_client import PolicyClient
@@ -171,8 +171,11 @@ class PolicyEditor(Gtk.Application):
             Gtk.Clipboard.get(Gdk.SELECTION_CLIPBOARD)
 
         self.builder = Gtk.Builder()
-        self.builder.add_from_file(pkg_resources.resource_filename(
-            'qubes_config', 'policy_editor.glade'))
+
+        glade_ref = (importlib.resources.files('qubes_config') /
+                      'policy_editor.glade')
+        with importlib.resources.as_file(glade_ref) as path:
+            self.builder.add_from_file(str(path))
 
         self.file_select_handler = OpenDialogHandler(self.builder,
                                                      self.policy_client,
@@ -218,16 +221,14 @@ class PolicyEditor(Gtk.Application):
         self.setup_actions()
         self.setup_menu()
 
-        load_theme(widget=self.main_window,
-                   light_theme_path=pkg_resources.resource_filename(
-                       'qubes_config', 'qubes-policy-editor-light.css'),
-                   dark_theme_path=pkg_resources.resource_filename(
-                       'qubes_config', 'qubes-policy-editor-dark.css'))
+        load_theme(widget=self.main_window, package_name='qubes_config',
+                   light_file_name='qubes-policy-editor-light.css',
+                   dark_file_name='qubes-policy-editor-dark.css')
 
         self.setup_source()
-
-        help_text = pkg_resources.resource_string(
-            'qubes_config', 'policy_editor/policy_help.txt').decode()
+        help_text = importlib.resources.files(
+            'qubes_config').joinpath(
+            'policy_editor/policy_help.txt').read_text()
         self.builder.get_object("help_label").set_markup(help_text)
 
         self.open_policy_file(self.filename)

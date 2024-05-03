@@ -20,7 +20,7 @@
 """Conftest helper pytest file: fixtures container here are
  reachable by all tests"""
 import pytest
-import pkg_resources
+import importlib.resources
 
 from qubes_config.tests.conftest import add_dom0_vm_property, \
     add_dom0_text_property, add_dom0_feature, add_expected_vm, \
@@ -141,8 +141,10 @@ def real_builder():
     """Gtk builder with actual config glade file registered"""
     builder = Gtk.Builder()
     builder.set_translation_domain("desktop-linux-manager")
-    builder.add_from_file(pkg_resources.resource_filename(
-        'qui', 'updater.glade'))
+    glade_ref = (importlib.resources.files('qui') /
+                 'updater.glade')
+    with importlib.resources.as_file(glade_ref) as path:
+        self.builder.add_from_file(str(path))
     return builder
 
 

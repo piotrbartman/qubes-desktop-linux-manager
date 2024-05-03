@@ -5,7 +5,7 @@ import argparse
 import logging
 import time
 
-import pkg_resources
+import importlib.resources
 import gi  # isort:skip
 
 from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, load_theme, \
@@ -78,8 +78,11 @@ class QubesUpdater(Gtk.Application):
         # pylint: disable=attribute-defined-outside-init
         self.builder = Gtk.Builder()
         self.builder.set_translation_domain("desktop-linux-manager")
-        self.builder.add_from_file(pkg_resources.resource_filename(
-            'qui', 'updater.glade'))
+
+        glade_ref = (importlib.resources.files('qui') /
+                      'updater.glade')
+        with importlib.resources.as_file(glade_ref) as path:
+            self.builder.add_from_file(str(path))
 
         self.main_window: Gtk.Window = self.builder.get_object("main_window")
         self.next_button: Gtk.Button = self.builder.get_object("button_next")
@@ -89,10 +92,9 @@ class QubesUpdater(Gtk.Application):
         self.cancel_button.connect("clicked", self.cancel_clicked)
 
         load_theme(widget=self.main_window,
-                   light_theme_path=pkg_resources.resource_filename(
-                       'qui', 'qubes-updater-light.css'),
-                   dark_theme_path=pkg_resources.resource_filename(
-                       'qui', 'qubes-updater-dark.css'))
+                   package_name='qui',
+                   light_file_name='qubes-updater-light.css',
+                   dark_file_name='qubes-updater-dark.css')
 
         self.header_label: Gtk.Label = self.builder.get_object("header_label")
 

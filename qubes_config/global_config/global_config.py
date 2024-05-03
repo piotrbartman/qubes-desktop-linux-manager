@@ -23,7 +23,7 @@
 import sys
 from typing import Dict, Optional, List, Union
 from html import escape
-import pkg_resources
+import importlib.resources
 import logging
 
 import qubesadmin
@@ -252,18 +252,19 @@ class GlobalConfig(Gtk.Application):
         self.progress_bar_dialog.update_progress(0)
 
         self.builder = Gtk.Builder()
-        self.builder.add_from_file(pkg_resources.resource_filename(
-            'qubes_config', 'global_config.glade'))
+        glade_ref = (importlib.resources.files('qubes_config') /
+                     'global_config.glade')
+        with importlib.resources.as_file(glade_ref) as path:
+            self.builder.add_from_file(str(path))
 
         self.main_window: Gtk.Window = self.builder.get_object('main_window')
         self.main_notebook: Gtk.Notebook = \
             self.builder.get_object('main_notebook')
 
         load_theme(widget=self.main_window,
-                   light_theme_path=pkg_resources.resource_filename(
-                       'qubes_config', 'qubes-global-config-light.css'),
-                   dark_theme_path=pkg_resources.resource_filename(
-                       'qubes_config', 'qubes-global-config-dark.css'))
+                   package_name='qubes_config',
+                   light_file_name='qubes-global-config-light.css',
+                   dark_file_name='qubes-global-config-dark.css')
 
         self.apply_button: Gtk.Button = self.builder.get_object('apply_button')
         self.cancel_button: Gtk.Button = \

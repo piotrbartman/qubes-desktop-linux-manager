@@ -21,7 +21,7 @@ from typing import Set, List, Dict
 import asyncio
 import sys
 
-import pkg_resources
+import importlib.resources
 
 import qubesadmin
 import qubesadmin.exc
@@ -281,8 +281,11 @@ class DevicesTray(Gtk.Application):
         theme = 'light' if is_theme_light(widget) else 'dark'
         screen = Gdk.Screen.get_default()
         provider = Gtk.CssProvider()
-        provider.load_from_path(pkg_resources.resource_filename(
-                       'qui', f'qubes-devices-{theme}.css'))
+        css_file_ref = (importlib.resources.files('qui') /
+                        f'qubes-devices-{theme}.css')
+        with importlib.resources.as_file(css_file_ref) as css_file:
+            provider.load_from_path(str(css_file))
+
         Gtk.StyleContext.add_provider_for_screen(
             screen, provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
 

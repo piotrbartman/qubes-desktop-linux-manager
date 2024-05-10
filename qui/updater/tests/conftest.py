@@ -132,6 +132,9 @@ def test_qapp():
     add_feature_to_all(qapp, 'updates-available', [])
     add_feature_to_all(qapp, 'last-update', [])
     add_feature_to_all(qapp, 'last-updates-check', [])
+    add_feature_to_all(qapp, 'template-name', [])
+    add_feature_to_all(qapp, 'servicevm',
+                       ['sys-usb', 'sys-firewall', 'sys-net'])
 
     return qapp
 

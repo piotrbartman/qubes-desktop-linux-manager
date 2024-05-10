@@ -84,13 +84,17 @@ def run_asyncio_and_show_errors(loop, tasks, name, restart=True):
 def check_support(vm):
     """Return true if the given template/standalone vm is still supported, by
     default returns true"""
-    template_name: str = vm.features.get('template-name', '')
-    if not template_name:
-        return True
-    for suffix in SUFFIXES:
-        template_name = template_name.removesuffix(suffix)
-    eol = EOL_DATES.get(template_name, None)
-    if not eol:
-        return True
-    eol = datetime.strptime(eol, '%Y-%m-%d')
+    # first, check if qube itself has known eol
+    eol_string: str = vm.features.get('os-eol', '')
+
+    if not eol_string:
+        template_name: str = vm.features.get('template-name', '')
+        if not template_name:
+            return True
+        for suffix in SUFFIXES:
+            template_name = template_name.removesuffix(suffix)
+        eol_string = EOL_DATES.get(template_name, None)
+        if not eol_string:
+            return True
+    eol = datetime.strptime(eol_string, '%Y-%m-%d')
     return eol > datetime.now()

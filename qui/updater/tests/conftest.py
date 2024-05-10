@@ -135,6 +135,7 @@ def test_qapp():
     add_feature_to_all(qapp, 'template-name', [])
     add_feature_to_all(qapp, 'servicevm',
                        ['sys-usb', 'sys-firewall', 'sys-net'])
+    add_feature_to_all(qapp, 'os-eol', [])
 
     return qapp
 

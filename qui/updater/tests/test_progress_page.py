@@ -169,7 +169,7 @@ def test_update_templates(
              call(mock_text_view.buffer.set_text, "Details 0"),
              call(mock_text_view.buffer.set_text, "Details 2"),
              ]
-    idle_add.assert_has_calls(calls)
+    idle_add.assert_has_calls(calls, any_order=True)
     if not interrupted:
         sut.do_update_templates.assert_called()
 

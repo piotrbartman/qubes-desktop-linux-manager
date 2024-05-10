@@ -73,6 +73,10 @@ def test_restart_service_vms(test_qapp):
         ('dom0', 'admin.vm.feature.Get', 'qubes-vm-update-restart-servicevms', None)
     ] = b'2\x00QubesFeatureNotFoundError\x00\x00' \
         + b'qubes-vm-update-restart-servicevms' + b'\x00'
+    test_qapp.expected_calls[
+        ('dom0', 'admin.vm.feature.Get', 'qubes-vm-update-restart-system', None)
+    ] = b'2\x00QubesFeatureNotFoundError\x00\x00' \
+        + b'qubes-vm-update-restart-system' + b'\x00'
     assert sut.restart_service_vms
     test_qapp.expected_calls[
         ('dom0', 'admin.vm.feature.Get', 'qubes-vm-update-restart-servicevms', None)
@@ -155,6 +159,14 @@ def test_save(feature, default_value, new_value, test_qapp, button_name):
     sut = Settings(Gtk.Window(), test_qapp, mock_log, mock_callback)
 
     init_features(test_qapp)
+
+    # set the backwards-compatible feature appropriately
+    test_qapp.expected_calls[
+        ('dom0', 'admin.vm.feature.Get',
+         f'qubes-vm-update-restart-system', None)
+    ] = b'2\x00QubesFeatureNotFoundError\x00\x00' \
+        + f'qubes-vm-update-restart-system'.encode() + b'\x00'
+
     sut.show()
     sut.save_and_close(None)
 
@@ -205,7 +217,6 @@ def test_save(feature, default_value, new_value, test_qapp, button_name):
     ] = b'2\x00QubesFeatureNotFoundError\x00\x00' \
         + f'qubes-vm-update-{feature}'.encode() + b'\x00'
 
-
     # do not set adminVM feature if nothing change
     sut.show()
     del test_qapp.expected_calls[('dom0', 'admin.vm.feature.Set',
@@ -245,9 +256,9 @@ def test_limit_concurrency(test_qapp):
 
     # Set concurrency to max value
     sut.show()
-    sut.max_concurrency_button.set_value(Settings.MAX_CONCURRENCY)
+    sut.max_concurrency_button.set_value(sut.MAX_CONCURRENCY)
     test_qapp.expected_calls[
-        (*dom0_set_max_concurrency, sut.MAX_CONCURRENCY)
+        (*dom0_set_max_concurrency, str(sut.MAX_CONCURRENCY).encode())
     ] = b'0\x00'
     sut.save_and_close(None)
     test_qapp.expected_calls[dom0_get_max_concurrency] = \

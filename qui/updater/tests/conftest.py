@@ -132,6 +132,9 @@ def test_qapp():
     add_feature_to_all(qapp, 'updates-available', [])
     add_feature_to_all(qapp, 'last-update', [])
     add_feature_to_all(qapp, 'last-updates-check', [])
+    add_feature_to_all(qapp, 'template-name', [])
+    add_feature_to_all(qapp, 'servicevm',
+                       ['sys-usb', 'sys-firewall', 'sys-net'])
 
     return qapp
 
@@ -144,7 +147,7 @@ def real_builder():
     glade_ref = (importlib.resources.files('qui') /
                  'updater.glade')
     with importlib.resources.as_file(glade_ref) as path:
-        self.builder.add_from_file(str(path))
+        builder.add_from_file(str(path))
     return builder
 
 

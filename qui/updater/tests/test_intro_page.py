@@ -158,33 +158,71 @@ def test_on_checkbox_toggled(
     assert not sut.checkbox_column_button.get_inconsistent()
     assert not sut.checkbox_column_button.get_active()
 
-all_domains = {vm.name for vm in test_qapp_impl().domains}
-all_templates = {vm.name for vm in test_qapp_impl().domains if vm.klass == "TemplateVM"}
-all_standalones = {vm.name for vm in test_qapp_impl().domains if vm.klass == "StandaloneVM"}
+
+_domains = {vm.name for vm in test_qapp_impl().domains}
+_templates = {vm.name for vm in test_qapp_impl().domains
+              if vm.klass == "TemplateVM"}
+_standalones = {vm.name for vm in test_qapp_impl().domains
+                if vm.klass == "StandaloneVM"}
+_tmpls_and_stndas = _templates.union(_standalones)
+_non_derived_qubes = {"dom0"}.union(_tmpls_and_stndas)
+_derived_qubes = _domains.difference(_non_derived_qubes)
 
 
-@pytest.mark.xfail
 @patch('subprocess.check_output')
 @pytest.mark.parametrize(
-    "args, templates, rest, selected",
+    # args: for `qubes-vm-update`
+    # selection is based on a result of `qubes-vm-update --dry-run *args`
+    # templates_and_standalones: mocked selection of templates and standalones
+    # derived_qubes: mocked selection of derived qubes
+    # expected_selection: gui should select what
+    "args, tmpls_and_stndas, derived_qubes, expected_selection",
     (
-        pytest.param(('--all',), ",".join(all_templates).encode(), ",".join(all_domains.difference({"dom0"}).difference(all_templates)).encode(), all_domains),
-        pytest.param(('--update-if-stale', '10'), b'fedora-36', b'', {'fedora-36'}),
-        pytest.param(('--targets', 'dom0,fedora-36'), b'fedora-36', b'', {'dom0', 'fedora-36'}),
-        pytest.param(('--dom0', '--skip', 'dom0'), b'', b'', set()),
-        pytest.param(('--skip', 'dom0'), b'', b'', set()),
-        pytest.param(('--targets', 'dom0', '--skip', 'dom0'), b'', b'', set()),
+        # `qubes-update-gui --all`
+        # Target all updatable VMs (AdminVM, TemplateVMs and StandaloneVMs)
+        pytest.param(
+            ('--all',), ",".join(_tmpls_and_stndas).encode(),
+            ",".join(_derived_qubes).encode(), _non_derived_qubes),
+        # `qubes-update-gui --update-if-stale 10`
+        # Target all TemplateVMs and StandaloneVMs with known updates or for
+        # which last update check was more than <10> days ago.
+        pytest.param(
+            ('--update-if-stale', '10'), b'fedora-36', b'', {'fedora-36'}),
+        # `qubes-update-gui --targets dom0,fedora-36`
+        # Comma separated list of VMs to target
+        pytest.param(
+            ('--targets', 'dom0,fedora-36'), b'fedora-36',
+            b'', {'dom0', 'fedora-36'}),
+        # `qubes-update-gui --standalones`
+        # Target all StandaloneVMs
+        pytest.param(
+            ('--standalones',), b'',
+            ",".join(_standalones).encode(), _standalones),
+        # `qubes-update-gui --dom0`
+        # Target dom0
         pytest.param(('--dom0',), b'', b'', {'dom0'}),
-        pytest.param(('--standalones',), b'', ",".join(all_standalones).encode(), all_standalones),
+        # `qubes-update-gui --dom0 --skip dom0`
+        # Comma separated list of VMs to be skipped,
+        # works with all other options.
+        pytest.param(('--dom0', '--skip', 'dom0'), b'', b'', set()),
+        # `qubes-update-gui --skip dom0`
+        pytest.param(('--skip', 'dom0'), b'', b'', set()),
+        # `qubes-update-gui --targets dom0 --skip dom0`
+        # the same as `qubes-update-gui --dom0 --skip dom0`
+        pytest.param(
+            ('--targets', 'dom0', '--skip', 'dom0'), b'', b'', set()),
+        # `qubes-update-gui --templates dom0 --skip fedora-36,garbage-name`
         pytest.param(('--templates', '--skip', 'fedora-36,garbage-name'),
-                     ",".join(all_templates.difference({"fedora-36"})).encode(),
+                     ",".join(_templates.difference({"fedora-36"})).encode(),
                      b'',
-                     all_templates.difference({"fedora-36"})),
+                     _templates.difference({"fedora-36"})),
     ),
 )
 def test_select_rows_ignoring_conditions(
-        mock_subprocess, args, templates, rest, selected, real_builder,
-        test_qapp, mock_next_button, mock_settings, mock_list_store
+        mock_subprocess,
+        args, tmpls_and_stndas, derived_qubes, expected_selection,
+        real_builder, test_qapp, mock_next_button, mock_settings,
+        mock_list_store
 ):
     mock_log = Mock()
     sut = IntroPage(real_builder, mock_log, mock_next_button)
@@ -196,17 +234,24 @@ def test_select_rows_ignoring_conditions(
 
     assert len(sut.list_store) == 12
 
-    mock_subprocess.return_value = (
-        b'Following templates will be updated: ' + templates + b'\n'
-        b'Following qubes will be updated: ' + rest
-    )
+    result = b''
+    if tmpls_and_stndas:
+        result += (b'Following templates and standalones will be updated: '
+                   + tmpls_and_stndas)
+    if derived_qubes:
+        if result:
+            result += b'\n'
+        result += b'Following qubes will be updated: ' + derived_qubes
+    mock_subprocess.return_value = result
 
     cliargs = parse_args(args)
     sut.select_rows_ignoring_conditions(cliargs, test_qapp.domains['dom0'])
     to_update = {row.name for row in sut.list_store if row.selected}
 
-    assert to_update == selected
-    if not templates + rest:
+    assert to_update == expected_selection
+
+    at_most_dom0_selected = not tmpls_and_stndas + derived_qubes
+    if at_most_dom0_selected:
         mock_subprocess.assert_not_called()
 
 

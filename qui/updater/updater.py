@@ -278,9 +278,9 @@ def parse_args(args):
                        help='Target all updatable VMs (AdminVM, '
                             'TemplateVMs and StandaloneVMs)')
     group.add_argument('--update-if-stale', action='store',
-                       help='Target all TemplateVMs with known updates or for '
-                            'which last update check was more than N days '
-                            'ago.',
+                       help='Target all TemplateVMs and StandaloneVMs with '
+                            'known updates or for which last update check was '
+                            'more than N days ago.',
                        type=int)
 
     parser.add_argument('--skip', action='store',

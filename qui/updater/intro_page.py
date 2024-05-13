@@ -209,10 +209,13 @@ class IntroPage:
             output = subprocess.check_output(cmd)
             self.log.debug("Command returns: %s", output.decode())
 
+            output_lines = output.decode().split("\n")
+            if ":" not in output_lines[0]:
+                return set()
+
             return {
                 vm_name.strip() for vm_name
-                in output.decode().split("\n", maxsplit=1)[0]
-                .split(":", maxsplit=1)[1].split(",")
+                in output_lines[0].split(":", maxsplit=1)[1].split(",")
             }
         except subprocess.CalledProcessError as err:
             if err.returncode != 100:

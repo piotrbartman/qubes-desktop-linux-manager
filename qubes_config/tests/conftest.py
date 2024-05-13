@@ -424,16 +424,14 @@ def test_qapp_broken():  # pylint: disable=redefined-outer-name
     return qapp
 
 
-SIGNALS_REGISTERED = False
-
 @pytest.fixture
 def test_builder():
     """Test gtk_builder with loaded test glade file and registered signals."""
-    global SIGNALS_REGISTERED  # pylint:disable=global-statement
-    # register all the signals various widgets might emit
-    if not SIGNALS_REGISTERED:
+    try:
         GlobalConfig.register_signals()
-        SIGNALS_REGISTERED = True
+    except RuntimeError:
+        # signals already registered
+        pass
     # test glade file contains very simple setup with correctly named widgets
     builder = Gtk.Builder()
     glade_ref = (importlib.resources.files('qubes_config') /
@@ -445,11 +443,11 @@ def test_builder():
 @pytest.fixture
 def real_builder():
     """Gtk builder with actual config glade file registered"""
-    global SIGNALS_REGISTERED  # pylint:disable=global-statement
-    # register all the signals various widgets might emit
-    if not SIGNALS_REGISTERED:
+    try:
         GlobalConfig.register_signals()
-        SIGNALS_REGISTERED = True
+    except RuntimeError:
+        # signals already registered
+        pass
     # test glade file contains very simple setup with correctly named widgets
     builder = Gtk.Builder()
     glade_ref = (importlib.resources.files('qubes_config') /
@@ -459,17 +457,14 @@ def real_builder():
     return builder
 
 
-NEW_QUBE_SIGNALS_REGISTERED = False
-
-
 @pytest.fixture
 def new_qube_builder():
     """Gtk builder with actual config glade file registered"""
-    global NEW_QUBE_SIGNALS_REGISTERED  # pylint:disable=global-statement
-    # register all the signals various widgets might emit
-    if not NEW_QUBE_SIGNALS_REGISTERED:
+    try:
         CreateNewQube.register_signals()
-        NEW_QUBE_SIGNALS_REGISTERED = True
+    except RuntimeError:
+        # signals already registered
+        pass
     # test glade file contains very simple setup with correctly named widgets
     builder = Gtk.Builder()
     glade_ref = (importlib.resources.files('qubes_config') /

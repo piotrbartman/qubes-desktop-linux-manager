@@ -24,7 +24,7 @@ New Qube program.
 import subprocess
 import sys
 from typing import Optional, Dict, Any
-import pkg_resources
+import importlib.resources
 import logging
 
 import qubesadmin
@@ -93,8 +93,10 @@ class CreateNewQube(Gtk.Application):
         self.progress_bar_dialog.update_progress(0.1)
 
         self.builder = Gtk.Builder()
-        self.builder.add_from_file(pkg_resources.resource_filename(
-            'qubes_config', 'new_qube.glade'))
+        glade_ref = (importlib.resources.files('qubes_config') /
+                     'new_qube.glade')
+        with importlib.resources.as_file(glade_ref) as path:
+            self.builder.add_from_file(str(path))
 
         self.main_window = self.builder.get_object('main_window')
         self.qube_name: Gtk.Entry = self.builder.get_object('qube_name')
@@ -102,10 +104,9 @@ class CreateNewQube(Gtk.Application):
             self.builder.get_object('qube_label')
 
         load_theme(widget=self.main_window,
-                   light_theme_path=pkg_resources.resource_filename(
-                       'qubes_config', 'qubes-new-qube-light.css'),
-                   dark_theme_path=pkg_resources.resource_filename(
-                       'qubes_config', 'qubes-new-qube-dark.css'))
+                   package_name='qubes_config',
+                   light_file_name='qubes-new-qube-light.css',
+                   dark_file_name='qubes-new-qube-dark.css')
 
         self.progress_bar_dialog.update_progress(0.1)
 

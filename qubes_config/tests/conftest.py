@@ -20,7 +20,7 @@
 """Conftest helper pytest file: fixtures container here are
  reachable by all tests"""
 import pytest
-import pkg_resources
+import importlib.resources
 import subprocess
 from typing import Mapping, Union, Tuple, List
 from qubesadmin.tests import QubesTest
@@ -436,8 +436,10 @@ def test_builder():
         SIGNALS_REGISTERED = True
     # test glade file contains very simple setup with correctly named widgets
     builder = Gtk.Builder()
-    builder.add_from_file(pkg_resources.resource_filename(
-        __name__, 'test.glade'))
+    glade_ref = (importlib.resources.files('qubes_config') /
+                 'tests/test.glade')
+    with importlib.resources.as_file(glade_ref) as path:
+        builder.add_from_file(str(path))
     return builder
 
 @pytest.fixture
@@ -450,8 +452,10 @@ def real_builder():
         SIGNALS_REGISTERED = True
     # test glade file contains very simple setup with correctly named widgets
     builder = Gtk.Builder()
-    builder.add_from_file(pkg_resources.resource_filename(
-        'qubes_config', 'global_config.glade'))
+    glade_ref = (importlib.resources.files('qubes_config') /
+                 'global_config.glade')
+    with importlib.resources.as_file(glade_ref) as path:
+        builder.add_from_file(str(path))
     return builder
 
 
@@ -468,8 +472,10 @@ def new_qube_builder():
         NEW_QUBE_SIGNALS_REGISTERED = True
     # test glade file contains very simple setup with correctly named widgets
     builder = Gtk.Builder()
-    builder.add_from_file(pkg_resources.resource_filename(
-        'qubes_config', 'new_qube.glade'))
+    glade_ref = (importlib.resources.files('qubes_config') /
+                 'new_qube.glade')
+    with importlib.resources.as_file(glade_ref) as path:
+        builder.add_from_file(str(path))
     return builder
 
 

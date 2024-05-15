@@ -459,7 +459,6 @@ class RawPolicyTextHandler:
                 text=_("The following rules could not be parsed:\n") +
                      error_message + "\n"
             )
-            return
 
     def _cancel_raw(self, _widget):
         self.fill_raw(self.last_known_rules)

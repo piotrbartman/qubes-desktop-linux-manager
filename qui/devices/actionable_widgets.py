@@ -80,8 +80,6 @@ class ActionableWidget:
 
     def widget_action(self, *_args):
         """What should happen when this widget is activated/clicked"""
-        if not self.actionable:
-            return
 
 
 ### ICONS

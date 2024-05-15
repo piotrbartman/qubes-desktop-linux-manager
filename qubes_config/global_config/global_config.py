@@ -429,7 +429,6 @@ class GlobalConfig(Gtk.Application):
         if not allow_switch:
             GLib.timeout_add(1, lambda: self.main_notebook.set_current_page(
                 old_page_num))
-            return
 
     def _ask_unsaved(self, description: str) -> Gtk.ResponseType:
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)

@@ -193,7 +193,7 @@ checkbutton check {
     padding-top: 18px;
     padding-bottom: 16px;
 
-    font-family: 'Source Sans Pro';
+    font-family: monospace;
     font-style: normal;
     font-weight: 400;
     font-size: 1em;

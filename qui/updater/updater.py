@@ -239,7 +239,8 @@ class QubesUpdater(Gtk.Application):
 
     def check_escape(self, _widget, event, _data=None):
         if event.keyval == Gdk.KEY_Escape:
-            self.window_close()
+            if self.intro_page.is_visible or self.summary_page.is_visible:
+                self.window_close()
 
     def window_close(self, *_args, **_kwargs):
         self.log.debug("Close window")

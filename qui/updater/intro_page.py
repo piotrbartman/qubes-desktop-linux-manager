@@ -179,8 +179,8 @@ class IntroPage:
 
         args = [a for a in dir(cliargs) if not a.startswith("_")]
         for arg in args:
-            if arg in ("dom0", "no-restart", "restart", "max_concurrency",
-                       "log"):
+            if arg in ("dom0", "no_restart", "restart", "max_concurrency",
+                       "log", "non_interactive"):
                 continue
             value = getattr(cliargs, arg)
             if value:
@@ -191,8 +191,8 @@ class IntroPage:
                         continue
                     value = ",".join(vms_without_dom0)
                 cmd.append(f"--{arg.replace('_', '-')}")
-                if isinstance(value, str):
-                    cmd.append(value)
+                if isinstance(value, (str, int)):
+                    cmd.append(str(value))
 
         to_update = set()
         if cmd[2:]:

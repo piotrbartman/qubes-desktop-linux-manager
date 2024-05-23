@@ -3,6 +3,7 @@
 # pylint: disable=wrong-import-position,import-error
 import argparse
 import logging
+import sys
 import time
 
 import importlib.resources
@@ -12,7 +13,7 @@ from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, load_theme, \
     show_dialog_with_icon, RESPONSES_OK
 from qui.updater.progress_page import ProgressPage
 from qui.updater.updater_settings import Settings, OverridenSettings
-from qui.updater.summary_page import SummaryPage
+from qui.updater.summary_page import SummaryPage, RestartStatus
 from qui.updater.intro_page import IntroPage
 
 gi.require_version('Gtk', '3.0')  # isort:skip
@@ -44,6 +45,7 @@ class QubesUpdater(Gtk.Application):
         self.do_nothing = False
         self.connect("activate", self.do_activate)
         self.cliargs = cliargs
+        self.retcode = 0
 
         log_handler = logging.FileHandler(
             QubesUpdater.LOGPATH, encoding='utf-8')
@@ -104,7 +106,9 @@ class QubesUpdater(Gtk.Application):
             self.log,
             self.header_label,
             self.next_button,
-            self.cancel_button
+            self.cancel_button,
+            callback=lambda: self.next_clicked(None)
+                     if self.cliargs.non_interactive else lambda: None
         )
         self.summary_page = SummaryPage(
             self.builder,
@@ -125,7 +129,7 @@ class QubesUpdater(Gtk.Application):
         overriden_restart = None
         if self.cliargs.restart:
             overriden_restart = True
-        elif  self.cliargs.no_restart:
+        elif self.cliargs.no_restart:
             overriden_restart = False
 
         overrides = OverridenSettings(
@@ -201,15 +205,27 @@ class QubesUpdater(Gtk.Application):
                     vm_updated=self.progress_page.vms_to_update,
                     settings=self.settings
                 )
-            self.summary_page.show(*self.progress_page.get_update_summary())
+            updated, no_updates, failed = (
+                self.progress_page.get_update_summary())
+            if failed:
+                self.retcode = 1
+            if failed or not self.cliargs.non_interactive:
+                self.summary_page.show(updated, no_updates, failed)
+            else:
+                self.restart_phase()
         elif self.summary_page.is_visible:
-            self.main_window.hide()
-            self.log.debug("Hide main window")
-            # ensuring that main_window will be hidden
-            while Gtk.events_pending():
-                Gtk.main_iteration()
-            self.summary_page.restart_selected_vms()
-            self.exit_updater()
+            self.restart_phase()
+
+    def restart_phase(self):
+        self.main_window.hide()
+        self.log.debug("Hide main window")
+        # ensuring that main_window will be hidden
+        while Gtk.events_pending():
+            Gtk.main_iteration()
+        self.summary_page.restart_selected_vms()
+        if self.summary_page.status == RestartStatus.ERROR:
+            self.retcode = 2
+        self.exit_updater()
 
     def cancel_clicked(self, _emitter):
         self.log.debug("Cancel clicked")
@@ -296,6 +312,11 @@ def parse_args(args):
     parser.add_argument('--dom0', action='store_true',
                         help='Target dom0')
 
+    parser.add_argument('--non-interactive', action='store_true',
+                        help='Run the updater GUI in non-interactive mode. '
+                             'Interaction will be required in the event '
+                             'of an update error.')
+
     args = parser.parse_args(args)
 
     return args
@@ -304,7 +325,8 @@ def parse_args(args):
 def skip_intro_if_args(args):
     return args is not None and (args.templates or args.standalones or args.skip
                                  or args.update_if_stale or args.all
-                                 or args.targets or args.dom0)
+                                 or args.targets or args.dom0
+                                 or args.non_interactive)
 
 
 def main(args=None):
@@ -312,6 +334,7 @@ def main(args=None):
     qapp = Qubes()
     app = QubesUpdater(qapp, cliargs)
     app.run()
+    sys.exit(app.retcode)
 
 
 if __name__ == '__main__':

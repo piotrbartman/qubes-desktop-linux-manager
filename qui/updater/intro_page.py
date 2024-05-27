@@ -179,7 +179,8 @@ class IntroPage:
 
         args = [a for a in dir(cliargs) if not a.startswith("_")]
         for arg in args:
-            if arg in ("dom0", "no_restart", "restart", "max_concurrency",
+            if arg in ("dom0", "no_restart", "restart", "apply_to_sys",
+                       "apply_to_all", "no_apply", "max_concurrency",
                        "log", "non_interactive"):
                 continue
             value = getattr(cliargs, arg)

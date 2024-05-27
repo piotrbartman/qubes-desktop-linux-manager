@@ -21,7 +21,7 @@ from gi.repository import Gtk, Gdk, Gio  # isort:skip
 from qubesadmin import Qubes
 
 # using locale.gettext is necessary for Gtk.Builder translation support to work
-# in most cases gettext is better, but it cannot handle Gtk.Builder/glade files
+# in most cases, gettext is better, but it cannot handle Gtk.Builder/glade files
 import locale
 from locale import gettext as l
 
@@ -126,14 +126,20 @@ class QubesUpdater(Gtk.Application):
         settings_image = Gtk.Image.new_from_pixbuf(settings_pixbuf)
         self.button_settings.set_image(settings_image)
 
-        overriden_restart = None
-        if self.cliargs.restart:
-            overriden_restart = True
+        overridden_apply_to_sys = None
+        overridden_apply_to_other = None
+        if self.cliargs.apply_to_all:
+            overridden_apply_to_sys = True
+            overridden_apply_to_other = True
+        elif self.cliargs.restart:
+            overridden_apply_to_sys = True
         elif self.cliargs.no_restart:
-            overriden_restart = False
+            overridden_apply_to_sys = False
+            overridden_apply_to_other = False
 
         overrides = OverridenSettings(
-            restart=overriden_restart,
+            apply_to_sys=overridden_apply_to_sys,
+            apply_to_other=overridden_apply_to_other,
             max_concurrency=self.cliargs.max_concurrency,
             update_if_stale=self.cliargs.update_if_stale,
         )
@@ -186,7 +192,6 @@ class QubesUpdater(Gtk.Application):
         width = self.intro_page.vm_list.get_preferred_width().natural_width
         self.main_window.resize(width + 50, int(width * 1.2))
         self.main_window.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
-        # return 0
 
     def open_settings_window(self, _emitter):
         self.settings.show()
@@ -283,12 +288,16 @@ def parse_args(args):
                              '(default: number of cpus)',
                         type=int)
     restart_gr = parser.add_mutually_exclusive_group()
-    restart_gr.add_argument('--restart', action='store_true',
-                            help='Restart AppVMs whose template '
+    restart_gr.add_argument('--restart', '--apply-to-sys', '-r',
+                            action='store_true',
+                            help='Restart Service VMs whose template '
                                  'has been updated.')
-    restart_gr.add_argument('--no-restart', action='store_true',
-                            help='Do not restart AppVMs whose template '
-                                 'has been updated.')
+    restart_gr.add_argument('--apply-to-all', '-R',
+                            action='store_true',
+                            help='Restart Service VMs and shutdown AppVMs '
+                                 'whose template has been updated.')
+    restart_gr.add_argument('--no-apply', action='store_true',
+                            help='Do not restart/shutdown any AppVMs.')
 
     group = parser.add_mutually_exclusive_group()
     group.add_argument('--targets', action='store',

@@ -39,7 +39,8 @@ GObject.signal_new('child-removed',
 
 @dataclasses.dataclass(frozen=True)
 class OverridenSettings:
-    restart: Optional[bool] = None
+    apply_to_sys: Optional[bool] = None
+    apply_to_other: Optional[bool] = None
     max_concurrency: Optional[int] = None
     update_if_stale: Optional[int] = None
 
@@ -148,8 +149,8 @@ class Settings:
     @property
     def restart_service_vms(self) -> bool:
         """Return the current (set by this window or manually) option value."""
-        if self.overrides.restart is not None:
-            return self.overrides.restart
+        if self.overrides.apply_to_sys is not None:
+            return self.overrides.apply_to_sys
 
         result = get_boolean_feature(
             self.vm, "qubes-vm-update-restart-servicevms",
@@ -168,8 +169,8 @@ class Settings:
     @property
     def restart_other_vms(self) -> bool:
         """Return the current (set by this window or manually) option value."""
-        if self.overrides.restart is not None:
-            return self.overrides.restart
+        if self.overrides.apply_to_other is not None:
+            return self.overrides.apply_to_other
         return get_boolean_feature(
             self.vm, "qubes-vm-update-restart-other",
             Settings.DEFAULT_RESTART_OTHER_VMS)

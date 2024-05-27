@@ -12,7 +12,7 @@ import gi  # isort:skip
 from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, load_theme, \
     show_dialog_with_icon, RESPONSES_OK
 from qui.updater.progress_page import ProgressPage
-from qui.updater.updater_settings import Settings, OverridenSettings
+from qui.updater.updater_settings import Settings, OverriddenSettings
 from qui.updater.summary_page import SummaryPage, RestartStatus
 from qui.updater.intro_page import IntroPage
 
@@ -137,7 +137,7 @@ class QubesUpdater(Gtk.Application):
             overridden_apply_to_sys = False
             overridden_apply_to_other = False
 
-        overrides = OverridenSettings(
+        overrides = OverriddenSettings(
             apply_to_sys=overridden_apply_to_sys,
             apply_to_other=overridden_apply_to_other,
             max_concurrency=self.cliargs.max_concurrency,
@@ -214,6 +214,9 @@ class QubesUpdater(Gtk.Application):
                 self.progress_page.get_update_summary())
             if failed:
                 self.retcode = 1
+            if updated == 0 and failed == 0:
+                # no updates
+                self.retcode = 100
             if failed or not self.cliargs.non_interactive:
                 self.summary_page.show(updated, no_updates, failed)
             else:

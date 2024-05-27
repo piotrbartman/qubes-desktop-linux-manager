@@ -37,8 +37,9 @@ GObject.signal_new('child-removed',
                    GObject.SignalFlags.RUN_LAST, GObject.TYPE_PYOBJECT,
                    (GObject.TYPE_PYOBJECT,))
 
+
 @dataclasses.dataclass(frozen=True)
-class OverridenSettings:
+class OverriddenSettings:
     apply_to_sys: Optional[bool] = None
     apply_to_other: Optional[bool] = None
     max_concurrency: Optional[int] = None
@@ -59,7 +60,7 @@ class Settings:
             qapp,
             log,
             refresh_callback: Callable,
-            overrides: OverridenSettings = OverridenSettings(),
+            overrides: OverriddenSettings = OverriddenSettings(),
     ):
         self.qapp = qapp
         self.log = log
@@ -71,7 +72,7 @@ class Settings:
         self.builder.set_translation_domain("desktop-linux-manager")
 
         glade_ref = (importlib.resources.files('qui') /
-                      'updater_settings.glade')
+                     'updater_settings.glade')
         with importlib.resources.as_file(glade_ref) as path:
             self.builder.add_from_file(str(path))
 
@@ -222,7 +223,7 @@ class Settings:
         )
 
     def show(self):
-        """Show hidden window."""
+        """Show a hidden window."""
         self.load_settings()
         self.settings_window.show_all()
         self._show_restart_exceptions()

@@ -133,7 +133,7 @@ class QubesUpdater(Gtk.Application):
             overridden_apply_to_other = True
         elif self.cliargs.restart:
             overridden_apply_to_sys = True
-        elif self.cliargs.no_restart:
+        elif self.cliargs.no_apply:
             overridden_apply_to_sys = False
             overridden_apply_to_other = False
 

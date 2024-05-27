@@ -195,11 +195,12 @@ class Settings:
         self._init_restart_servicevms = self.restart_service_vms
         self._init_restart_other_vms = self.restart_other_vms
         self.restart_servicevms_checkbox.set_sensitive(
-            not self.overrides.restart)
+            not self.overrides.apply_to_sys)
         self.restart_servicevms_checkbox.set_active(
             self._init_restart_servicevms)
         self.restart_other_checkbox.set_active(self._init_restart_other_vms)
-        self.restart_other_checkbox.set_sensitive(not self.overrides.restart)
+        self.restart_other_checkbox.set_sensitive(
+            not self.overrides.apply_to_other)
 
         self._init_max_concurrency = self.max_concurrency
         self._init_limit_concurrency = self._init_max_concurrency is not None

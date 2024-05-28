@@ -65,12 +65,7 @@ class QubesUpdater(Gtk.Application):
         else:
             self.log.debug("Secondary activation")
             if self.do_nothing:
-                show_dialog_with_icon(
-                    None, l("Quit"),
-                    l("Nothing to do."),
-                    buttons=RESPONSES_OK,
-                    icon_name="check_yes"
-                )
+                self._show_final_dialog()
                 self.window_close()
             else:
                 self.main_window.present()
@@ -221,7 +216,8 @@ class QubesUpdater(Gtk.Application):
                 self.summary_page.show(updated, no_updates, failed)
             else:
                 self._restart_phase()
-                self._show_final_dialog()
+                if self.cliargs.non_interactive:
+                    self._show_final_dialog()
         elif self.summary_page.is_visible:
             self._restart_phase()
 
@@ -238,12 +234,11 @@ class QubesUpdater(Gtk.Application):
 
     def _show_final_dialog(self):
         """
-        In a non-interactive mode, we should show the user a success
-        confirmation.
-        """
-        if not self.cliargs.non_interactive:
-            return
+        We should show the user a success confirmation.
 
+        In the case of non-interactive mode or if there is nothing to do,
+        we should show some feedback to the user.
+        """
         if (not self.cliargs.skip and not self.cliargs.targets
                 and self.retcode in (0, 100)):
             msg = "Qubes OS is up to date."

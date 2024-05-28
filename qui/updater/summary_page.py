@@ -251,7 +251,7 @@ class SummaryPage:
         time.sleep(0.01)
 
         if self.restart_thread.is_alive():
-            # show wainting dialog
+            # show waiting dialog
             spinner = Gtk.Spinner()
             spinner.start()
             dialog = show_dialog(None, l("Applying updates to qubes"), l(

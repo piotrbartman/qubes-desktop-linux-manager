@@ -220,11 +220,12 @@ class QubesUpdater(Gtk.Application):
             if failed or not self.cliargs.non_interactive:
                 self.summary_page.show(updated, no_updates, failed)
             else:
-                self.restart_phase()
+                self._restart_phase()
+                self._show_final_dialog()
         elif self.summary_page.is_visible:
-            self.restart_phase()
+            self._restart_phase()
 
-    def restart_phase(self):
+    def _restart_phase(self):
         self.main_window.hide()
         self.log.debug("Hide main window")
         # ensuring that main_window will be hidden
@@ -234,6 +235,29 @@ class QubesUpdater(Gtk.Application):
         if self.summary_page.status == RestartStatus.ERROR:
             self.retcode = 2
         self.exit_updater()
+
+    def _show_final_dialog(self):
+        """
+        In a non-interactive mode, we should show the user a success
+        confirmation.
+        """
+        if not self.cliargs.non_interactive:
+            return
+
+        if (not self.cliargs.skip and not self.cliargs.targets
+                and self.retcode in (0, 100)):
+            msg = "Qubes OS is up to date."
+        elif self.retcode == 0:
+            msg = "All selected qubes have been updated."
+        elif self.retcode == 100:
+            msg = "There are no updates available for the selected Qubes."
+        show_dialog_with_icon(
+            None,
+            l("Success"),
+            l(msg),
+            buttons=RESPONSES_OK,
+            icon_name="qubes-check-yes"
+        )
 
     def cancel_clicked(self, _emitter):
         self.log.debug("Cancel clicked")

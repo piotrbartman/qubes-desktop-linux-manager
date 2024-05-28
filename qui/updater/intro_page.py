@@ -179,7 +179,7 @@ class IntroPage:
 
         args = [a for a in dir(cliargs) if not a.startswith("_")]
         for arg in args:
-            if arg in ("dom0", "no_restart", "restart", "apply_to_sys",
+            if arg in ("dom0", "restart", "apply_to_sys",
                        "apply_to_all", "no_apply", "max_concurrency",
                        "log", "non_interactive"):
                 continue
@@ -195,10 +195,7 @@ class IntroPage:
                 if isinstance(value, (str, int)):
                     cmd.append(str(value))
 
-        to_update = set()
-        if cmd[2:]:
-            to_update = self._get_stale_qubes(cmd)
-
+        to_update = self._get_stale_qubes(cmd)
         to_update = self._handle_cli_dom0(dom0, to_update, cliargs)
 
         for row in self.list_store:

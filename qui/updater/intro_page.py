@@ -113,7 +113,7 @@ class IntroPage:
         if not self.active:
             return
 
-        cmd = ['qubes-vm-update', '--dry-run',
+        cmd = ['qubes-vm-update', '--quiet', '--dry-run',
                '--update-if-stale', str(update_if_stale)]
 
         to_update = self._get_stale_qubes(cmd)
@@ -175,13 +175,14 @@ class IntroPage:
                            in self.head_checkbox.allowed
 
     def select_rows_ignoring_conditions(self, cliargs, dom0):
-        cmd = ['qubes-vm-update', '--dry-run']
+        cmd = ['qubes-vm-update', '--dry-run', '--quiet']
 
         args = [a for a in dir(cliargs) if not a.startswith("_")]
         for arg in args:
-            if arg in ("dom0", "restart", "apply_to_sys",
-                       "apply_to_all", "no_apply", "max_concurrency",
-                       "log", "non_interactive"):
+            if arg in ("non_interactive", "non_default_select",
+                       "dom0",
+                       "restart", "apply_to_sys", "apply_to_all", "no_apply",
+                       "max_concurrency", "log"):
                 continue
             value = getattr(cliargs, arg)
             if value:
@@ -192,10 +193,16 @@ class IntroPage:
                         continue
                     value = ",".join(vms_without_dom0)
                 cmd.append(f"--{arg.replace('_', '-')}")
-                if isinstance(value, (str, int)):
+                if not isinstance(value, bool):
                     cmd.append(str(value))
 
-        to_update = self._get_stale_qubes(cmd)
+        to_update = set()
+        non_default_select = [
+            '--' + arg for arg in cliargs.non_default_select if arg != 'dom0']
+        non_default = [a for a in cmd if a in non_default_select]
+        if non_default or cliargs.non_interactive:
+            to_update = self._get_stale_qubes(cmd)
+
         to_update = self._handle_cli_dom0(dom0, to_update, cliargs)
 
         for row in self.list_store:

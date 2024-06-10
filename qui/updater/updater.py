@@ -29,6 +29,10 @@ locale.bindtextdomain("desktop-linux-manager", "/usr/locales/")
 locale.textdomain('desktop-linux-manager')
 
 
+class ArgumentError(Exception):
+    """Nonsense arguments"""
+
+
 class QubesUpdater(Gtk.Application):
     # pylint: disable=too-many-instance-attributes
 
@@ -126,7 +130,7 @@ class QubesUpdater(Gtk.Application):
         if self.cliargs.apply_to_all:
             overridden_apply_to_sys = True
             overridden_apply_to_other = True
-        elif self.cliargs.restart:
+        elif self.cliargs.apply_to_sys:
             overridden_apply_to_sys = True
         elif self.cliargs.no_apply:
             overridden_apply_to_sys = False
@@ -182,6 +186,15 @@ class QubesUpdater(Gtk.Application):
                 return
             self.next_clicked(None, skip_intro=True)
         else:
+            # default update_if_stale -> do nothing
+            if self.cliargs.update_if_available:
+                self.intro_page.head_checkbox.state = (
+                    self.intro_page.head_checkbox.SAFE)
+                self.intro_page.select_rows()
+            elif self.cliargs.force_update:
+                self.intro_page.head_checkbox.state = (
+                    self.intro_page.head_checkbox.ALL)
+                self.intro_page.select_rows()
             self.log.info("Show intro page.")
         self.main_window.show_all()
         width = self.intro_page.vm_list.get_preferred_width().natural_width
@@ -239,8 +252,16 @@ class QubesUpdater(Gtk.Application):
         In the case of non-interactive mode or if there is nothing to do,
         we should show some feedback to the user.
         """
-        if (not self.cliargs.skip and not self.cliargs.targets
-                and self.retcode in (0, 100)):
+        non_default_select = any(
+            [getattr(self.cliargs, arg)
+             for arg in self.cliargs.non_default_select if arg != 'all'])
+        if (
+                (  # at least all vms with available updates was updated
+                (self.cliargs.all and not self.cliargs.skip)
+                or not non_default_select
+                )
+                and self.retcode in (0, 100)
+        ):
             msg = "Qubes OS is up to date."
         elif self.retcode == 0:
             msg = "All selected qubes have been updated."
@@ -301,63 +322,95 @@ class QubesUpdater(Gtk.Application):
 
 def parse_args(args):
     parser = argparse.ArgumentParser()
+    default_update_if_stale = 7
 
     parser.add_argument('--log', action='store', default='WARNING',
                         help='Provide logging level. Values: DEBUG, INFO, '
                              'WARNING (default), ERROR, CRITICAL')
+
     parser.add_argument('--max-concurrency', action='store',
                         help='Maximum number of VMs configured simultaneously '
                              '(default: number of cpus)',
                         type=int)
-    restart_gr = parser.add_mutually_exclusive_group()
-    restart_gr.add_argument('--restart', '--apply-to-sys', '-r',
-                            action='store_true',
-                            help='Restart Service VMs whose template '
-                                 'has been updated.')
-    restart_gr.add_argument('--apply-to-all', '-R',
-                            action='store_true',
-                            help='Restart Service VMs and shutdown AppVMs '
-                                 'whose template has been updated.')
-    restart_gr.add_argument('--no-apply', action='store_true',
-                            help='Do not restart/shutdown any AppVMs.')
 
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('--targets', action='store',
-                       help='Comma separated list of VMs to target')
-    group.add_argument('--all', action='store_true',
-                       help='Target all updatable VMs (AdminVM, '
-                            'TemplateVMs and StandaloneVMs)')
-    group.add_argument('--update-if-stale', action='store',
-                       help='Target all TemplateVMs and StandaloneVMs with '
-                            'known updates or for which last update check was '
-                            'more than N days ago.',
-                       type=int)
+    restart = parser.add_mutually_exclusive_group()
+    restart.add_argument(
+        '--apply-to-sys', '--restart', '-r',
+        action='store_true',
+        help='Restart not updated ServiceVMs whose template has been updated.')
+    restart.add_argument(
+        '--apply-to-all', '-R', action='store_true',
+        help='Restart not updated ServiceVMs and shutdown not updated AppVMs '
+             'whose template has been updated.')
+    restart.add_argument(
+        '--no-apply', action='store_true',
+        help='DEFAULT. Do not restart/shutdown any AppVMs.')
 
-    parser.add_argument('--skip', action='store',
-                        help='Comma separated list of VMs to be skipped, '
-                             'works with all other options.', default="")
-    parser.add_argument('--templates', action='store_true',
-                        help='Target all TemplatesVMs')
-    parser.add_argument('--standalones', action='store_true',
-                        help='Target all StandaloneVMs')
-    parser.add_argument('--dom0', action='store_true',
-                        help='Target dom0')
+    update_state = parser.add_mutually_exclusive_group()
+    update_state.add_argument(
+        '--force-update', action='store_true',
+        help='Attempt to update all targeted VMs '
+             'even if no updates are available')
+    update_state.add_argument(
+        '--update-if-stale', action='store',
+        help='DEFAULT. '
+             'Attempt to update targeted VMs with known updates available '
+             'or for which last update check was more than N days ago. '
+             '(default: %(default)d)',
+        type=int, default=default_update_if_stale)
+    update_state.add_argument(
+        '--update-if-available', action='store_true',
+        help='Update targeted VMs with known updates available.')
 
-    parser.add_argument('--non-interactive', action='store_true',
+    parser.add_argument(
+        '--skip', action='store',
+        help='Comma separated list of VMs to be skipped, '
+             'works with all other options. '
+             'If present, skip manual selection of qubes to update.',
+        default="")
+    parser.add_argument(
+        '--targets', action='store',
+        help='Comma separated list of updatable VMs to target. '
+             'If present, skip manual selection of qubes to update.')
+    parser.add_argument(
+        '--templates', '-T', action='store_true',
+        help='Target all updatable TemplateVMs. '
+             'If present, skip manual selection of qubes to update.')
+    parser.add_argument(
+        '--standalones', '-S', action='store_true',
+        help='Target all updatable StandaloneVMs. '
+             'If present, skip manual selection of qubes to update.')
+    parser.add_argument(
+        '--all', action='store_true',
+        help='DEFAULT. Target AdminVM, TemplateVMs and StandaloneVMs.'
+             'Use explicitly with "--targets" to include both. '
+             'If explicitly present, skip manual selection of qubes to update.')
+    parser.add_argument(
+        '--dom0', action='store_true', help='Target dom0. '
+        'If present, skip manual selection of qubes to update.')
+
+    parser.add_argument('--non-interactive', '-n', action='store_true',
                         help='Run the updater GUI in non-interactive mode. '
                              'Interaction will be required in the event '
                              'of an update error.')
 
     args = parser.parse_args(args)
 
+    args.non_default_select = {
+        'skip', 'targets', 'templates', 'standalones', 'all', 'dom0'}
+
+    if args.update_if_stale < 0:
+        raise ArgumentError("Wrong value for --update-if-stale")
+    if args.update_if_stale == default_update_if_stale:
+        args.update_if_stale = None
+
     return args
 
 
 def skip_intro_if_args(args):
-    return args is not None and (args.templates or args.standalones or args.skip
-                                 or args.update_if_stale or args.all
-                                 or args.targets or args.dom0
-                                 or args.non_interactive)
+    auto_select = [getattr(args, arg) for arg in args.non_default_select
+                   ] + [args.non_interactive]
+    return any(auto_select)
 
 
 def main(args=None):

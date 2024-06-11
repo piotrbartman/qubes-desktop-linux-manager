@@ -264,7 +264,7 @@ def test_select_rows_ignoring_conditions(
         result += b'Following qubes will be updated: ' + derived_qubes
     mock_subprocess.return_value = result
 
-    cliargs = parse_args(args)
+    cliargs = parse_args(args, test_qapp)
     sut.select_rows_ignoring_conditions(cliargs, test_qapp.domains['dom0'])
     to_update = {row.name for row in sut.list_store if row.selected}
 

@@ -19,6 +19,7 @@ from qui.updater.intro_page import IntroPage
 gi.require_version('Gtk', '3.0')  # isort:skip
 from gi.repository import Gtk, Gdk, Gio  # isort:skip
 from qubesadmin import Qubes
+import qubesadmin.exc
 
 # using locale.gettext is necessary for Gtk.Builder translation support to work
 # in most cases, gettext is better, but it cannot handle Gtk.Builder/glade files
@@ -320,9 +321,14 @@ class QubesUpdater(Gtk.Application):
             self.release()
 
 
-def parse_args(args):
+def parse_args(args, app):
     parser = argparse.ArgumentParser()
-    default_update_if_stale = 7
+    try:
+        default_update_if_stale = int(app.domains["dom0"].features.get(
+            "qubes-vm-update-update-if-stale", Settings.DEFAULT_UPDATE_IF_STALE)
+        )
+    except qubesadmin.exc.QubesDaemonAccessError:
+        default_update_if_stale = Settings.DEFAULT_UPDATE_IF_STALE
 
     parser.add_argument('--log', action='store', default='WARNING',
                         help='Provide logging level. Values: DEBUG, INFO, '
@@ -414,8 +420,8 @@ def skip_intro_if_args(args):
 
 
 def main(args=None):
-    cliargs = parse_args(args)
     qapp = Qubes()
+    cliargs = parse_args(args, qapp)
     app = QubesUpdater(qapp, cliargs)
     app.run()
     sys.exit(app.retcode)

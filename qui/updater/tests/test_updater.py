@@ -29,7 +29,7 @@ from qui.updater.updater import QubesUpdater, parse_args
 @patch('logging.getLogger')
 @patch('qui.updater.intro_page.IntroPage.populate_vm_list')
 def test_setup(populate_vm_list, _mock_logging, __mock_logging, test_qapp):
-    sut = QubesUpdater(test_qapp, parse_args(()))
+    sut = QubesUpdater(test_qapp, parse_args((), test_qapp))
     sut.perform_setup()
     calls = [call(sut.qapp, sut.settings)]
     populate_vm_list.assert_has_calls(calls)
@@ -53,7 +53,7 @@ def test_setup(populate_vm_list, _mock_logging, __mock_logging, test_qapp):
 )
 def test_retcode(_populate_vm_list, _mock_logging, __mock_logging,
                  update_results, ret_code, test_qapp):
-    sut = QubesUpdater(test_qapp, parse_args(()))
+    sut = QubesUpdater(test_qapp, parse_args((), test_qapp))
     sut.perform_setup()
 
     sut.intro_page.get_vms_to_update = Mock()

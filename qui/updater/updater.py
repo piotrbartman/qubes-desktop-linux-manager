@@ -256,8 +256,9 @@ class QubesUpdater(Gtk.Application):
         we should show some feedback to the user.
         """
         non_default_select = any(
-            [getattr(self.cliargs, arg)
-             for arg in self.cliargs.non_default_select if arg != 'all'])
+            (getattr(self.cliargs, arg)
+             for arg in self.cliargs.non_default_select if arg != 'all'))
+        msg = "Nothing to do."
         if (
                 (  # at least all vms with available updates was updated
                 (self.cliargs.all and not self.cliargs.skip)

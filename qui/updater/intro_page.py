@@ -230,8 +230,8 @@ class IntroPage:
     @staticmethod
     def _handle_cli_dom0(dom0, to_update, cliargs):
         default_select = not any(
-            [getattr(cliargs, arg)
-             for arg in cliargs.non_default_select if arg != 'all'])
+            (getattr(cliargs, arg)
+             for arg in cliargs.non_default_select if arg != 'all'))
         if (default_select or cliargs.all or cliargs.dom0) and (
                 cliargs.force_update
                 or bool(dom0.features.get('updates-available', False))

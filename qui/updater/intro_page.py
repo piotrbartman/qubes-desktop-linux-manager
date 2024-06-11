@@ -191,7 +191,7 @@ class IntroPage:
                     vms_without_dom0 = vms.difference({"dom0"})
                     if not vms_without_dom0:
                         continue
-                    value = ",".join(vms_without_dom0)
+                    value = ",".join(sorted(vms_without_dom0))
                 cmd.append(f"--{arg.replace('_', '-')}")
                 if not isinstance(value, bool):
                     cmd.append(str(value))

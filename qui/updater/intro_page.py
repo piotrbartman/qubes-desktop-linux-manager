@@ -229,17 +229,35 @@ class IntroPage:
 
     @staticmethod
     def _handle_cli_dom0(dom0, to_update, cliargs):
-        if not cliargs.targets and not cliargs.all:
-            if bool(dom0.features.get(
-                    'updates-available', False)):
-                to_update.add('dom0')
-        if cliargs.dom0 or cliargs.all:
-            to_update.add("dom0")
+        default_select = not any(
+            [getattr(cliargs, arg)
+             for arg in cliargs.non_default_select if arg != 'all'])
+        if (default_select or cliargs.all or cliargs.dom0) and (
+                cliargs.force_update
+                or bool(dom0.features.get('updates-available', False))
+                or is_stale(dom0, cliargs.update_if_stale)
+        ):
+            to_update.add('dom0')
+
         if cliargs.targets and "dom0" in cliargs.targets.split(","):
             to_update.add("dom0")
         if cliargs.skip and "dom0" in cliargs.skip.split(","):
             to_update = to_update.difference({"dom0"})
         return to_update
+
+
+def is_stale(vm, expiration_period):
+    if expiration_period is None:
+        return False
+    today = datetime.today()
+    last_update_str = vm.features.get(
+        'last-updates-check',
+        datetime.fromtimestamp(0).strftime('%Y-%m-%d %H:%M:%S')
+    )
+    last_update = datetime.fromisoformat(last_update_str)
+    if (today - last_update).days > expiration_period:
+        return True
+    return False
 
 
 class UpdateRowWrapper(RowWrapper):

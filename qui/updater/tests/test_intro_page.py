@@ -181,15 +181,18 @@ _derived_qubes = _domains.difference(_non_derived_qubes)
         # `qubes-update-gui --all`
         # Target all updatable VMs (AdminVM, TemplateVMs and StandaloneVMs)
         pytest.param(
-            ('--all',), ",".join(_tmpls_and_stndas).encode(),
-            ",".join(_derived_qubes).encode(), _non_derived_qubes, ('--all',),
+            ('--all', '--force-update'),
+            ",".join(_tmpls_and_stndas).encode(),
+            ",".join(_derived_qubes).encode(), _non_derived_qubes,
+            ('--all', '--force-update'),
             id="all"),
         # `qubes-update-gui --update-if-stale 10`
         # Target all TemplateVMs and StandaloneVMs with known updates or for
         # which last update check was more than <10> days ago.
         pytest.param(
             ('--non-interactive', '--update-if-stale', '10'),
-            b'fedora-36', b'', {'fedora-36'}, ('--update-if-stale', '10'),
+            b'fedora-36', b'', {'fedora-36', 'dom0'},
+            ('--update-if-stale', '10'),
             id="if-stale"),
         # `qubes-update-gui --targets dom0,fedora-36`
         # Comma separated list of VMs to target
@@ -205,7 +208,8 @@ _derived_qubes = _domains.difference(_non_derived_qubes)
             id="standalones"),
         # `qubes-update-gui --dom0`
         # Target dom0
-        pytest.param(('--dom0',), b'', b'', {'dom0'}, None, id="dom0"),
+        pytest.param(('--dom0', '--force-update'), b'', b'', {'dom0'},
+                     None, id="dom0"),
         # `qubes-update-gui --dom0 --skip dom0`
         # Comma separated list of VMs to be skipped,
         # works with all other options.

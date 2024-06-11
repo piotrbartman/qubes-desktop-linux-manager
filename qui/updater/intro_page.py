@@ -232,11 +232,15 @@ class IntroPage:
         default_select = not any(
             (getattr(cliargs, arg)
              for arg in cliargs.non_default_select if arg != 'all'))
-        if (default_select or cliargs.all or cliargs.dom0) and (
-                cliargs.force_update
-                or bool(dom0.features.get('updates-available', False))
-                or is_stale(dom0, cliargs.update_if_stale)
-        ):
+        if ((
+            default_select and cliargs.non_interactive
+            or cliargs.all
+            or cliargs.dom0
+        ) and (
+            cliargs.force_update
+            or bool(dom0.features.get('updates-available', False))
+            or is_stale(dom0, cliargs.update_if_stale)
+        )):
             to_update.add('dom0')
 
         if cliargs.targets and "dom0" in cliargs.targets.split(","):

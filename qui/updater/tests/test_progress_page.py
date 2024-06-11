@@ -258,11 +258,12 @@ def test_get_update_summary(
 
     sut.vms_to_update = updatable_vms_list
 
-    vm_updated_num, vm_no_updates_num, vm_failed_num = sut.get_update_summary()
+    updated, no_updates, failed, cancelled = sut.get_update_summary()
 
-    assert vm_updated_num == 1
-    assert vm_no_updates_num == 1
-    assert vm_failed_num == 2
+    assert updated == 1
+    assert no_updates == 1
+    assert failed == 1
+    assert cancelled == 1
     mock_callback.assert_not_called()
 
 

@@ -41,14 +41,16 @@ def test_setup(populate_vm_list, _mock_logging, __mock_logging, test_qapp):
 @pytest.mark.parametrize(
     "update_results, ret_code",
     (
-        pytest.param((0, 0, 0), 100, id="nothing to do"),
-        pytest.param((0, 0, 1), 1, id="failed"),
-        pytest.param((0, 1, 0), 100, id="no updates"),
-        pytest.param((0, 1, 1), 1, id="no updates + failed"),
-        pytest.param((1, 0, 0), 0, id="success"),
-        pytest.param((1, 0, 1), 1, id="success + failed"),
-        pytest.param((1, 1, 0), 0, id="success + no updated"),
-        pytest.param((1, 1, 1), 1, id="all"),
+        pytest.param((0, 0, 0, 0), 100, id="nothing to do"),
+        pytest.param((0, 0, 1, 0), 1, id="failed"),
+        pytest.param((0, 0, 0, 1), 130, id="cancelled"),
+        pytest.param((0, 0, 1, 1), 130, id="failed + cancelled"),
+        pytest.param((0, 1, 0, 0), 100, id="no updates"),
+        pytest.param((0, 1, 1, 0), 1, id="no updates + failed"),
+        pytest.param((1, 0, 0, 0), 0, id="success"),
+        pytest.param((1, 0, 1, 0), 1, id="success + failed"),
+        pytest.param((1, 1, 0, 0), 0, id="success + no updated"),
+        pytest.param((1, 1, 1, 1), 130, id="all"),
     )
 )
 def test_retcode(_populate_vm_list, _mock_logging, __mock_logging,
@@ -86,4 +88,6 @@ def test_retcode(_populate_vm_list, _mock_logging, __mock_logging,
     sut.summary_page.populate_restart_list.assert_called_once_with(
         restart=True, vm_updated=vms_to_update, settings=sut.settings)
     assert sut.retcode == ret_code
-    sut.summary_page.show.assert_called_once_with(*update_results)
+    expected_summary = (update_results[0], update_results[1],
+                        update_results[2] + update_results[3])
+    sut.summary_page.show.assert_called_once_with(*expected_summary)

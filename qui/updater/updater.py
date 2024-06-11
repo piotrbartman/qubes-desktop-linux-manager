@@ -219,15 +219,17 @@ class QubesUpdater(Gtk.Application):
                     vm_updated=self.progress_page.vms_to_update,
                     settings=self.settings
                 )
-            updated, no_updates, failed = (
+            updated, no_updates, failed, cancelled = (
                 self.progress_page.get_update_summary())
-            if failed:
-                self.retcode = 1
-            if updated == 0 and failed == 0:
+            if updated == 0:
                 # no updates
                 self.retcode = 100
+            if failed:
+                self.retcode = 1
+            if cancelled:
+                self.retcode = 130
             if failed or not self.cliargs.non_interactive:
-                self.summary_page.show(updated, no_updates, failed)
+                self.summary_page.show(updated, no_updates, failed + cancelled)
             else:
                 self._restart_phase()
                 if self.cliargs.non_interactive:

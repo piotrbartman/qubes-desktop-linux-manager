@@ -461,16 +461,19 @@ class ProgressPage:
         2. number of vms that tried to update but no update was found,
         3. vms that update was canceled before starting.
         """
-        vm_updated_num = len(
+        updated = len(
             [row for row in self.vms_to_update
              if row.status == UpdateStatus.Success])
-        vm_no_updates_num = len(
+        no_updates = len(
             [row for row in self.vms_to_update
              if row.status == UpdateStatus.NoUpdatesFound])
-        vm_failed_num = len(
+        failed = len(
             [row for row in self.vms_to_update
-             if row.status in (UpdateStatus.Error, UpdateStatus.Cancelled)])
-        return vm_updated_num, vm_no_updates_num, vm_failed_num
+             if row.status == UpdateStatus.Error])
+        cancelled = len(
+            [row for row in self.vms_to_update
+             if row.status == UpdateStatus.Cancelled])
+        return updated, no_updates, failed, cancelled
 
 
 class Ticker:

@@ -381,6 +381,7 @@ class ProgressPage:
         try:
             if status == "done":
                 update_status = UpdateStatus.from_name(info)
+                GLib.idle_add(rows[name].set_update_progress, 100)
                 GLib.idle_add(rows[name].set_status, update_status)
         except KeyError:
             return

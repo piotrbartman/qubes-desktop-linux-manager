@@ -237,7 +237,7 @@ class SummaryPage:
                     AppVMType.EXCLUDED in self.head_checkbox.allowed
             )
 
-    def restart_selected_vms(self):
+    def restart_selected_vms(self, show_only_error: bool):
         self.log.debug("Start restarting")
         self.restart_thread = threading.Thread(
             target=self.perform_restart
@@ -272,7 +272,7 @@ class SummaryPage:
             spinner.stop()
             dialog.destroy()
             self.log.debug("Hide restart dialog")
-        self._show_status_dialog()
+        self._show_status_dialog(show_only_error)
 
     def perform_restart(self):
 
@@ -298,10 +298,8 @@ class SummaryPage:
         self.restart_vms(to_restart)
         self.shutdown_domains(to_shutdown)
 
-        if not self.err:
+        if self.status is RestartStatus.NONE:
             self.status = RestartStatus.OK
-        else:
-            self.status = RestartStatus.ERROR
 
     def shutdown_domains(self, to_shutdown):
         """
@@ -317,6 +315,7 @@ class SummaryPage:
                 self.err += vm.name + " cannot shutdown: " + str(err) + '\n'
                 self.log.error("Cannot shutdown %s because %s",
                                vm.name, str(err))
+                self.status = RestartStatus.ERROR_TMPL_DOWN
 
         asyncio.run(wait_for_domain_shutdown(wait_for))
 
@@ -336,9 +335,10 @@ class SummaryPage:
             except qubesadmin.exc.QubesVMError as err:
                 self.err += vm.name + " cannot start: " + str(err) + '\n'
                 self.log.error("Cannot start %s because %s", vm.name, str(err))
+                self.status = RestartStatus.ERROR_APP_DOWN
 
-    def _show_status_dialog(self):
-        if self.status == RestartStatus.OK:
+    def _show_status_dialog(self, show_only_error: bool):
+        if self.status == RestartStatus.OK and not show_only_error:
             show_dialog_with_icon(
                 None,
                 l("Success"),
@@ -346,12 +346,13 @@ class SummaryPage:
                 buttons=RESPONSES_OK,
                 icon_name="qubes-check-yes"
             )
-        elif self.status == RestartStatus.ERROR:
+        elif self.status.is_error():
             show_error(None, "Failure",
                        l("During restarting following errors occurs: ")
                        + self.err
                        )
             self.log.error("Restart error: %s", self.err)
+            self.status = RestartStatus.ERROR_APP_START
 
 
 class RestartRowWrapper(RowWrapper):
@@ -421,10 +422,17 @@ class AppVMType:
 
 
 class RestartStatus(Enum):
-    ERROR = 0
-    OK = 1
-    NOTHING_TO_DO = 2
-    NONE = 3
+    OK = 0
+    NOTHING_TO_DO = 100
+    NONE = -1
+    ERROR_TMPL_DOWN = 11
+    ERROR_APP_DOWN = 12
+    ERROR_APP_START = 13
+
+    def is_error(self: 'RestartStatus') -> bool:
+        return self in [
+            RestartStatus.ERROR_TMPL_DOWN, RestartStatus.ERROR_APP_DOWN,
+            RestartStatus.ERROR_APP_START]
 
 
 class RestartHeaderCheckbox(HeaderCheckbox):

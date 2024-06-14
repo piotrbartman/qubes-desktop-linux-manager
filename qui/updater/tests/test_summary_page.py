@@ -212,7 +212,7 @@ def test_populate_restart_list(
     "alive_requests_max, status",
     (pytest.param(3, RestartStatus.OK),
      pytest.param(0, RestartStatus.OK),
-     pytest.param(1, RestartStatus.ERROR),
+     pytest.param(1, RestartStatus.ERROR_TMPL_DOWN),
      pytest.param(1, RestartStatus.NOTHING_TO_DO),
      ),
 )
@@ -259,7 +259,7 @@ def test_restart_selected_vms(
     sut.status = status
 
     # ACT
-    sut.restart_selected_vms()
+    sut.restart_selected_vms(show_only_error=False)
 
     # ASSERT
 
@@ -288,7 +288,7 @@ def test_restart_selected_vms(
             calls = [call(None, "Success",
                           "All qubes were restarted/shutdown successfully.",
                           RESPONSES_OK, icon)]
-        if status == RestartStatus.ERROR:
+        if status.is_error():
             calls = [call(None, "Failure",
                           "During restarting following errors occurs: " + sut.err,
                           RESPONSES_OK, icon)]

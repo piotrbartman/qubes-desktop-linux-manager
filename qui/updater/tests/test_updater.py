@@ -23,6 +23,8 @@ from unittest.mock import patch, call, Mock
 import pytest
 
 from qui.updater.updater import QubesUpdater, parse_args
+from qui.updater.summary_page import SummaryPage, RestartStatus
+from qubes_config.widgets import gtk_utils
 
 
 @patch('logging.FileHandler')
@@ -91,3 +93,58 @@ def test_retcode(_populate_vm_list, _mock_logging, __mock_logging,
     expected_summary = (update_results[0], update_results[1],
                         update_results[2] + update_results[3])
     sut.summary_page.show.assert_called_once_with(*expected_summary)
+
+
+@patch('threading.Thread')
+@patch('qui.updater.updater.show_dialog_with_icon')
+@patch('qui.updater.summary_page.show_dialog_with_icon')
+@patch('logging.FileHandler')
+@patch('logging.getLogger')
+@patch('qui.updater.intro_page.IntroPage.populate_vm_list')
+def test_dialog(_populate_vm_list, _mock_logging, __mock_logging,
+                dialog, dialog2, thread, test_qapp, monkeypatch):
+    monkeypatch.setattr(SummaryPage, "perform_restart", lambda *_: None)
+    sut = QubesUpdater(test_qapp, parse_args((), test_qapp))
+    sut.perform_setup()
+
+    sut.cliargs.non_interactive = True
+
+    sut.intro_page.get_vms_to_update = Mock()
+    vms_to_update = Mock()
+    sut.intro_page.get_vms_to_update.return_value = vms_to_update
+
+    def set_vms(_vms_to_update, _settings):
+        sut.progress_page.vms_to_update = _vms_to_update
+    sut.progress_page.init_update = Mock(side_effect=set_vms)
+
+    sut.next_clicked(None)
+
+    assert not sut.intro_page.active
+    assert sut.progress_page.is_visible
+    sut.progress_page.init_update.assert_called_once_with(
+        vms_to_update, sut.settings)
+
+    # set sut.summary_page.is_populated = False
+    sut.summary_page.list_store = None
+    def populate(**_kwargs):
+        sut.summary_page.list_store = []
+    sut.summary_page.populate_restart_list = Mock(side_effect=populate)
+    sut.progress_page.get_update_summary = Mock()
+    sut.progress_page.get_update_summary.return_value = (1, 0, 0, 0)
+    sut.summary_page.show = Mock()
+    sut.summary_page.show.return_value = None
+
+    def ok(**_kwargs):
+        sut.summary_page.status = RestartStatus.OK
+        t = Mock()
+        t.is_alive = Mock(return_value=False)
+        return t
+    thread.side_effect = ok
+
+    sut.summary_page.status = RestartStatus.OK
+    sut.next_clicked(None)
+
+    dialog2.assert_has_calls(calls=[call(
+        None, "Success", "Qubes OS is up to date.",
+        buttons=gtk_utils.RESPONSES_OK, icon_name="qubes-check-yes")])
+    dialog.assert_not_called()

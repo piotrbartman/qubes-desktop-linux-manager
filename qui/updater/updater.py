@@ -70,7 +70,7 @@ class QubesUpdater(Gtk.Application):
         else:
             self.log.debug("Secondary activation")
             if self.do_nothing:
-                self._show_final_dialog()
+                self._show_success_dialog()
                 self.window_close()
             else:
                 self.main_window.present()
@@ -228,27 +228,31 @@ class QubesUpdater(Gtk.Application):
                 self.retcode = 1
             if cancelled:
                 self.retcode = 130
-            if failed or not self.cliargs.non_interactive:
+            if failed or cancelled or not self.cliargs.non_interactive:
                 self.summary_page.show(updated, no_updates, failed + cancelled)
             else:
-                self._restart_phase()
-                if self.cliargs.non_interactive:
-                    self._show_final_dialog()
+                # at this point retcode is in (0, 100)
+                self._restart_phase(
+                    show_only_error=self.cliargs.non_interactive)
+                # at thi point retcode is in (0, 100)
+                # or an error message have been already shown
+                if self.cliargs.non_interactive and self.retcode in (0, 100):
+                    self._show_success_dialog()
         elif self.summary_page.is_visible:
             self._restart_phase()
 
-    def _restart_phase(self):
+    def _restart_phase(self, show_only_error: bool = True):
         self.main_window.hide()
         self.log.debug("Hide main window")
         # ensuring that main_window will be hidden
         while Gtk.events_pending():
             Gtk.main_iteration()
-        self.summary_page.restart_selected_vms()
-        if self.summary_page.status == RestartStatus.ERROR:
-            self.retcode = 2
+        self.summary_page.restart_selected_vms(show_only_error)
+        if self.summary_page.status.is_error():
+            self.retcode = self.summary_page.status.value
         self.exit_updater()
 
-    def _show_final_dialog(self):
+    def _show_success_dialog(self):
         """
         We should show the user a success confirmation.
 

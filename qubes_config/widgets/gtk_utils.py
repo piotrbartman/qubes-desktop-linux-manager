@@ -205,10 +205,12 @@ def load_theme(widget: Gtk.Widget, light_theme_path: Optional[str] = None,
     :param dark_file_name: name of the css file with dark theme
     """
     if not light_theme_path and light_file_name:
+        assert package_name
         css_path = importlib.resources.files(package_name) / light_file_name
         with importlib.resources.as_file(css_path) as resource_path:
             light_theme_path = str(resource_path)
     if not dark_theme_path and dark_file_name:
+        assert package_name
         css_path = importlib.resources.files(package_name) / dark_file_name
         with importlib.resources.as_file(css_path) as resource_path:
             dark_theme_path = str(resource_path)

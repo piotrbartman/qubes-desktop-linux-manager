@@ -639,8 +639,8 @@ class DevicesHandler(PageHandler):
 
         for vm in self.qapp.domains:
             for assignment in vm.devices['pci'].get_attached_devices():
-                if any(infc.category for infc in assignment.device.interfaces
-                       ) == DeviceCategory.PCI_USB:
+                cats = [infc.category for infc in assignment.device.interfaces]
+                if DeviceCategory.PCI_USB in cats:
                     usb_qubes.add(vm)
 
         self.input_handler = InputDeviceHandler(

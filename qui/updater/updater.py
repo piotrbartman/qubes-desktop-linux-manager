@@ -13,7 +13,7 @@ from qubes_config.widgets.gtk_utils import load_icon_at_gtk_size, load_theme, \
     show_dialog_with_icon, RESPONSES_OK
 from qui.updater.progress_page import ProgressPage
 from qui.updater.updater_settings import Settings, OverriddenSettings
-from qui.updater.summary_page import SummaryPage, RestartStatus
+from qui.updater.summary_page import SummaryPage
 from qui.updater.intro_page import IntroPage
 
 gi.require_version('Gtk', '3.0')  # isort:skip

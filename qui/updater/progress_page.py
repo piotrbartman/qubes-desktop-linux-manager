@@ -330,6 +330,7 @@ class ProgressPage:
             ['qubes-vm-update',
              '--show-output',
              '--just-print-progress',
+             '--force-update',
              *args,
              '--targets', targets],
             stderr=subprocess.PIPE, stdout=subprocess.PIPE)

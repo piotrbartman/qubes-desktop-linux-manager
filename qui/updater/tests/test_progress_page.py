@@ -233,6 +233,7 @@ def test_do_update_templates(
         ['qubes-vm-update',
          '--show-output',
          '--just-print-progress',
+         '--force-update',
          '--targets',
          'fedora-35,fedora-36,test-standalone'],
         stderr=subprocess.PIPE, stdout=subprocess.PIPE)]

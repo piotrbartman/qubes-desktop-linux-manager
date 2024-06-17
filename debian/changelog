@@ -1,3 +1,19 @@
+qubes-desktop-linux-manager (4.3.0-1) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * ci: install pip
+  * load_theme needs package_name for loading by name
+
+  [ Piotr Bartman ]
+  * q-dev: implement new device api
+  * q-dev: fix global config
+  * q-dev: update api
+
+  [ Piotr Bartman-Szwarc ]
+  * q-dev: update tests + fix
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Mon, 17 Jun 2024 15:45:33 +0200
+
 qubes-desktop-linux-manager (4.2.23-1) unstable; urgency=medium
 
   [ Marta Marczykowska-Górecka ]

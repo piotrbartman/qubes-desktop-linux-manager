@@ -307,6 +307,10 @@ def test_qapp_impl():
     add_feature_to_all(qapp, 'service.qubes-u2f-proxy',
                                      ['test-vm'])
 
+    for vm in qapp.domains:
+        qapp.expected_calls[
+            (vm.name, 'admin.vm.device.pci.Attached', None, None)] = b'0\x00'
+
     return qapp
 
 
@@ -380,6 +384,10 @@ def test_qapp_simple(): # pylint: disable=redefined-outer-name
                     {"netvm": ("vm", False, '')},
                     {'service.qubes-update-check': None}, [])
 
+    for vm in qapp.domains:
+        qapp.expected_calls[
+            (vm.name, 'admin.vm.device.pci.Attached', None, None)] = b'0\x00'
+
     return qapp
 
 
@@ -421,6 +429,12 @@ def test_qapp_broken():  # pylint: disable=redefined-outer-name
                          'gui-default-secure-copy-sequence': None,
                          'gui-default-secure-paste-sequence': None
                          }, [])
+
+    #
+    for vm in qapp.domains:
+        qapp.expected_calls[
+            (vm.name, 'admin.vm.device.pci.Attached', None, None)] = b'0\x00'
+
     return qapp
 
 

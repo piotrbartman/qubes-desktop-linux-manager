@@ -24,6 +24,7 @@ from functools import partial
 from typing import List, Union, Optional, Dict, Tuple, Set
 
 from qrexec.policy.parser import Allow
+from qubesadmin.device_protocol import DeviceCategory
 
 from ..widgets.gtk_widgets import TokenName, TextModeler, VMListModeler
 from ..widgets.utils import get_feature, apply_feature_change
@@ -628,7 +629,7 @@ class DevicesHandler(PageHandler):
                  qapp: qubesadmin.Qubes,
                  policy_manager: PolicyManager,
                  gtk_builder: Gtk.Builder
- ):
+                 ):
         self.qapp = qapp
         self.policy_manager = policy_manager
 
@@ -637,8 +638,9 @@ class DevicesHandler(PageHandler):
         usb_qubes: Set[qubesadmin.vm.QubesVM] = set()
 
         for vm in self.qapp.domains:
-            for device in vm.devices['pci'].attached():
-                if device.description.startswith('USB controller'):
+            for assignment in vm.devices['pci'].get_attached_devices():
+                cats = [infc.category for infc in assignment.device.interfaces]
+                if DeviceCategory.PCI_USB in cats:
                     usb_qubes.add(vm)
 
         self.input_handler = InputDeviceHandler(

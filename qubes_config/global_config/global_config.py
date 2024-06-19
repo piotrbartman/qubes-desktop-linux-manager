@@ -469,6 +469,11 @@ class GlobalConfig(Gtk.Application):
             page.reset()
 
     def _quit(self, _widget=None):
+        # Hide the main Window
+        self.main_window.hide()
+        while Gtk.events_pending():
+            Gtk.main_iteration()
+        # Then wait for disposable helper threads to finish
         self.quit()
 
     def _ok(self, widget):
@@ -479,6 +484,9 @@ class GlobalConfig(Gtk.Application):
         can_quit = self.verify_changes()
         if not can_quit:
             return True
+        self.main_window.hide()
+        while Gtk.events_pending():
+            Gtk.main_iteration()
         self.quit()
         return False
 

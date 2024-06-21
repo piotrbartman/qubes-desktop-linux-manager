@@ -39,6 +39,78 @@ def test_setup(populate_vm_list, _mock_logging, __mock_logging, test_qapp):
 
 @patch('logging.FileHandler')
 @patch('logging.getLogger')
+@patch('subprocess.check_output')
+@patch('qui.updater.intro_page.IntroPage.select_rows_ignoring_conditions')
+@patch('qui.updater.intro_page.IntroPage.get_vms_to_update')
+def test_setup_non_interactive_nothing_to_do(
+        get_vms, select, subproc, _mock_logging, __mock_logging, test_qapp):
+    sut = QubesUpdater(test_qapp, parse_args(('-n',), test_qapp))
+    subproc.return_value = b''
+    get_vms.return_value = ()
+    sut.perform_setup()
+    select.assert_called_once()
+    get_vms.assert_called_once()
+
+
+@patch('logging.FileHandler')
+@patch('logging.getLogger')
+@patch('qui.updater.intro_page.IntroPage.populate_vm_list')
+@patch('qui.updater.intro_page.IntroPage.select_rows')
+def test_setup_update_if_available(
+        select, populate_vm_list, _mock_logging, __mock_logging, test_qapp):
+    sut = QubesUpdater(
+        test_qapp, parse_args(('--update-if-available',), test_qapp))
+    sut.perform_setup()
+    calls = [call(sut.qapp, sut.settings)]
+    populate_vm_list.assert_has_calls(calls)
+    select.assert_called_once()
+    assert (sut.intro_page.head_checkbox.state ==
+            sut.intro_page.head_checkbox.SAFE)
+
+
+@patch('logging.FileHandler')
+@patch('logging.getLogger')
+@patch('qui.updater.intro_page.IntroPage.populate_vm_list')
+@patch('qui.updater.intro_page.IntroPage.select_rows')
+def test_setup_force_update(
+        select, populate_vm_list, _mock_logging, __mock_logging, test_qapp):
+    sut = QubesUpdater(
+        test_qapp, parse_args(('--force-update',), test_qapp))
+    sut.perform_setup()
+    calls = [call(sut.qapp, sut.settings)]
+    populate_vm_list.assert_has_calls(calls)
+    select.assert_called_once()
+    assert (sut.intro_page.head_checkbox.state ==
+            sut.intro_page.head_checkbox.ALL)
+
+
+@patch('logging.FileHandler')
+@patch('logging.getLogger')
+@patch('qui.updater.intro_page.IntroPage.populate_vm_list')
+@patch('qui.updater.intro_page.IntroPage.select_rows')
+@patch('qui.updater.updater_settings.get_boolean_feature')
+@pytest.mark.parametrize(
+    "args, sys, non_sys",
+    (
+        pytest.param(('--apply-to-all',), True, True, id="all"),
+        pytest.param(('--apply-to-sys',), True, None, id="sys"),
+        pytest.param(('--no-apply',), False, False, id="none"),
+    )
+)
+def test_setup_apply(
+        get_feature, __select, populate_vm_list, _mock_logging, __mock_logging, test_qapp, args, sys, non_sys):
+    sut = QubesUpdater(
+        test_qapp, parse_args(args, test_qapp))
+    sut.perform_setup()
+    calls = [call(sut.qapp, sut.settings)]
+    populate_vm_list.assert_has_calls(calls)
+    assert sut.settings.restart_service_vms == sys
+    assert (non_sys is not None and sut.settings.restart_other_vms == non_sys
+            or sut.settings.overrides.apply_to_other is None)
+
+
+@patch('logging.FileHandler')
+@patch('logging.getLogger')
 @patch('qui.updater.intro_page.IntroPage.populate_vm_list')
 @pytest.mark.parametrize(
     "update_results, ret_code",

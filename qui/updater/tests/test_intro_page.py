@@ -24,7 +24,7 @@ import pytest
 from unittest.mock import patch
 from unittest.mock import Mock
 
-from qubes_config.tests.conftest import test_qapp_impl
+from qui.updater.tests.conftest import test_qapp_impl
 from qui.updater.intro_page import IntroPage, UpdateRowWrapper, UpdatesAvailable
 from qui.updater.updater import parse_args
 from qui.updater.utils import ListWrapper, HeaderCheckbox
@@ -159,11 +159,10 @@ def test_on_checkbox_toggled(
     assert not sut.checkbox_column_button.get_active()
 
 
-_domains = {vm.name for vm in test_qapp_impl().domains}
-_templates = {vm.name for vm in test_qapp_impl().domains
-              if vm.klass == "TemplateVM"}
-_standalones = {vm.name for vm in test_qapp_impl().domains
-                if vm.klass == "StandaloneVM"}
+doms = test_qapp_impl().domains
+_domains = {vm.name for vm in doms}
+_templates = {vm.name for vm in doms if vm.klass == "TemplateVM"}
+_standalones = {vm.name for vm in doms if vm.klass == "StandaloneVM"}
 _tmpls_and_stndas = _templates.union(_standalones)
 _non_derived_qubes = {"dom0"}.union(_tmpls_and_stndas)
 _derived_qubes = _domains.difference(_non_derived_qubes)
@@ -193,7 +192,12 @@ _derived_qubes = _domains.difference(_non_derived_qubes)
             ('--non-interactive', '--update-if-stale', '10'),
             b'fedora-36', b'', {'fedora-36', 'dom0'},
             ('--update-if-stale', '10'),
-            id="if-stale"),
+            id="if-stale with dom0"),
+        pytest.param(
+            ('--non-interactive', '--update-if-stale', '10'),
+            b'fedora-36', b'', {'fedora-36'},
+            ('--update-if-stale', '10'),
+            id="if-stale without dom0"),
         # `qubes-update-gui --targets dom0,fedora-36`
         # Comma separated list of VMs to target
         pytest.param(
@@ -267,6 +271,12 @@ def test_select_rows_ignoring_conditions(
             result += b'\n'
         result += b'Following qubes will be updated: ' + derived_qubes
     mock_subprocess.return_value = result
+
+    if (expected_args == ('--update-if-stale', '10')
+            and expected_selection == {'fedora-36'}):
+        test_qapp.expected_calls[
+            ('dom0', 'admin.vm.feature.Get', 'last-updates-check', None)] = \
+            b'0\x00' + b'3020-01-01 00:00:00'
 
     cliargs = parse_args(args, test_qapp)
     sut.select_rows_ignoring_conditions(cliargs, test_qapp.domains['dom0'])

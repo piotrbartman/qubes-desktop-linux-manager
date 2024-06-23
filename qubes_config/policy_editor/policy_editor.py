@@ -193,6 +193,7 @@ class PolicyEditor(Gtk.Application):
         self.header_buffer.set_text(HEADER_NORMAL)
         self.header_view.set_show_line_numbers(True)
         self.header_view.set_monospace(True)
+        self.header_view.set_editable(False)
 
         self.source_viewport: Gtk.Viewport = \
             self.builder.get_object('source_viewport')

@@ -147,6 +147,8 @@ class UpdatesTray(Gtk.Application):
                                     self.feature_unset)
         self.dispatcher.add_handler('domain-add', self.domain_added)
         self.dispatcher.add_handler('domain-delete', self.domain_removed)
+        self.dispatcher.add_handler('domain-feature-set:os-eol',
+                                    self.feature_set)
 
     def domain_added(self, _submitter, _event, vm, *_args, **_kwargs):
         try:
@@ -177,16 +179,26 @@ class UpdatesTray(Gtk.Application):
 
     def feature_set(self, vm, event, feature, value, **_kwargs):
         # pylint: disable=unused-argument
-        if value and vm not in self.vms_needing_update and\
-                getattr(vm, 'updateable', False):
-            self.vms_needing_update.add(vm)
+        if feature == 'updates-available':
+            if value and vm not in self.vms_needing_update and\
+                    getattr(vm, 'updateable', False):
+                self.vms_needing_update.add(vm)
 
-            notification = Gio.Notification.new(
-                _("New updates are available for {}.").format(vm.name))
-            notification.set_priority(Gio.NotificationPriority.NORMAL)
-            self.send_notification(None, notification)
-        elif not value and vm in self.vms_needing_update:
-            self.vms_needing_update.remove(vm)
+                notification = Gio.Notification.new(
+                    _("New updates are available for {}.").format(vm.name))
+                notification.set_priority(Gio.NotificationPriority.NORMAL)
+                self.send_notification(None, notification)
+            elif not value and vm in self.vms_needing_update:
+                self.vms_needing_update.remove(vm)
+        elif feature == 'os-eol':
+            try:
+                supported = qui.utils.check_support(vm)
+            except exc.QubesDaemonCommunicationError:
+                supported = True
+            if supported and vm.name in self.obsolete_vms:
+                self.obsolete_vms.remove(vm.name)
+            elif not supported and vm.name not in self.obsolete_vms:
+                self.obsolete_vms.add(vm.name)
 
         self.update_indicator_state()
 

@@ -345,6 +345,10 @@ def parse_args(args, app):
                         help='Maximum number of VMs configured simultaneously '
                              '(default: number of cpus)',
                         type=int)
+    parser.add_argument(
+        '--signal-no-updates', action='store_true',
+        help='Return exit code 100 instread of 0 '
+             'if there is no updates available.')
 
     restart = parser.add_mutually_exclusive_group()
     restart.add_argument(
@@ -431,6 +435,8 @@ def main(args=None):
     cliargs = parse_args(args, qapp)
     app = QubesUpdater(qapp, cliargs)
     app.run()
+    if app.retcode == 100 and not app.cliargs.signal_no_updates:
+        app.retcode = 0
     sys.exit(app.retcode)
 
 

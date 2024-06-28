@@ -43,8 +43,10 @@ def test_init_update(
 
     mock_threading.return_value = mock_thread
     mock_log = Mock()
+    mock_callback = Mock()
     sut = ProgressPage(
-        real_builder, mock_log, mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_log, mock_label, mock_next_button,
+        mock_cancel_button, mock_callback
     )
 
     sut.progress_list = mock_tree_view
@@ -61,6 +63,7 @@ def test_init_update(
     assert mock_label.halign == Gtk.Align.CENTER
 
     assert sut.progress_list.model == all_vms_list.list_store_raw
+    mock_callback.assert_not_called()
 
 
 @patch('gi.repository.GLib.idle_add')
@@ -69,8 +72,10 @@ def test_perform_update(
         mock_next_button, mock_cancel_button, mock_label, updatable_vms_list
 ):
     mock_log = Mock()
+    mock_callback = Mock()
     sut = ProgressPage(
-        real_builder, mock_log, mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_log, mock_label, mock_next_button,
+        mock_cancel_button, mock_callback
     )
 
     sut.vms_to_update = updatable_vms_list
@@ -91,6 +96,7 @@ def test_perform_update(
              call(mock_label.set_text, "Update finished"),
              call(mock_cancel_button.set_visible, False)]
     idle_add.assert_has_calls(calls, any_order=True)
+    mock_callback.assert_called_once()
 
 
 @patch('gi.repository.GLib.idle_add')
@@ -108,8 +114,10 @@ def test_update_admin_vm(
         mock_list_store
 ):
     mock_log = Mock()
+    mock_callback = Mock()
     sut = ProgressPage(
-        real_builder, mock_log, mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_log, mock_label, mock_next_button,
+        mock_cancel_button, mock_callback
     )
 
     admins = ListWrapper(UpdateRowWrapper, mock_list_store)
@@ -130,6 +138,7 @@ def test_update_admin_vm(
     idle_add.assert_has_calls(calls)
     if not interrupted:
         mock_subprocess.assert_called()
+    mock_callback.assert_not_called()
 
 
 @patch('gi.repository.GLib.idle_add')
@@ -145,8 +154,10 @@ def test_update_templates(
         mock_next_button, mock_cancel_button, mock_label, mock_text_view
 ):
     mock_log = Mock()
+    mock_callback = Mock()
     sut = ProgressPage(
-        real_builder, mock_log, mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_log, mock_label, mock_next_button,
+        mock_cancel_button, mock_callback
     )
 
     sut.do_update_templates = Mock()
@@ -172,6 +183,7 @@ def test_update_templates(
     idle_add.assert_has_calls(calls, any_order=True)
     if not interrupted:
         sut.do_update_templates.assert_called()
+    mock_callback.assert_not_called()
 
 
 @patch('subprocess.Popen')
@@ -200,8 +212,10 @@ def test_do_update_templates(
     mock_subprocess.return_value = MockPorc()
 
     mock_log = Mock()
+    mock_callback = Mock()
     sut = ProgressPage(
-        real_builder, mock_log, mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_log, mock_label, mock_next_button,
+        mock_cancel_button, mock_callback
     )
     sut.read_stderrs = lambda *_args, **_kwargs: None
     sut.read_stdouts = lambda *_args, **_kwargs: None
@@ -219,10 +233,12 @@ def test_do_update_templates(
         ['qubes-vm-update',
          '--show-output',
          '--just-print-progress',
+         '--force-update',
          '--targets',
          'fedora-35,fedora-36,test-standalone'],
         stderr=subprocess.PIPE, stdout=subprocess.PIPE)]
     mock_subprocess.assert_has_calls(calls)
+    mock_callback.assert_not_called()
 
 
 def test_get_update_summary(
@@ -230,8 +246,10 @@ def test_get_update_summary(
         mock_next_button, mock_cancel_button, mock_label, updatable_vms_list
 ):
     mock_log = Mock()
+    mock_callback = Mock()
     sut = ProgressPage(
-        real_builder, mock_log, mock_label, mock_next_button, mock_cancel_button
+        real_builder, mock_log, mock_label, mock_next_button,
+        mock_cancel_button, mock_callback
     )
 
     updatable_vms_list[0].set_status(UpdateStatus.NoUpdatesFound)
@@ -241,11 +259,13 @@ def test_get_update_summary(
 
     sut.vms_to_update = updatable_vms_list
 
-    vm_updated_num, vm_no_updates_num, vm_failed_num = sut.get_update_summary()
+    updated, no_updates, failed, cancelled = sut.get_update_summary()
 
-    assert vm_updated_num == 1
-    assert vm_no_updates_num == 1
-    assert vm_failed_num == 2
+    assert updated == 1
+    assert no_updates == 1
+    assert failed == 1
+    assert cancelled == 1
+    mock_callback.assert_not_called()
 
 
 def test_set_active_row(real_builder, updatable_vms_list):

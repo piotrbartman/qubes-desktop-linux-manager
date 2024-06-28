@@ -113,7 +113,7 @@ class IntroPage:
         if not self.active:
             return
 
-        cmd = ['qubes-vm-update', '--dry-run',
+        cmd = ['qubes-vm-update', '--quiet', '--dry-run',
                '--update-if-stale', str(update_if_stale)]
 
         to_update = self._get_stale_qubes(cmd)
@@ -175,12 +175,14 @@ class IntroPage:
                            in self.head_checkbox.allowed
 
     def select_rows_ignoring_conditions(self, cliargs, dom0):
-        cmd = ['qubes-vm-update', '--dry-run']
+        cmd = ['qubes-vm-update', '--dry-run', '--quiet']
 
         args = [a for a in dir(cliargs) if not a.startswith("_")]
         for arg in args:
-            if arg in ("dom0", "no-restart", "restart", "max_concurrency",
-                       "log"):
+            if arg in ("non_interactive", "non_default_select",
+                       "dom0",
+                       "restart", "apply_to_sys", "apply_to_all", "no_apply",
+                       "max_concurrency", "log"):
                 continue
             value = getattr(cliargs, arg)
             if value:
@@ -189,13 +191,16 @@ class IntroPage:
                     vms_without_dom0 = vms.difference({"dom0"})
                     if not vms_without_dom0:
                         continue
-                    value = ",".join(vms_without_dom0)
+                    value = ",".join(sorted(vms_without_dom0))
                 cmd.append(f"--{arg.replace('_', '-')}")
-                if isinstance(value, str):
-                    cmd.append(value)
+                if not isinstance(value, bool):
+                    cmd.append(str(value))
 
         to_update = set()
-        if cmd[2:]:
+        non_default_select = [
+            '--' + arg for arg in cliargs.non_default_select if arg != 'dom0']
+        non_default = [a for a in cmd if a in non_default_select]
+        if non_default or cliargs.non_interactive:
             to_update = self._get_stale_qubes(cmd)
 
         to_update = self._handle_cli_dom0(dom0, to_update, cliargs)
@@ -224,17 +229,39 @@ class IntroPage:
 
     @staticmethod
     def _handle_cli_dom0(dom0, to_update, cliargs):
-        if not cliargs.targets and not cliargs.all:
-            if bool(dom0.features.get(
-                    'updates-available', False)):
-                to_update.add('dom0')
-        if cliargs.dom0 or cliargs.all:
-            to_update.add("dom0")
+        default_select = not any(
+            (getattr(cliargs, arg)
+             for arg in cliargs.non_default_select if arg != 'all'))
+        if ((
+            default_select and cliargs.non_interactive
+            or cliargs.all
+            or cliargs.dom0
+        ) and (
+            cliargs.force_update
+            or bool(dom0.features.get('updates-available', False))
+            or is_stale(dom0, cliargs.update_if_stale)
+        )):
+            to_update.add('dom0')
+
         if cliargs.targets and "dom0" in cliargs.targets.split(","):
             to_update.add("dom0")
         if cliargs.skip and "dom0" in cliargs.skip.split(","):
             to_update = to_update.difference({"dom0"})
         return to_update
+
+
+def is_stale(vm, expiration_period):
+    if expiration_period is None:
+        return False
+    today = datetime.today()
+    last_update_str = vm.features.get(
+        'last-updates-check',
+        datetime.fromtimestamp(0).strftime('%Y-%m-%d %H:%M:%S')
+    )
+    last_update = datetime.fromisoformat(last_update_str)
+    if (today - last_update).days > expiration_period:
+        return True
+    return False
 
 
 class UpdateRowWrapper(RowWrapper):

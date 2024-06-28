@@ -44,7 +44,8 @@ class ProgressPage:
             log,
             header_label,
             next_button,
-            cancel_button
+            cancel_button,
+            callback
     ):
         self.builder = builder
         self.log = log
@@ -54,6 +55,7 @@ class ProgressPage:
         self.vms_to_update = None
         self.exit_triggered = False
         self.update_thread = None
+        self.after_update_callback = callback
 
         self.update_details = QubeUpdateDetails(self.builder)
 
@@ -127,9 +129,10 @@ class ProgressPage:
         if templs:
             self.update_templates(templs, settings)
 
-        GLib.idle_add(self.next_button.set_sensitive, True)
         GLib.idle_add(self.header_label.set_text, l("Update finished"))
         GLib.idle_add(self.cancel_button.set_visible, False)
+        GLib.idle_add(self.next_button.set_sensitive, True)
+        self.after_update_callback()
 
     def update_admin_vm(self, admins):
         """Runs command to update dom0."""
@@ -327,6 +330,7 @@ class ProgressPage:
             ['qubes-vm-update',
              '--show-output',
              '--just-print-progress',
+             '--force-update',
              *args,
              '--targets', targets],
             stderr=subprocess.PIPE, stdout=subprocess.PIPE)
@@ -378,6 +382,7 @@ class ProgressPage:
         try:
             if status == "done":
                 update_status = UpdateStatus.from_name(info)
+                GLib.idle_add(rows[name].set_update_progress, 100)
                 GLib.idle_add(rows[name].set_status, update_status)
         except KeyError:
             return
@@ -458,16 +463,19 @@ class ProgressPage:
         2. number of vms that tried to update but no update was found,
         3. vms that update was canceled before starting.
         """
-        vm_updated_num = len(
+        updated = len(
             [row for row in self.vms_to_update
              if row.status == UpdateStatus.Success])
-        vm_no_updates_num = len(
+        no_updates = len(
             [row for row in self.vms_to_update
              if row.status == UpdateStatus.NoUpdatesFound])
-        vm_failed_num = len(
+        failed = len(
             [row for row in self.vms_to_update
-             if row.status in (UpdateStatus.Error, UpdateStatus.Cancelled)])
-        return vm_updated_num, vm_no_updates_num, vm_failed_num
+             if row.status == UpdateStatus.Error])
+        cancelled = len(
+            [row for row in self.vms_to_update
+             if row.status == UpdateStatus.Cancelled])
+        return updated, no_updates, failed, cancelled
 
 
 class Ticker:

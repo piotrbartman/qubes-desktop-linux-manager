@@ -548,3 +548,12 @@ msgstr ""
 
 msgid "failed to update."
 msgstr ""
+
+msgid "Qubes OS is up to date."
+msgstr ""
+
+msgid "All selected qubes have been updated."
+msgstr ""
+
+msgid "There are no updates available for the selected Qubes."
+msgstr ""

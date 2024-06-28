@@ -37,9 +37,11 @@ GObject.signal_new('child-removed',
                    GObject.SignalFlags.RUN_LAST, GObject.TYPE_PYOBJECT,
                    (GObject.TYPE_PYOBJECT,))
 
+
 @dataclasses.dataclass(frozen=True)
-class OverridenSettings:
-    restart: Optional[bool] = None
+class OverriddenSettings:
+    apply_to_sys: Optional[bool] = None
+    apply_to_other: Optional[bool] = None
     max_concurrency: Optional[int] = None
     update_if_stale: Optional[int] = None
 
@@ -58,7 +60,7 @@ class Settings:
             qapp,
             log,
             refresh_callback: Callable,
-            overrides: OverridenSettings = OverridenSettings(),
+            overrides: OverriddenSettings = OverriddenSettings(),
     ):
         self.qapp = qapp
         self.log = log
@@ -70,7 +72,7 @@ class Settings:
         self.builder.set_translation_domain("desktop-linux-manager")
 
         glade_ref = (importlib.resources.files('qui') /
-                      'updater_settings.glade')
+                     'updater_settings.glade')
         with importlib.resources.as_file(glade_ref) as path:
             self.builder.add_from_file(str(path))
 
@@ -148,8 +150,8 @@ class Settings:
     @property
     def restart_service_vms(self) -> bool:
         """Return the current (set by this window or manually) option value."""
-        if self.overrides.restart is not None:
-            return self.overrides.restart
+        if self.overrides.apply_to_sys is not None:
+            return self.overrides.apply_to_sys
 
         result = get_boolean_feature(
             self.vm, "qubes-vm-update-restart-servicevms",
@@ -168,8 +170,8 @@ class Settings:
     @property
     def restart_other_vms(self) -> bool:
         """Return the current (set by this window or manually) option value."""
-        if self.overrides.restart is not None:
-            return self.overrides.restart
+        if self.overrides.apply_to_other is not None:
+            return self.overrides.apply_to_other
         return get_boolean_feature(
             self.vm, "qubes-vm-update-restart-other",
             Settings.DEFAULT_RESTART_OTHER_VMS)
@@ -193,11 +195,12 @@ class Settings:
         self._init_restart_servicevms = self.restart_service_vms
         self._init_restart_other_vms = self.restart_other_vms
         self.restart_servicevms_checkbox.set_sensitive(
-            not self.overrides.restart)
+            not self.overrides.apply_to_sys)
         self.restart_servicevms_checkbox.set_active(
             self._init_restart_servicevms)
         self.restart_other_checkbox.set_active(self._init_restart_other_vms)
-        self.restart_other_checkbox.set_sensitive(not self.overrides.restart)
+        self.restart_other_checkbox.set_sensitive(
+            not self.overrides.apply_to_other)
 
         self._init_max_concurrency = self.max_concurrency
         self._init_limit_concurrency = self._init_max_concurrency is not None
@@ -221,7 +224,7 @@ class Settings:
         )
 
     def show(self):
-        """Show hidden window."""
+        """Show a hidden window."""
         self.load_settings()
         self.settings_window.show_all()
         self._show_restart_exceptions()

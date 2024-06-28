@@ -40,6 +40,10 @@ from gi.repository import Gtk
 
 @pytest.fixture
 def test_qapp():
+    return test_qapp_impl()
+
+
+def test_qapp_impl():
     """Test QubesApp"""
     qapp = QubesTest()
     qapp._local_name = 'dom0'  # pylint: disable=protected-access

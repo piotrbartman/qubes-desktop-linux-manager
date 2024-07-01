@@ -170,6 +170,9 @@ class UpdatesTray(Gtk.Application):
         if vm in self.vms_needing_update:
             self.vms_needing_update.remove(vm)
             self.update_indicator_state()
+        if vm.name in self.obsolete_vms:
+            self.obsolete_vms.remove(vm.name)
+            self.update_indicator_state()
 
     def feature_unset(self, vm, event, feature, **_kwargs):
         # pylint: disable=unused-argument

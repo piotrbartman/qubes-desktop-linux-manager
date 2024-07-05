@@ -1,3 +1,10 @@
+qubes-desktop-linux-manager (4.3.2-1) unstable; urgency=medium
+
+  [ Piotr Bartman-Szwarc ]
+  * updater: unify retcodes with backend updater
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 05 Jul 2024 19:41:26 +0200
+
 qubes-desktop-linux-manager (4.3.1-1) unstable; urgency=medium
 
   [ Ali Mirjamali ]

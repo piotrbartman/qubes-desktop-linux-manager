@@ -1,3 +1,39 @@
+qubes-desktop-linux-manager (4.3.1-1) unstable; urgency=medium
+
+  [ Ali Mirjamali ]
+  * Global Config app not closing if Help Window is Open
+  * Tray Update Notifier fix for os-eol feature change
+  * Uneditable column headers in policy editor
+  * Monospace font for Qubes Update GUI progress details
+
+  [ Piotr Bartman-Szwarc ]
+  * updater: non-interactive updater
+  * updater: unify cli options with cli updater
+  * updater: return 100 if no vm was updated
+  * updater: update tests
+  * updater: show success dialog in non-interactive mode
+  * updater: show success dialog if nothing to do
+  * updater: fix selection if the intro page is skipped
+  * updater: unify cli args with backend updater
+  * updater: get default value of '--update-if-stale' from dom0 settings
+  * updater: return 130 if user cancels updating
+  * updater: make test reproducible
+  * updater: set progress as 100 if update fails or was cancelled
+  * updater: apply the same selection criteria to dom0
+  * updater: make pylint happy
+  * updater: updaate dom0 tests
+  * updater: show only one confirmation to the user
+  * updater: fix force updating
+  * updater: make pylint happy
+  * updater: test is_stale(dom0)
+  * updater: test apply and update flags
+  * updater: add --signal-no-updates flag
+
+  [ Ali Mirjamali ]
+  * Remove VM from obsolete_vms list if template is deleted
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Fri, 05 Jul 2024 17:37:25 +0200
+
 qubes-desktop-linux-manager (4.3.0-1) unstable; urgency=medium
 
   [ Marek Marczykowski-Górecki ]

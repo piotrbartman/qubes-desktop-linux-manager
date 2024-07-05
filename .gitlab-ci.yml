@@ -25,9 +25,12 @@ checks:tests:
 
 checks:pylint:
   before_script:
-  - sudo dnf install -y python3-gobject gtk3 xorg-x11-server-Xvfb python3-mypy gtksourceview4 python3-pip
+  - sudo dnf install -y python3-gobject gtk3 xorg-x11-server-Xvfb python3-mypy gtksourceview4 python3-pip curl
   - pip3 install --quiet -r ci/requirements.txt
   - mypy --install-types --non-interactive
+  # remove when https://github.com/pylint-dev/astroid/issues/2190 is fixed
+  - file_to_patch=$(python3 -c 'import astroid.builder;print(astroid.builder.__file__)') &&
+    curl -sSL https://github.com/QubesOS/qubes-continuous-integration/raw/main/scripts/pylint-astroid-workaround-2190.patch | sudo patch "$file_to_patch"
   - git clone https://github.com/QubesOS/qubes-core-admin-client ~/core-admin-client
   - git clone https://github.com/QubesOS/qubes-core-qrexec ~/core-qrexec
   script:

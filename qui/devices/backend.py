@@ -100,6 +100,8 @@ class Device:
         self._dev: qubesadmin.devices.DeviceInfo = dev
         self.__hash = hash(dev)
         self._port: str = ''
+        # Monotonic connection timestamp only for new devices
+        self.connection_timestamp: None
 
         self._dev_name: str = getattr(dev, 'description', 'unknown')
         if dev.devclass == 'block' and 'size' in dev.data:

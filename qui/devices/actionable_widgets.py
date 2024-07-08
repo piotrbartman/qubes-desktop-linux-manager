@@ -409,7 +409,7 @@ class MainDeviceWidget(ActionableWidget, Gtk.Grid):
         self.device_label = Gtk.Label(xalign=0)
 
         label_markup = device.name
-        if (device.connection_timestamp and 
+        if (device.connection_timestamp and
                 int(time.monotonic() - device.connection_timestamp) < 120):
             label_markup += ' <span foreground="red"><b>NEW!</b></span>'
         self.device_label.set_markup(label_markup)

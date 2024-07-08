@@ -135,6 +135,8 @@ class QubeClass(Enum):
     AppVM = 3
     DispVM = 4
 
+# pylint: disable=global-statement
+# TODO: Encapsulate the below variable within a class
 __effective_css_provider__: Gtk.CssProvider = None
 
 def SetEffectiveCssProvider(CssProvider: Gtk.CssProvider) -> None:
@@ -142,9 +144,8 @@ def SetEffectiveCssProvider(CssProvider: Gtk.CssProvider) -> None:
     __effective_css_provider__ = CssProvider
 
 def label_color_theme(color: str) -> str:
-    global __effective_css_provider__
     widget = Gtk.Label()
-    if __effective_css_provider__ == None:
+    if not __effective_css_provider__:
         # Replicating the old behaviour. Both forward and backward compatible
         widget.get_style_context().add_class(f'qube-box-{color}')
     elif f'.qube-box-{color}' in __effective_css_provider__.to_string():

@@ -101,7 +101,7 @@ class Device:
         self.__hash = hash(dev)
         self._port: str = ''
         # Monotonic connection timestamp only for new devices
-        self.connection_timestamp: None
+        self.connection_timestamp: float = None
 
         self._dev_name: str = getattr(dev, 'description', 'unknown')
         if dev.devclass == 'block' and 'size' in dev.data:

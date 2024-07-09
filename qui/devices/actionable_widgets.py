@@ -411,7 +411,7 @@ class MainDeviceWidget(ActionableWidget, Gtk.Grid):
         label_markup = device.name
         if (device.connection_timestamp and
                 int(time.monotonic() - device.connection_timestamp) < 120):
-            label_markup += ' <span foreground="red"><b>NEW!</b></span>'
+            label_markup += ' <span foreground="blue"><b>NEW</b></span>'
         self.device_label.set_markup(label_markup)
 
         if self.device.attachments:

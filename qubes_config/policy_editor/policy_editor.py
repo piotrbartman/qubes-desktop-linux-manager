@@ -184,6 +184,16 @@ class PolicyEditor(Gtk.Application):
         self.main_window : Gtk.ApplicationWindow = \
             self.builder.get_object('main_window')
 
+        # Reserving 3 pixels for window border on all sides (most themes use 2)
+        # Reserving 32x2 pixels for taskbar (default on top) and Window title.
+        # Setting minimum supported size
+        self.main_window.set_size_request(1024 - 3*2, 768 - 3*2 - 32*2)
+        width = min(1920, self.main_window.get_screen().get_width())
+        height= min(1280, self.main_window.get_screen().get_height())
+        self.main_window.set_default_size(width - 3*2, height - 3*2 - 32*2)
+        # ToDo: Considering maximizing by default as it packs too much info.
+        # self.main_window.maximize()
+
         # setup source and help
         header_box: Gtk.Box = self.builder.get_object('header_box')
         self.header_view = GtkSource.View()

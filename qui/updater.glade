@@ -64,6 +64,7 @@
     <property name="hexpand">True</property>
     <property name="vexpand">False</property>
     <property name="title" translatable="yes">Qubes OS Update</property>
+    <property name="icon-name">qubes-manager</property>
     <property name="window-position">center</property>
     <child>
       <!-- n-columns=1 n-rows=3 -->

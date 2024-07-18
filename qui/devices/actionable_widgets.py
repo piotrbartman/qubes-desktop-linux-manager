@@ -34,6 +34,7 @@ gi.require_version('Gtk', '3.0')  # isort:skip
 from gi.repository import Gtk, GdkPixbuf, GLib  # isort:skip
 
 from . import backend
+import time
 
 
 def load_icon(icon_name: str, backup_name: str, size: int = 24):
@@ -393,6 +394,11 @@ class MainDeviceWidget(ActionableWidget, Gtk.Grid):
         self.device = device
         self.variant = variant
 
+        # add NEW! label for new devices for 10 minutes on 1st view
+        self._new_device_label_timout = 10 * 60
+        # reduce NEW! label timeout to 2 minutes after 1st view
+        self._new_device_label_afterview = 2 * 60
+
         self.get_style_context().add_class('main_device_item')
 
         # the part that is common to all devices
@@ -401,7 +407,13 @@ class MainDeviceWidget(ActionableWidget, Gtk.Grid):
         self.device_icon.set_valign(Gtk.Align.CENTER)
 
         self.device_label = Gtk.Label(xalign=0)
-        self.device_label.set_markup(device.name)
+
+        label_markup = device.name
+        if (device.connection_timestamp and
+                int(time.monotonic() - device.connection_timestamp) < 120):
+            label_markup += ' <span foreground="#63a0ff"><b>NEW</b></span>'
+        self.device_label.set_markup(label_markup)
+
         if self.device.attachments:
             self.device_label.get_style_context().add_class("dev_attached")
 

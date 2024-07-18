@@ -201,7 +201,9 @@ class QubesUpdater(Gtk.Application):
             self.log.info("Show intro page.")
         self.main_window.show_all()
         width = self.intro_page.vm_list.get_preferred_width().natural_width
-        self.main_window.resize(width + 50, int(width * 1.2))
+        height = min(int(width * 1.2),
+            self.main_window.get_screen().get_height() - 48)
+        self.main_window.resize(width + 50, height)
         self.main_window.set_position(Gtk.WindowPosition.CENTER_ALWAYS)
 
     def open_settings_window(self, _emitter):

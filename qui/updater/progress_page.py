@@ -148,9 +148,7 @@ class ProgressPage:
             return
         self.log.debug("Start adminVM updating")
 
-        info = f"Updating {admin.name}...\n" \
-               f"{admin.name} does not support in-progress update " \
-               "information.\n"
+        info = f"Checking for available updates for {admin.name}...\n"
         GLib.idle_add(
             admin.append_text_view,
             l(info).format(admin.name))
@@ -158,18 +156,40 @@ class ProgressPage:
 
         self.update_details.update_buffer()
 
+        def qubes_dom0_update(*args):
+            with subprocess.Popen(['sudo', 'qubes-dom0-update'] + list(args),
+                    stderr=subprocess.PIPE, stdout=subprocess.PIPE) as subproc:
+
+                read_err_thread = threading.Thread(
+                    target=self.dump_to_textview,
+                    args=(subproc.stderr, admin)
+                )
+                read_out_thread = threading.Thread(
+                    target=self.dump_to_textview,
+                    args=(subproc.stdout, admin)
+                )
+                read_err_thread.start()
+                read_out_thread.start()
+
+                while subproc.poll() is None \
+                        or read_out_thread.is_alive() \
+                        or read_err_thread.is_alive():
+                    time.sleep(1)
+                    if self.exit_triggered and subproc.poll() is None:
+                        subproc.send_signal(signal.SIGINT)
+                        subproc.wait()
+                        read_err_thread.join()
+                        read_out_thread.join()
+
+                return subproc.returncode
+
         try:
             with Ticker(admin):
                 curr_pkg = self._get_packages_admin()
 
-                # pylint: disable=consider-using-with
-                check_updates = subprocess.Popen(
-                    ['sudo', 'qubes-dom0-update', '--refresh', '--check-only'],
-                    stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-                _stdout, stderr = check_updates.communicate()
-                if check_updates.returncode != 100:
-                    GLib.idle_add(admin.append_text_view, stderr.decode())
-                    if check_updates.returncode != 0:
+                returncode = qubes_dom0_update('--refresh', '--check-only')
+                if returncode != 100:
+                    if returncode != 0:
                         GLib.idle_add(admin.set_status, UpdateStatus.Error)
                     else:
                         GLib.idle_add(
@@ -177,37 +197,18 @@ class ProgressPage:
                     self.update_details.update_buffer()
                     return
 
-                proc = subprocess.Popen(
-                    ['sudo', 'qubes-dom0-update', '-y'],
-                    stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-
-                read_err_thread = threading.Thread(
-                    target=self.dump_to_textview,
-                    args=(proc.stderr, admin)
-                )
-                read_out_thread = threading.Thread(
-                    target=self.dump_to_textview,
-                    args=(proc.stdout, admin)
-                )
-                read_err_thread.start()
-                read_out_thread.start()
-
-                while proc.poll() is None \
-                        or read_out_thread.is_alive() \
-                        or read_err_thread.is_alive():
-                    time.sleep(1)
-                    if self.exit_triggered and proc.poll() is None:
-                        proc.send_signal(signal.SIGINT)
-                        proc.wait()
-                        read_err_thread.join()
-                        read_out_thread.join()
+                returncode = qubes_dom0_update('-y')
+                if returncode != 0:
+                    GLib.idle_add(admin.set_status, UpdateStatus.Error)
+                    self.update_details.update_buffer()
+                    return
 
                 new_pkg = self._get_packages_admin()
                 changes = self._compare_packages(curr_pkg, new_pkg)
                 changes_str = self._print_changes(changes)
                 GLib.idle_add(admin.append_text_view, changes_str)
-
                 GLib.idle_add(admin.set_status, UpdateStatus.Success)
+
         except subprocess.CalledProcessError as ex:
             GLib.idle_add(
                 admin.append_text_view,

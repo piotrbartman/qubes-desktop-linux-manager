@@ -1,3 +1,35 @@
+qubes-desktop-linux-manager (4.3.3-1) unstable; urgency=medium
+
+  [ Marek Marczykowski-Górecki ]
+  * ci: workaround pylint + GTK3 issue
+  * Workaround pylint issue
+  * Fix removing VM from obsolete_vms
+
+  [ Ali Mirjamali ]
+  * Global Config GUI UI minor glade string issues
+  * Help text in policy editor is wrapped to too wide size
+  * Fixing policy editor window size on 1024x168 displays
+  * Fixing CSS for Updater GUI VM Name Labels
+  * Making the Pylint happy for PR #197
+
+  [ ooops ]
+  * Devices widget: label recently-connected devices as "NEW"
+  * Devices widget: label recently-connected devices as "NEW"
+  * Fixing Pylint error and initial value for connection_timestamp
+  * Update actionable_widgets.py
+
+  [ kennethrrosen ]
+  * Change color and punctuation
+  * Update color from blue to #99bfff
+  * Change color from #99bfff to #63a0ff
+
+  [ Ali Mirjamali ]
+  * Fixing Qubes OS Update window height on small dispplays
+  * Updater window Icon
+  * Improve Qubes OS Update reporting for dom0
+
+ -- Marek Marczykowski-Górecki <marmarek@invisiblethingslab.com>  Sat, 20 Jul 2024 05:24:31 +0200
+
 qubes-desktop-linux-manager (4.3.2-1) unstable; urgency=medium
 
   [ Piotr Bartman-Szwarc ]

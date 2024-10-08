@@ -27,6 +27,10 @@ from qrexec.server import call_socket_service
 from qrexec.utils import get_system_info
 
 SOCKET_PATH = "/var/run/qubes"
+SOURCE = 1
+ARGUMENT = SOURCE + 1
+DEV_NAME = ARGUMENT + 1
+TARGETS = DEV_NAME + 1
 
 
 def main():
@@ -43,14 +47,14 @@ def main():
     if guivm is None:
         guivm = "dom0"
 
-    number_of_targets = len(sys.argv) - 4
+    number_of_targets = len(sys.argv) - TARGETS
 
     params = {
-        "source": sys.argv[1],
-        "device_name": sys.argv[3],
-        "argument": sys.argv[2],
-        "targets": sys.argv[4:],
-        "default_target": sys.argv[4] if number_of_targets == 1 else "",
+        "source": sys.argv[SOURCE],
+        "device_name": sys.argv[DEV_NAME],
+        "argument": sys.argv[ARGUMENT],
+        "targets": sys.argv[TARGETS:],
+        "default_target": sys.argv[TARGETS] if number_of_targets == 1 else "",
         "icons": {
             dom.name
             if dom.klass != "DispVM" else f'@dispvm:{dom.name}':

@@ -75,6 +75,7 @@ class DevicesTray(Gtk.Application):
         super().__init__()
         self.name: str = app_name
 
+        # maps: port to connected device (e.g., sys-usb:sda -> block device)
         self.devices: Dict[str, backend.Device] = {}
         self.vms: Set[backend.VM] = set()
         self.dispvm_templates: Set[backend.VM] = set()
@@ -130,10 +131,10 @@ class DevicesTray(Gtk.Application):
         except qubesadmin.exc.QubesException:
             changed_devices = {}  # VM was removed
 
-        for dev_name, dev in changed_devices.items():
-            if dev_name not in self.devices:
+        for dev_port, dev in changed_devices.items():
+            if dev_port not in self.devices:
                 dev.connection_timestamp = time.monotonic()
-                self.devices[dev_name] = dev
+                self.devices[dev_port] = dev
                 self.emit_notification(
                     _("Device available"),
                     _("Device {} is available.").format(dev.description),
@@ -141,19 +142,19 @@ class DevicesTray(Gtk.Application):
                     notification_id=dev.notification_id)
 
         dev_to_remove = []
-        for dev_name, dev in self.devices.items():
+        for dev_port, dev in self.devices.items():
             if dev.backend_domain != vm:
                 continue
-            if dev_name not in changed_devices:
-                dev_to_remove.append((dev_name, dev))
+            if dev_port not in changed_devices:
+                dev_to_remove.append((dev_port, dev))
 
-        for dev_name, dev in dev_to_remove:
+        for dev_port, dev in dev_to_remove:
             self.emit_notification(
                 _("Device removed"),
                 _("Device {} has been removed.").format(dev.description),
                 Gio.NotificationPriority.NORMAL,
                 notification_id=dev.notification_id)
-            del self.devices[dev_name]
+            del self.devices[dev_port]
 
     def initialize_vm_data(self):
         for vm in self.qapp.domains:
